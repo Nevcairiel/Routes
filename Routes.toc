@@ -1,0 +1,21 @@
+﻿## Interface: 20300
+## Title: Routes
+## Notes: Routes on your worldmap and minimap!
+## Author: Grum, Xinhuan
+## Version: 1.0
+## DefaultState: enabled
+## X-Category: Map
+## X-Embeds: 
+## X-eMail: cartographer_routes @ grum DOT nl & xinhuan @ gmail DOT com
+## X-Name: Routes
+
+## OptionalDeps: Ace3, LibBabble-Zone-3.0
+## SavedVariables: RoutesDB
+
+embeds.xml
+
+Locale-enUS.lua
+Locale-deDE.lua
+
+Routes.lua
+TSP.lua

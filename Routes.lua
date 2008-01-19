@@ -5,6 +5,65 @@ local Routes = Routes
 local L = LibStub("AceLocale-3.0"):GetLocale("Routes", false)
 local G = {} -- was Graph-1.0, but we removed the dependency
 
+
+
+-- database defaults
+local db
+local defaults = {
+	global = {
+		routes = {
+			['*'] = { -- zone name
+				['*'] = { -- route name
+					route           = {},    -- point, point, point
+					color           = nil,   -- defaults to db.defaults.color if nil
+					width           = nil,   -- defaults to db.defaults.width if nil
+					width_minimap   = nil,   -- defaults to db.defaults.width_minimap if nil
+					width_battlemap = nil,   -- defaults to db.defaults.width_battlemap if nil
+					hidden          = false, -- boolean
+					looped          = 1,     -- looped? 1 is used (instead of true) because initial early code used 1 inside route creation code
+					visible         = true,  -- visible?
+					length          = 0,     -- length
+					source          = {
+						['**'] = {         -- Database
+							['**'] = false -- Node
+						},
+					},
+				},
+			},
+		},
+		defaults = {            --    r,    g,    b,   a
+			color           = {   1, 0.75, 0.75,   1 },
+			hidden_color    = {   1,    1,    1, 0.5 },
+			width           = 35,
+			width_minimap   = 30,
+			width_battlemap = 15,
+			show_hidden     = false,
+			update_distance = 1,
+			fake_point      = -1,
+			fake_data       = 'dummy',
+			draw_minimap    = 1,
+			draw_worldmap   = 1,
+			draw_battlemap  = 1,
+			tsp = {
+				initial_pheromone  = 0,     -- Initial pheromone trail value
+				alpha              = 1,     -- Likelihood of ants to follow pheromone trails (larger value == more likely)
+				beta               = 6,     -- Likelihood of ants to choose closer nodes (larger value == more likely)
+				local_decay        = 0.2,   -- Governs local trail decay rate [0, 1]
+				local_update       = 0.4,   -- Amount of pheromone to reinforce local trail update by
+				global_decay       = 0.2,   -- Governs global trail decay rate [0, 1]
+				twoopt_passes      = 3,		-- Number of times to perform 2-opt passes
+				two_point_five_opt = false, -- Perform optimized 2-opt pass
+			},
+		},
+	}
+}
+
+
+function Routes:OnInitialize()
+	self.db = LibStub("AceDB-3.0"):New("RoutesDB", defaults)
+	db = self.db.global
+end
+
 function Routes:OnEnable()
 end
 

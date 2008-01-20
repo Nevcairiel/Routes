@@ -1314,13 +1314,29 @@ do
 	local create_name = ""
 	local create_zones = {}
 	local create_zone
+	local last_zone
+	local create_choices = {}
+	local create_data = {}
+	local empty_table = {}
+	local translate_type = {}
+	function Routes:UpdateTranslationTables()
+		-- See if these libraries exist
+		translate_type.CartHerbalism = LibStub:GetLibrary("Babble-Herbs-2.2", 1)
+		translate_type.CartMining = LibStub:GetLibrary("Babble-Ore-2.2", 1)
+		translate_type.CartFishing = LibStub:GetLibrary("Babble-Fish-2.2", 1)
+		local AL = LibStub:GetLibrary("AceLocale-2.2", 1)
+		if AL then
+			translate_type.CartTreasure = AL:new("Cartographer_Treasure")
+		end
+		translate_type.CartExtractGas = LibStub("Babble-Gas-2.2", 1)
+	end
 	options.args.add_group.args = {
 		route_name = {
 			type = "input",
 			name = L["Name of route"],
 			desc = L["Name of the route to add"],
 			validate = function(info, name)
-				if name == "" or not name:match("%S") then
+				if name == "" or strtrim(name) == "" then
 					return L["No name given for new route"]
 				end
 				return true
@@ -1330,7 +1346,7 @@ do
 			order = 100,
 		},
 		zone_choice = {
-			name = L["Zone"], type = "select",
+			name = L["Select Zone"], type = "select",
 			desc = L["Zone to create route in"],
 			order = 200,
 			values = function()
@@ -1360,16 +1376,82 @@ do
 			set = function(info, key) create_zone = key end,
 			style = "radio",
 		},
-		--[[zone_choice = {
-			name = L["Zone"], type = "multiselect",
-			desc = L["Zone to create route in"],
-			order = 200,
+		data_choices = {
+			name = L["Data"], type = "multiselect",
+			desc = L["Which nodes to use in the route"],
+			order = 300,
 			values = function()
-			end
-			get = function() end,
-			set = function() end,
-			style = "",
-		},]]
+				if not create_zone then return empty_table end
+				if last_zone == create_zone then return create_data end
+				-- reuse table
+				for k in pairs(create_data) do create_data[k] = nil end
+				-- update translation tables
+				Routes:UpdateTranslationTables()
+				-- check for cartographer
+				local CN = (Cartographer and Cartographer:HasModule("Notes")) and Cartographer:GetModule("Notes")
+				if CN then
+					for db_type,db_data in pairs(CN.externalDBs) do
+						db_type = "Cart"..db_type
+						-- get the babble localization for this db type
+						local LN = translate_type[db_type]
+						-- if this is a valid node db as specified in translate_type[]
+						if LN then
+							local amount_of = {}
+							-- only look for data for this currentzone
+							if db_data[create_zone] then
+								-- count the unique values (structure is: location => item)
+								if db_type == "CartTreasure" then
+									for _,node in pairs(db_data[create_zone]) do
+										amount_of[node.title] = (amount_of[node.title] or 0) + 1
+									end
+								else
+									for _,node in pairs(db_data[create_zone]) do
+										amount_of[node] = (amount_of[node] or 0) + 1
+									end
+								end
+								-- XXX Localize these strings
+								-- store combinations with all information we have
+								for node,count in pairs(amount_of) do
+									local translatednode = LN:HasTranslation(node) and LN[node] or node
+									create_data[ ("%s;%s;%s"):format(db_type, node, count) ] = ("%s - %s - %d"):format(L[db_type],translatednode,count)
+								end
+							end
+						end
+					end
+				end
+				-- check for gathermate data
+				-- TODO
+				-- found no data - insert dummy message
+				if not next(create_data) then
+					create_data[ db.defaults.fake_data ..";;" ] = L["No data found"]
+				end
+				last_zone = create_zone
+				return create_data
+			end,
+			get = function(info, key)
+				--Routes:Print(("Getting choice for: %s"):format(key or "nil"));
+				if not create_zone then return end
+				if key == db.defaults.fake_data then return end
+				if not create_choices[create_zone] then create_choices[create_zone] = {} end
+				return create_choices[create_zone][key]
+			end,
+			set = function(info, key, value)
+				if not create_zone then return end
+				if key == db.defaults.fake_data then return end
+				if not create_choices[create_zone] then create_choices[create_zone] = {} end
+				create_choices[create_zone][key] = value
+				--:Print(("Setting choice: %s to %s"):format(key or "nil", value and "true" or "false"));
+			end,
+		},
+		add_route = {
+			name = L["Create Route"], type = "execute",
+			desc = L["Create Route"],
+			order = 400,
+			func = function() end,
+			disabled = function()
+				return not create_name or strtrim(create_name) == ""
+			end,
+		},
 	}
 end
 

@@ -16,8 +16,20 @@ L["Routes in %s"] = true
 L["Name of route"] = true
 L["Name of the route to add"] = true
 L["No name given for new route"] = true
-L["Zone"] = true
+L["Select Zone"] = true
 L["Zone to create route in"] = true
+L["Data"] = true
+L["Which nodes to use in the route"] = true
+L["No data found"] = true
+L["Create Route"] = true
+
+
+-- DB abbreviations 
+L["CartHerbalism"] = "CHerb"
+L["CartMining"] = "CMine"
+L["CartFishing"] = "CFish"
+L["CartTreasure"] = "CTreasure"
+L["CartExtractGas"] = "CGas"
 
 -- Route Config
 L["Line settings"] = true

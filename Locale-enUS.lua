@@ -9,6 +9,64 @@ L["routes"] = true -- slash command
 
 -- Options Config
 L["Options"] = true
+L["Update distance"] = true
+L["Yards to move before triggering a minimap update"] = true
+
+-- Map drawing
+L["Map Drawing"] = true
+L["Toggle drawing on each of the maps."] = true
+L["Worldmap"] = true
+L["Worldmap drawing"] = true
+L["Minimap"] = true
+L["Minimap drawing"] = true
+L["Zone Map"] = true
+L["Zone Map drawing"] = true
+L["Set the width of lines on each of the maps."] = true
+L["Normal lines"] = true
+L["Width of the line in the Worldmap"] = true
+L["Width of the line in the Minimap"] = true
+L["Width of the line in the Zone Map"] = true
+L["Color of lines"] = true
+L["Default route"] = true
+L["Change default route color"] = true
+L["Hidden route"] = true
+L["Change default hidden route color"] = true
+L["Show hidden routes"] = true
+L["Show hidden routes?"] = true
+
+-- Auto show/hide
+L["Auto show/hide"] = true
+L["Auto show and hide routes based on your professions"] = true
+L["Use Auto Show/Hide"] = true
+L["Auto Show/Hide per route type"] = true
+L["Auto Show/Hide settings"] = true
+L["Fish"] = true
+L["Routes with Fish"] = true
+L["Gas"] = true
+L["Routes with Gas"] = true
+L["Herbs"] = true
+L["Routes with Herbs"] = true
+L["Ore"] = true
+L["Routes with Ore"] = true
+L["Treasure"] = true
+L["Routes with Treasure"] = true
+L["Always show"] = true
+L["Only with profession"] = true
+L["Only while tracking"] = true
+L["Never show"] = true
+
+-- Waypoints
+L["Waypoints"] = true
+L["Integrated support options for Cartographer_Waypoints"] = true
+L["Waypoint hit distance"] = true
+L["This is the distance in yards away from a waypoint to consider as having reached it so that the next node in the route can be added as the waypoint"] = true
+L["Change direction"] = true
+L["Change the direction of the nodes in the route being added as the next waypoint"] = true
+L["Start using Waypoints"] = true
+L["Start using Cartographer_Waypoints by finding the closest visible route/node in the current zone and using that as the waypoint"] = true
+L["Stop using Waypoints"] = true
+L["Stop using Cartographer_Waypoints by clearing the last queued node"] = true
+
 
 -- Add Route Config
 L["Add"] = true
@@ -30,6 +88,7 @@ L["CartMining"] = "CMine"
 L["CartFishing"] = "CFish"
 L["CartTreasure"] = "CTreasure"
 L["CartExtractGas"] = "CGas"
+
 
 -- Route Config
 L["Line settings"] = true

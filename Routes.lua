@@ -129,8 +129,8 @@ function Routes:OnInitialize()
 		-- This because lua cant do '#' on hash-tables
 		if next(zone_table) ~= nil then
 			local localizedZoneName = BZ[zone] or zone
-			local key = tostring(zoneNamesReverse[localizedZoneName])
-			opts[key] = { -- use a 3 digit string which is alphabetically sorted zone names by continent
+			local zonekey = tostring(zoneNamesReverse[localizedZoneName])
+			opts[zonekey] = { -- use a 3 digit string which is alphabetically sorted zone names by continent
 				type = "group",
 				name = localizedZoneName,
 				desc = L["Routes in %s"]:format(localizedZoneName),
@@ -138,7 +138,7 @@ function Routes:OnInitialize()
 			}
 			for route in pairs(zone_table) do
 				local routekey = route:gsub("%s", "") -- can't have spaces in the key
-				opts[key].args[routekey] = self:CreateAceOptRouteTable(zone, route)
+				opts[zonekey].args[routekey] = self:CreateAceOptRouteTable(zone, route)
 			end
 		end
 	end
@@ -284,18 +284,21 @@ function ConfigHandler:SetWidthBattleMap(info, v)
 end
 
 function ConfigHandler:DeleteRoute(info)
-	--[[local is_running, route_table = Routes.TSP:IsTSPRunning()
+	local zone, route = info.arg.zone, info.arg.route
+	local is_running, route_table = Routes.TSP:IsTSPRunning()
 	if is_running and route_table == db.routes[zone][route].route then
 		self:Print(L["You may not delete a route that is being optimized in the background."])
 		return
 	end
 	db.routes[zone][route] = nil
-	aceopts[zone].args[route] = nil
+	local zonekey = tostring(zoneNamesReverse[BZ[zone] or zone]) -- use a 3 digit string which is alphabetically sorted zone names by continent
+	local routekey = route:gsub("%s", "") -- can't have spaces in the key
+	options.args.routes_group.args[zonekey].args[routekey] = nil -- delete route from aceopt
 	if next(db.routes[zone]) == nil then
-		aceopts[zone] = nil
+		options.args.routes_group.args[zonekey] = nil -- delete zone from aceopt if no routes remaining
 	end
 	Routes:DrawWorldmapLines()
-	Routes:DrawMinimapLines(true)]]
+	Routes:DrawMinimapLines(true)
 end
 
 function ConfigHandler:ResetLineSettings(info)

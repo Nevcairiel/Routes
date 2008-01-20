@@ -60,6 +60,31 @@ local defaults = {
 	}
 }
 
+-- Ace Options Table for our addon
+local options = {
+	type = "group",
+	name = L["Routes"],
+	get = function(k) return db.defaults[k.arg]	end,
+	set = function(k, v) db.defaults[k.arg] = v; Routes:DrawWorldmapLines(); Routes:DrawMinimapLines(); end,
+	args = {
+		add_group = {
+			type = "group",
+			name = L["Add"],
+			desc = L["Add"],
+			order = 100,
+			args = {},
+		},
+		routes_group = {
+			type = "group",
+			name = L["Routes"],
+			desc = L["Routes"],
+			order = 200,
+			args = {},
+		}
+	}
+}
+
+
 -- localize some globals
 local pairs, ipairs, next = pairs, ipairs, next
 local tinsert, tremove = tinsert, tremove
@@ -67,25 +92,54 @@ local floor = floor
 local WorldMapButton = WorldMapButton
 
 -- other locals we use
-local zoneNames = {} -- cache of zones names by continent and zoned id from WowAPI
+local zoneNames = {} -- cache of localized zone names by continent and zoneID from WoW API
+local zoneNamesReverse = {}
 
 
 ------------------------------------------------------------------------------------------------------
 -- General event functions
 
 function Routes:OnInitialize()
+	-- Initialize database
 	self.db = LibStub("AceDB-3.0"):New("RoutesDB", defaults)
 	db = self.db.global
 
+	-- Initialize the ace options table
+	LibStub("AceConfigRegistry-3.0"):RegisterOptionsTable("Routes", options)
+	self:RegisterChatCommand(L["routes"], function() LibStub("AceConfigDialog-3.0"):Open("Routes") end)
+
 	-- Initialize zone names into a table
 	for index, zname in ipairs({GetMapZones(1)}) do
-		zoneNames[100 + index] = zname;
+		zoneNames[100 + index] = zname
 	end
 	for index, zname in ipairs({GetMapZones(2)}) do
-		zoneNames[200 + index] = zname;
+		zoneNames[200 + index] = zname
 	end
 	for index, zname in ipairs({GetMapZones(3)}) do
-		zoneNames[300 + index] = zname;
+		zoneNames[300 + index] = zname
+	end
+	for k, v in pairs(zoneNames) do
+		zoneNamesReverse[v] = k
+	end
+
+	-- Generate ace options table for each route
+	local opts = options.args.routes_group.args
+	for zone, zone_table in pairs(db.routes) do
+		-- do not show unless we have routes.
+		-- This because lua cant do '#' on hash-tables
+		if next(zone_table) ~= nil then
+			local localizedZoneName = BZ[zone] or zone
+			local key = tostring(zoneNamesReverse[localizedZoneName])
+			opts[key] = { -- use a 3 digit string which is alphabetically sorted zone names by continent
+				type = "group",
+				name = localizedZoneName,
+				desc = L['Routes in %s']:format(localizedZoneName),
+				args = {},
+			}
+			for route in pairs(zone_table) do
+				--opts[key].args[route] = CreateAceOptZoneRouteTable(zone, route)
+			end
+		end
 	end
 end
 
@@ -174,7 +228,8 @@ function Routes:DrawWorldmapLines()
 	end
 end
 
-
+function Routes:DrawMinimapLines()
+end
 
 ------------------------------------------------------------------------------------------------------
 -- The following function is used with permission from Daniel Stephens <iriel@vigilance-committee.org>

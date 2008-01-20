@@ -85,290 +85,6 @@ local prof_options3 = { -- For Gas, which doesn't have tracking as a skill
 
 -- Ace Options Table for our addon
 local options
-options = {
-	type = "group",
-	name = L["Routes"],
-	get = function(k) return db.defaults[k.arg] end,
-	set = function(k, v) db.defaults[k.arg] = v; Routes:DrawWorldmapLines(); Routes:DrawMinimapLines(true); end,
-	args = {
-		options_group = {
-			type = "group",
-			name = L["Options"],
-			desc = L["Options"],
-			order = 0,
-			args = {
-				update_distance = {
-					name = L["Update distance"], type = "range",
-					desc = L["Yards to move before triggering a minimap update"],
-					min = 0, max = 10, step = 0.1,
-					arg = "update_distance",
-					order = 1,
-				},
-				-- Mapdrawing menu entry
-				drawing = {
-					name = L["Map Drawing"], type = "group",
-					desc = L["Map Drawing"],
-					order = 100,
-					args = {
-						linedisplay_group = {
-							name = L["Toggle drawing on each of the maps."], type = "group",
-							desc = L["Toggle drawing on each of the maps."],
-							inline = true,
-							order = 100,
-							args = {
-								worldmap_toggle = {
-									name = L["Worldmap"],
-									desc = L["Worldmap drawing"],
-									type = "toggle",
-									order = 100,
-									arg = "draw_worldmap",
-								},
-								minimap_toggle = {
-									name = L["Minimap"],
-									desc = L["Minimap drawing"],
-									type  = "toggle",
-									order = 200,
-									get  = function(info) return db.defaults.draw_minimap end,
-									set  = function(info, v)
-										db.defaults.draw_minimap = v
-										--if v then
-											--Cartographer_Routes:AddEventListener("MINIMAP_UPDATE_ZOOM")
-											--Cartographer_Routes:AddEventListener("CVAR_UPDATE")
-											--Cartographer_Routes:AddRepeatingTimer("Cartographer-Routes-MinimapRoutes", 0, DrawMinimapLines)
-											--Cartographer_Routes:AddEventListener("MINIMAP_ZONE_CHANGED", DrawMinimapLines, nil, true)
-											--minimap_rotate = GetCVar("rotateMinimap") == "1"
-											--Cartographer_Routes:MINIMAP_UPDATE_ZOOM()
-										--else
-											--Cartographer_Routes:RemoveEventListener("MINIMAP_UPDATE_ZOOM")
-											--Cartographer_Routes:RemoveEventListener("CVAR_UPDATE")
-											--Cartographer_Routes:RemoveTimer("Cartographer-Routes-MinimapRoutes")
-											--Cartographer_Routes:RemoveEventListener("MINIMAP_ZONE_CHANGED")
-											--clearMinimap()
-										--end
-									end,
-								},
-								battlemap_toggle = {
-									name = L["Zone Map"],
-									desc = L["Zone Map drawing"],
-									type  = "toggle",
-									order = 300,
-									arg = "draw_battlemap",
-								},
-							},
-						},
-						default_group = {
-							name = L["Set the width of lines on each of the maps."], type = "group",
-							desc = L["Normal lines"],
-							inline = true,
-							order = 200,
-							args = {
-								width = {
-									name = L["Worldmap"], type = "range",
-									desc = L["Width of the line in the Worldmap"],
-									min = 10, max = 100, step = 1,
-									arg = "width",
-									order = 100,
-								},
-								width_minimap = {
-									name = L["Minimap"], type = "range",
-									desc = L["Width of the line in the Minimap"],
-									min = 10, max = 100, step = 1,
-									arg = "width_minimap",
-									order = 110,
-								},
-								width_battlemap = {
-									name = L["Zone Map"], type = "range",
-									desc = L["Width of the line in the Zone Map"],
-									min = 10, max = 100, step = 1,
-									arg = "width_battlemap",
-									order = 120,
-								},
-							},
-						},
-						color_group = {
-							name = L["Color of lines"], type = "group",
-							desc = L["Color of lines"],
-							inline = true,
-							order = 300,
-							get = function(info) return unpack(db.defaults[info.arg]) end,
-							set = function(info, r, g, b, a)
-								local c = db.defaults[info.arg]
-								c[1] = r; c[2] = g; c[3] = b; c[4] = a
-								Routes:DrawWorldmapLines()
-								Routes:DrawMinimapLines(true)
-							end,
-							args = {
-								color = {
-									name = L["Default route"], type = "color",
-									desc = L["Change default route color"],
-									arg  = "color",
-									hasAlpha = true,
-									order = 200,
-								},
-								hidden_color = {
-									name = L["Hidden route"], type = "color",
-									desc = L["Change default hidden route color"],
-									arg  = "hidden_color",
-									hasAlpha = true,
-									order = 400,
-								},
-							},
-						},
-						show_hidden = {
-							name = L["Show hidden routes"], type = "toggle",
-							desc = L["Show hidden routes?"],
-							arg  = "show_hidden",
-							order = 400,
-						},
-					},
-				},
-				auto_group = {
-					name = L["Auto show/hide"], type = "group",
-					desc = L["Auto show and hide routes based on your professions"],
-					--groupType = "inline",
-					order = 200,
-					args = {
-						use_auto_showhide = {
-							name = L["Use Auto Show/Hide"],
-							desc = L["Use Auto Show/Hide"],
-							type = "toggle",
-							arg = "use_auto_showhide",
-							order = 210,
-							set = function(info, v)
-								db.defaults.use_auto_showhide = v
-								local t = options.args.options_group.args.auto_group.args.auto_group.args
-								if v then
-									--Cartographer_Routes:AddEventListener("SKILL_LINES_CHANGED")
-									--Cartographer_Routes:AddEventListener("MINIMAP_UPDATE_TRACKING")
-									--Cartographer_Routes:MINIMAP_UPDATE_TRACKING()
-									--Cartographer_Routes:SKILL_LINES_CHANGED()
-									t.fishing.disabled = nil
-									t.herbalism.disabled = nil
-									t.mining.disabled = nil
-									t.treasure.disabled = nil
-									t.gas.disabled = nil
-								else
-									--Cartographer_Routes:RemoveEventListener("SKILL_LINES_CHANGED")
-									--Cartographer_Routes:RemoveEventListener("MINIMAP_UPDATE_TRACKING")
-									t.fishing.disabled = true
-									t.herbalism.disabled = true
-									t.mining.disabled = true
-									t.treasure.disabled = true
-									t.gas.disabled = true
-								end
-							end,
-						},
-						auto_group = {
-							name = L["Auto Show/Hide per route type"], type = "group",
-							desc = L["Auto Show/Hide settings"],
-							inline = true,
-							order = 300,
-							disabled = function(info) return not db.defaults.use_auto_showhide end,
-							set = function(info, v)
-								db.defaults.prof_options[info.arg] = v
-								--Routes:ApplyVisibility()
-							end,
-							get = function(info) return db.defaults.prof_options[info.arg] end,
-							args = {
-								fishing = {
-									name = L["Fish"], type = "select",
-									desc = L["Routes with Fish"],
-									order = 100,
-									values = prof_options,
-									arg = "Fishing",
-								},
-								gas = {
-									name = L["Gas"], type = "select",
-									desc = L["Routes with Gas"],
-									order = 200,
-									values = prof_options3,
-									arg = "ExtractGas",
-								},
-								herbalism = {
-									name = L["Herbs"], type = "select",
-									desc = L["Routes with Herbs"],
-									order = 300,
-									values = prof_options,
-									arg = "Herbalism",
-								},
-								mining = {
-									name = L["Ore"], type = "select",
-									desc = L["Routes with Ore"],
-									order = 400,
-									values = prof_options,
-									arg = "Mining",
-								},
-								treasure = {
-									name = L["Treasure"], type = "select",
-									desc = L["Routes with Treasure"],
-									order = 500,
-									values = prof_options2,
-									arg = "Treasure",
-								},
-							},
-						},
-					},
-				},
-				waypoints = {
-					name = L["Waypoints"], type = "group",
-					desc = L["Integrated support options for Cartographer_Waypoints"],
-					disabled = function() return not (Cartographer and Cartographer:HasModule("Waypoints") and Cartographer:IsModuleActive("Waypoints")) end,
-					order = 300,
-					args = {
-						hit_distance = {
-							name = L["Waypoint hit distance"], type = "range",
-							desc = L["This is the distance in yards away from a waypoint to consider as having reached it so that the next node in the route can be added as the waypoint"],
-							min  = 5,
-							max  = 80, -- This is the maximum range of node detection for "Find X" profession skills
-							step = 1,
-							order = 700,
-							arg = "waypoint_hit_distance",
-						},
-						direction = {
-							name  = L["Change direction"], type = "execute",
-							desc  = L["Change the direction of the nodes in the route being added as the next waypoint"],
-							func  = function()
-								--Cartographer_Routes:ChangeWaypointDirection()
-							end,
-							order = 720,
-						},
-						start = {
-							name  = L["Start using Waypoints"], type = "execute",
-							desc  = L["Start using Cartographer_Waypoints by finding the closest visible route/node in the current zone and using that as the waypoint"],
-							func  = function()
-								--Cartographer_Routes:QueueFirstNode()
-							end,
-							order = 710,
-						},
-						stop = {
-							name  = L["Stop using Waypoints"], type = "execute",
-							desc  = L["Stop using Cartographer_Waypoints by clearing the last queued node"],
-							func  = function()
-								--Cartographer_Routes:RemoveQueuedNode()
-							end,
-							order = 730,
-						},
-					},
-				},
-			},
-		},
-		add_group = {
-			type = "group",
-			name = L["Add"],
-			desc = L["Add"],
-			order = 100,
-			--args = {}, -- defined later
-		},
-		routes_group = {
-			type = "group",
-			name = L["Routes"],
-			desc = L["Routes"],
-			order = 200,
-			args = {},
-		}
-	}
-}
-
 
 -- localize some globals
 local pairs, ipairs, next = pairs, ipairs, next
@@ -998,6 +714,293 @@ end
 ------------------------------------------------------------------------------------------------------
 -- Ace options table stuff
 
+options = {
+	type = "group",
+	name = L["Routes"],
+	get = function(k) return db.defaults[k.arg] end,
+	set = function(k, v) db.defaults[k.arg] = v; Routes:DrawWorldmapLines(); Routes:DrawMinimapLines(true); end,
+	args = {
+		options_group = {
+			type = "group",
+			name = L["Options"],
+			desc = L["Options"],
+			order = 0,
+			--args = {}, -- defined later
+		},
+		add_group = {
+			type = "group",
+			name = L["Add"],
+			desc = L["Add"],
+			order = 100,
+			--args = {}, -- defined later
+		},
+		routes_group = {
+			type = "group",
+			name = L["Routes"],
+			desc = L["Routes"],
+			order = 200,
+			args = {},
+		}
+	}
+}
+
+options.args.options_group.args = {
+	update_distance = {
+		name = L["Update distance"], type = "range",
+		desc = L["Yards to move before triggering a minimap update"],
+		min = 0, max = 10, step = 0.1,
+		arg = "update_distance",
+		order = 1,
+	},
+	-- Mapdrawing menu entry
+	drawing = {
+		name = L["Map Drawing"], type = "group",
+		desc = L["Map Drawing"],
+		order = 100,
+		args = {
+			linedisplay_group = {
+				name = L["Toggle drawing on each of the maps."], type = "group",
+				desc = L["Toggle drawing on each of the maps."],
+				inline = true,
+				order = 100,
+				args = {
+					worldmap_toggle = {
+						name = L["Worldmap"],
+						desc = L["Worldmap drawing"],
+						type = "toggle",
+						order = 100,
+						arg = "draw_worldmap",
+					},
+					minimap_toggle = {
+						name = L["Minimap"],
+						desc = L["Minimap drawing"],
+						type  = "toggle",
+						order = 200,
+						get  = function(info) return db.defaults.draw_minimap end,
+						set  = function(info, v)
+							db.defaults.draw_minimap = v
+							if v then
+								Routes:RegisterEvent("MINIMAP_UPDATE_ZOOM")
+								Routes:RegisterEvent("CVAR_UPDATE")
+								timerFrame:Show()
+								Routes:RegisterEvent("MINIMAP_ZONE_CHANGED", "DrawMinimapLines", true)
+								minimap_rotate = GetCVar("rotateMinimap") == "1"
+								Routes:MINIMAP_UPDATE_ZOOM()  -- This has a DrawMinimapLines(true) call in it, and sets an "indoors" variable
+							else
+								Routes:UnregisterEvent("MINIMAP_UPDATE_ZOOM")
+								Routes:UnregisterEvent("CVAR_UPDATE")
+								timerFrame:Hide()
+								Routes:UnregisterEvent("MINIMAP_ZONE_CHANGED")
+								G:HideLines(Minimap)
+							end
+						end,
+					},
+					battlemap_toggle = {
+						name = L["Zone Map"],
+						desc = L["Zone Map drawing"],
+						type  = "toggle",
+						order = 300,
+						arg = "draw_battlemap",
+					},
+				},
+			},
+			default_group = {
+				name = L["Set the width of lines on each of the maps."], type = "group",
+				desc = L["Normal lines"],
+				inline = true,
+				order = 200,
+				args = {
+					width = {
+						name = L["Worldmap"], type = "range",
+						desc = L["Width of the line in the Worldmap"],
+						min = 10, max = 100, step = 1,
+						arg = "width",
+						order = 100,
+					},
+					width_minimap = {
+						name = L["Minimap"], type = "range",
+						desc = L["Width of the line in the Minimap"],
+						min = 10, max = 100, step = 1,
+						arg = "width_minimap",
+						order = 110,
+					},
+					width_battlemap = {
+						name = L["Zone Map"], type = "range",
+						desc = L["Width of the line in the Zone Map"],
+						min = 10, max = 100, step = 1,
+						arg = "width_battlemap",
+						order = 120,
+					},
+				},
+			},
+			color_group = {
+				name = L["Color of lines"], type = "group",
+				desc = L["Color of lines"],
+				inline = true,
+				order = 300,
+				get = function(info) return unpack(db.defaults[info.arg]) end,
+				set = function(info, r, g, b, a)
+					local c = db.defaults[info.arg]
+					c[1] = r; c[2] = g; c[3] = b; c[4] = a
+					Routes:DrawWorldmapLines()
+					Routes:DrawMinimapLines(true)
+				end,
+				args = {
+					color = {
+						name = L["Default route"], type = "color",
+						desc = L["Change default route color"],
+						arg  = "color",
+						hasAlpha = true,
+						order = 200,
+					},
+					hidden_color = {
+						name = L["Hidden route"], type = "color",
+						desc = L["Change default hidden route color"],
+						arg  = "hidden_color",
+						hasAlpha = true,
+						order = 400,
+					},
+				},
+			},
+			show_hidden = {
+				name = L["Show hidden routes"], type = "toggle",
+				desc = L["Show hidden routes?"],
+				arg  = "show_hidden",
+				order = 400,
+			},
+		},
+	},
+	auto_group = {
+		name = L["Auto show/hide"], type = "group",
+		desc = L["Auto show and hide routes based on your professions"],
+		--groupType = "inline",
+		order = 200,
+		args = {
+			use_auto_showhide = {
+				name = L["Use Auto Show/Hide"],
+				desc = L["Use Auto Show/Hide"],
+				type = "toggle",
+				arg = "use_auto_showhide",
+				order = 210,
+				set = function(info, v)
+					db.defaults.use_auto_showhide = v
+					local t = options.args.options_group.args.auto_group.args.auto_group.args
+					if v then
+						--Cartographer_Routes:AddEventListener("SKILL_LINES_CHANGED")
+						--Cartographer_Routes:AddEventListener("MINIMAP_UPDATE_TRACKING")
+						--Cartographer_Routes:MINIMAP_UPDATE_TRACKING()
+						--Cartographer_Routes:SKILL_LINES_CHANGED()
+						t.fishing.disabled = nil
+						t.herbalism.disabled = nil
+						t.mining.disabled = nil
+						t.treasure.disabled = nil
+						t.gas.disabled = nil
+					else
+						--Cartographer_Routes:RemoveEventListener("SKILL_LINES_CHANGED")
+						--Cartographer_Routes:RemoveEventListener("MINIMAP_UPDATE_TRACKING")
+						t.fishing.disabled = true
+						t.herbalism.disabled = true
+						t.mining.disabled = true
+						t.treasure.disabled = true
+						t.gas.disabled = true
+					end
+				end,
+			},
+			auto_group = {
+				name = L["Auto Show/Hide per route type"], type = "group",
+				desc = L["Auto Show/Hide settings"],
+				inline = true,
+				order = 300,
+				disabled = function(info) return not db.defaults.use_auto_showhide end,
+				set = function(info, v)
+					db.defaults.prof_options[info.arg] = v
+					--Routes:ApplyVisibility()
+				end,
+				get = function(info) return db.defaults.prof_options[info.arg] end,
+				args = {
+					fishing = {
+						name = L["Fish"], type = "select",
+						desc = L["Routes with Fish"],
+						order = 100,
+						values = prof_options,
+						arg = "Fishing",
+					},
+					gas = {
+						name = L["Gas"], type = "select",
+						desc = L["Routes with Gas"],
+						order = 200,
+						values = prof_options3,
+						arg = "ExtractGas",
+					},
+					herbalism = {
+						name = L["Herbs"], type = "select",
+						desc = L["Routes with Herbs"],
+						order = 300,
+						values = prof_options,
+						arg = "Herbalism",
+					},
+					mining = {
+						name = L["Ore"], type = "select",
+						desc = L["Routes with Ore"],
+						order = 400,
+						values = prof_options,
+						arg = "Mining",
+					},
+					treasure = {
+						name = L["Treasure"], type = "select",
+						desc = L["Routes with Treasure"],
+						order = 500,
+						values = prof_options2,
+						arg = "Treasure",
+					},
+				},
+			},
+		},
+	},
+	waypoints = {
+		name = L["Waypoints"], type = "group",
+		desc = L["Integrated support options for Cartographer_Waypoints"],
+		disabled = function() return not (Cartographer and Cartographer:HasModule("Waypoints") and Cartographer:IsModuleActive("Waypoints")) end,
+		order = 300,
+		args = {
+			hit_distance = {
+				name = L["Waypoint hit distance"], type = "range",
+				desc = L["This is the distance in yards away from a waypoint to consider as having reached it so that the next node in the route can be added as the waypoint"],
+				min  = 5,
+				max  = 80, -- This is the maximum range of node detection for "Find X" profession skills
+				step = 1,
+				order = 700,
+				arg = "waypoint_hit_distance",
+			},
+			direction = {
+				name  = L["Change direction"], type = "execute",
+				desc  = L["Change the direction of the nodes in the route being added as the next waypoint"],
+				func  = function()
+					--Cartographer_Routes:ChangeWaypointDirection()
+				end,
+				order = 720,
+			},
+			start = {
+				name  = L["Start using Waypoints"], type = "execute",
+				desc  = L["Start using Cartographer_Waypoints by finding the closest visible route/node in the current zone and using that as the waypoint"],
+				func  = function()
+					--Cartographer_Routes:QueueFirstNode()
+				end,
+				order = 710,
+			},
+			stop = {
+				name  = L["Stop using Waypoints"], type = "execute",
+				desc  = L["Stop using Cartographer_Waypoints by clearing the last queued node"],
+				func  = function()
+					--Cartographer_Routes:RemoveQueuedNode()
+				end,
+				order = 730,
+			},
+		},
+	},
+}
+
+
 -- Set of functions we use to edit route configs
 local ConfigHandler = {}
 
@@ -1529,7 +1532,7 @@ do
 					Routes:Print(L["No data selected for new route"])
 					return
 				end
-Routes:Print(#new_route.route)
+
 				-- Perform a deep copy instead so that db defaults apply
 				db.routes[create_zone][create_name] = nil -- overwrite old route
 				deep_copy_table(db.routes[create_zone][create_name], new_route)

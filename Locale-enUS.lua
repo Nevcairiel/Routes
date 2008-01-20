@@ -79,8 +79,10 @@ L["Select data to use"] = true
 L["Select data to use in the route creation"] = true
 L["No data found"] = true
 L["Create Route"] = true
+L["No data selected for new route"] = true
 
--- DB abbreviations 
+
+-- DB prefix abbreviations 
 L["CartHerbalism"] = "CHerb"
 L["CartMining"] = "CMine"
 L["CartFishing"] = "CFish"

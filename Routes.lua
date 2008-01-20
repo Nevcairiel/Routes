@@ -26,10 +26,8 @@ local defaults = {
 					looped          = 1,     -- looped? 1 is used (instead of true) because initial early code used 1 inside route creation code
 					visible         = true,  -- visible?
 					length          = 0,     -- length
-					source          = {
-						['**'] = {         -- Database
-							['**'] = false -- Node
-						},
+					selection       = {
+						['**'] = false  -- Node we're interested in tracking
 					},
 				},
 			},
@@ -65,6 +63,7 @@ local defaults = {
 				ExtractGas = "Always",
 			},
 			use_auto_showhide = false,
+			waypoint_hit_distance = 50,
 		},
 	}
 }
@@ -325,6 +324,7 @@ options = {
 							max  = 80, -- This is the maximum range of node detection for "Find X" profession skills
 							step = 1,
 							order = 700,
+							arg = "waypoint_hit_distance",
 						},
 						direction = {
 							name  = L["Change direction"], type = "execute",
@@ -359,7 +359,7 @@ options = {
 			name = L["Add"],
 			desc = L["Add"],
 			order = 100,
-			--args = {},
+			--args = {}, -- defined later
 		},
 		routes_group = {
 			type = "group",
@@ -970,8 +970,8 @@ timerFrame:Hide()
 timerFrame.elapsed = 0
 timerFrame:SetScript("OnUpdate", function(self, elapsed)
 	self.elapsed = self.elapsed + elapsed
-	if self.elapsed > 0.025 then
-		self.elapsed = 0
+	if self.elapsed > 0.025 then -- throttle to a max of 40 redraws per sec
+		self.elapsed = 0         -- kinda unnecessary since at default 1 yard refresh, its limited to 36 redraws/sec
 		Routes:DrawMinimapLines()
 	end
 end)
@@ -1307,6 +1307,16 @@ do
 	local create_data = {}
 	local empty_table = {}
 	local translate_type = {}
+	local function deep_copy_table(a, b)
+		for k, v in pairs(b) do
+			if type(v) == "table" then
+				--a[k] = {} -- no need this, AceDB defaults should handle it
+				deep_copy_table(a[k], v)
+			else
+				a[k] = v
+			end
+		end
+	end
 	function Routes:UpdateTranslationTables()
 		-- See if these libraries exist
 		translate_type.CartHerbalism = LibStub:GetLibrary("Babble-Herbs-2.2", 1)
@@ -1314,7 +1324,7 @@ do
 		translate_type.CartFishing = LibStub:GetLibrary("Babble-Fish-2.2", 1)
 		local AL = LibStub:GetLibrary("AceLocale-2.2", 1)
 		if AL then
-			translate_type.CartTreasure = AL:new("Cartographer_Treasure")
+			translate_type.CartTreasure = AL:new("Cartographer_Treasure") -- Get the AceLocale registered translation table for Treasure
 		end
 		translate_type.CartExtractGas = LibStub("Babble-Gas-2.2", 1)
 	end
@@ -1379,16 +1389,15 @@ do
 				local CN = (Cartographer and Cartographer:HasModule("Notes")) and Cartographer:GetModule("Notes")
 				if CN then
 					for db_type,db_data in pairs(CN.externalDBs) do
-						db_type = "Cart"..db_type
 						-- get the babble localization for this db type
-						local LN = translate_type[db_type]
+						local LN = translate_type["Cart"..db_type]
 						-- if this is a valid node db as specified in translate_type[]
 						if LN then
 							local amount_of = {}
 							-- only look for data for this currentzone
 							if db_data[create_zone] then
 								-- count the unique values (structure is: location => item)
-								if db_type == "CartTreasure" then
+								if db_type == "Treasure" then
 									for _,node in pairs(db_data[create_zone]) do
 										amount_of[node.title] = (amount_of[node.title] or 0) + 1
 									end
@@ -1401,7 +1410,7 @@ do
 								-- store combinations with all information we have
 								for node,count in pairs(amount_of) do
 									local translatednode = LN:HasTranslation(node) and LN[node] or node
-									create_data[ ("%s;%s;%s"):format(db_type, node, count) ] = ("%s - %s - %d"):format(L[db_type],translatednode,count)
+									create_data[ ("%s;%s;%s;%s"):format("Cart", db_type, node, count) ] = ("%s - %s - %d"):format(L["Cart"..db_type],translatednode,count)
 								end
 							end
 						end
@@ -1411,7 +1420,6 @@ do
 				if GatherMate then
 					local LN = LibStub("AceLocale-3.0"):GetLocale("GatherMateNodes", true)
 					for db_type, db_data in pairs(GatherMate.gmdbs) do
-						db_type = "GM"..db_type
 						local amount_of = {}
 						-- only look for data for this currentzone
 						if db_data[GatherMate.zoneData[BZ[create_zone]][3]] then
@@ -1423,14 +1431,14 @@ do
 							-- store combinations with all information we have
 							for node,count in pairs(amount_of) do
 								local translatednode = GatherMate.reverseNodeIDs[node]
-								create_data[ ("%s;%s;%s"):format(db_type, node, count) ] = ("%s - %s - %d"):format(L[db_type],translatednode,count)
+								create_data[ ("%s;%s;%s;%s"):format("GM", db_type, node, count) ] = ("%s - %s - %d"):format(L["GM"..db_type],translatednode,count)
 							end
 						end
 					end
 				end
 				-- found no data - insert dummy message
 				if not next(create_data) then
-					create_data[ db.defaults.fake_data ..";;" ] = L["No data found"]
+					create_data[ db.defaults.fake_data ..";;;" ] = L["No data found"]
 				end
 				last_zone = create_zone
 				return create_data
@@ -1454,7 +1462,106 @@ do
 			name = L["Create Route"], type = "execute",
 			desc = L["Create Route"],
 			order = 400,
-			func = function() end,
+			func = function()
+				create_name = strtrim(create_name)
+				if not create_name or create_name == "" then
+					Routes:Print(L["No name given for new route"])
+					return
+				end
+				--the real 'action', we use a temporary table in case of data corruption and only commit this to the db if successful
+				local new_route = { route = {}, selection = {} }
+				-- check for cartographer
+				local CN = (Cartographer and Cartographer:HasModule("Notes")) and Cartographer:GetModule("Notes")
+				local GatherMate = GatherMate
+				-- if for every selected nodetype on this map
+				if type(create_choices[create_zone]) == "table" then
+					for data_string,wanted in pairs(create_choices[create_zone]) do
+						-- if we want em
+						if (wanted) then
+							local db_src, db_type, node_type, amount = (';'):split( data_string );
+							--Routes:Print(("found %s %s %s %s"):format( db_src,db_type,node_type,amount ))
+
+							-- ignore any fake data
+							if db_type ~= db.defaults.fake_data then
+								-- check if the db_type exists (could be disabled via _Professions)
+								if db_src == "Cart" and CN and CN.externalDBs[db_type] then
+									-- store the node_type we're interested in so we can auto-add them
+									new_route.selection[node_type] = true
+
+									-- Find all of the notes
+									for loc, t in pairs(CN.externalDBs[db_type][create_zone]) do
+										-- convert coordID from Cart format to GM format
+										local x, y = (loc % 10001)/10000, floor(loc / 10001)/10000
+										loc = floor(x * 10000 + 0.5) * 10000 + floor(y * 10000 + 0.5)
+										-- And are of a selected type - store
+										if db_type == "Treasure" and t.title == node_type then
+											tinsert( new_route.route, loc )
+										elseif t == node_type then
+											tinsert( new_route.route, loc )
+										end
+									end
+								elseif db_src == "GM" and GatherMate and GatherMate.gmdbs[db_type] then
+									node_type = tonumber(node_type)
+									-- store the node_type we're interested in so we can auto-add them
+									local LN = LibStub("AceLocale-3.0"):GetLocale("GatherMateNodes", true)
+									local translatednode = GatherMate.reverseNodeIDs[node_type]
+									for k, v in pairs(LN) do
+										if v == translatednode then
+											translatednode = k -- get the english name
+											break
+										end
+									end
+									new_route.selection[translatednode] = true
+								
+									-- Find all of the notes
+									--for loc, t in GatherMate:GetNodesForZone(BZ[create_zone], db_type) do
+									for loc, t in pairs(GatherMate.gmdbs[db_type][GatherMate.zoneData[BZ[create_zone]][3]]) do
+										-- And are of a selected type - store
+										if t == node_type then
+											tinsert( new_route.route, loc )
+										end
+									end
+								end
+							end
+						end
+					end
+				end
+
+				if #new_route.route == 0 then
+					Routes:Print(L["No data selected for new route"])
+					return
+				end
+Routes:Print(#new_route.route)
+				-- Perform a deep copy instead so that db defaults apply
+				db.routes[create_zone][create_name] = nil -- overwrite old route
+				deep_copy_table(db.routes[create_zone][create_name], new_route)
+
+				-- TODO Check if we can do a one-pass TSP run here as well if the user selected it.
+				db.routes[create_zone][create_name].length = Routes.TSP:PathLength(new_route.route, create_zone)
+
+				-- Create the aceopts table entry for our new route
+				local opts = options.args.routes_group.args
+				local localizedZoneName = BZ[create_zone] or create_zone
+				local zonekey = tostring(zoneNamesReverse[localizedZoneName])
+				if not opts[zonekey] then
+					opts[zonekey] = { -- use a 3 digit string which is alphabetically sorted zone names by continent
+						type = "group",
+						name = localizedZoneName,
+						desc = L["Routes in %s"]:format(localizedZoneName),
+						args = {},
+					}
+				end
+				local routekey = create_name:gsub("%s", "") -- can't have spaces in the key
+				opts[zonekey].args[routekey] = Routes:CreateAceOptRouteTable(create_zone, create_name)
+
+				-- Draw it
+				Routes:DrawWorldmapLines()
+				Routes:DrawMinimapLines(true)
+
+				-- clear stored name
+				create_name = ""
+				create_zone = nil
+			end,
 			disabled = function()
 				return not create_name or strtrim(create_name) == ""
 			end,

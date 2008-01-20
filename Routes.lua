@@ -80,7 +80,7 @@ local options = {
 			name = L["Add"],
 			desc = L["Add"],
 			order = 100,
-			args = {},
+			--args = {},
 		},
 		routes_group = {
 			type = "group",
@@ -691,7 +691,7 @@ timerFrame:Hide()
 timerFrame.elapsed = 0
 timerFrame:SetScript("OnUpdate", function(self, elapsed)
 	self.elapsed = self.elapsed + elapsed
-	if self.elapsed > 0.04 then
+	if self.elapsed > 0.025 then
 		self.elapsed = 0
 		Routes:DrawMinimapLines()
 	end
@@ -1004,6 +1004,82 @@ function Routes:CreateAceOptRouteTable(zone, route)
 		},
 	}
 end
+
+-- AceOpt config table for route creation
+do
+	-- Some upvalues used in the aceopts[] table for creating new routes
+	local outland_zones = {
+		"Blade's Edge Mountains",
+		"Hellfire Peninsula",
+		"Nagrand",
+		"Netherstorm",
+		"Shadowmoon Valley",
+		"Shattrath City",
+		"Terokkar Forest",
+		"Zangarmarsh",
+	}
+	local create_name = ""
+	local create_zones = {}
+	local create_zone
+	options.args.add_group.args = {
+		route_name = {
+			type = "input",
+			name = L["Name of route"],
+			desc = L["Name of the route to add"],
+			validate = function(info, name)
+				if name == "" or not name:match("%S") then
+					return L["No name given for new route"]
+				end
+				return true
+			end,
+			get = function() return create_name end,
+			set = function(info, v) create_name = strtrim(v) end,
+			order = 100,
+		},
+		zone_choice = {
+			name = L["Zone"], type = "select",
+			desc = L["Zone to create route in"],
+			order = 200,
+			values = function()
+				-- reuse table
+				for k in pairs(create_zones) do create_zones[k] = nil end
+				-- setup zones to show
+				for i = 1, #outland_zones do
+					create_zones[ outland_zones[i] ] = BZ[ outland_zones[i] ]
+				end
+				-- add current player zone
+				local zone = GetRealZoneText()
+				zone = BZR[zone] or zone
+				if zone then
+					create_zones[zone] = BZ[zone]
+					if not create_zone then create_zone = zone end
+				end
+				-- add current viewed map zone
+				local zone = zoneNames[GetCurrentMapContinent()*100 + GetCurrentMapZone()]
+				if BZR[zone] then zone = BZR[zone] end
+				if zone then
+					create_zones[zone] = BZ[zone]
+					if not create_zone then create_zone = zone end
+				end
+				return create_zones
+			end,
+			get = function() return create_zone end,
+			set = function(info, key) create_zone = key end,
+			style = "radio",
+		},
+		--[[zone_choice = {
+			name = L["Zone"], type = "multiselect",
+			desc = L["Zone to create route in"],
+			order = 200,
+			values = function()
+			end
+			get = function() end,
+			set = function() end,
+			style = "",
+		},]]
+	}
+end
+
 
 ------------------------------------------------------------------------------------------------------
 -- The following function is used with permission from Daniel Stephens <iriel@vigilance-committee.org>

@@ -13,6 +13,11 @@ L["Options"] = true
 -- Add Route Config
 L["Add"] = true
 L["Routes in %s"] = true
+L["Name of route"] = true
+L["Name of the route to add"] = true
+L["No name given for new route"] = true
+L["Zone"] = true
+L["Zone to create route in"] = true
 
 -- Route Config
 L["Line settings"] = true

@@ -6,8 +6,6 @@ local L = LibStub("AceLocale-3.0"):GetLocale("Routes", false)
 local BZ = LibStub("LibBabble-Zone-3.0"):GetUnstrictLookupTable()
 local BZR = LibStub("LibBabble-Zone-3.0"):GetReverseLookupTable()
 local G = {} -- was Graph-1.0, but we removed the dependency
-local T = LibStub("LibTourist-3.0")
-
 
 
 -- database defaults
@@ -539,9 +537,9 @@ local Y_cache = {}
 local XY_cache_mt = {
 	__index = function(t, key)
 		local zone, coord = (';'):split( key )
-		local yardX, yardY = T:GetZoneYardSize(BZ[zone])
-		local X, Y = yardX * floor(coord / 10000) / 10000, yardY * (coord % 10000) / 10000;
-
+		zone = BZ[zone]
+		local X = Routes.zoneData[zone][1] * floor(coord / 10000) / 10000
+		local Y = Routes.zoneData[zone][2] * (coord % 10000) / 10000
 		X_cache[key] = X
 		Y_cache[key] = Y
 
@@ -570,13 +568,13 @@ function Routes:DrawMinimapLines(forceUpdate)
 	local zone = GetRealZoneText()
 
 	-- instance/indoor .. no routes
-	if not zone or T:IsInstance(zone) or indoors == "indoor" then
+	if not zone or not self.zoneData[zone] or indoors == "indoor" then
 		G:HideLines(Minimap)
 		return
 	end
 
 	local defaults = db.defaults
-	local zoneW, zoneH = T:GetZoneYardSize(zone)
+	local zoneW, zoneH = self.zoneData[zone][1], self.zoneData[zone][2]
 	if not zoneW then return end
 	local cx, cy = zoneW * _x, zoneH * _y
 

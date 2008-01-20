@@ -83,7 +83,6 @@ local tinsert, tremove = tinsert, tremove;
 
 local pathR = {};
 local lastpath;
-local Tourist = LibStub("LibTourist-3.0");
 local BZ = LibStub("LibBabble-Zone-3.0"):GetLookupTable();
 
 ----------------------------------
@@ -247,7 +246,7 @@ function TSP:SolveTSP(nodes, zonename, parameters, path, nonblocking)
 	
 	-- Setup ACO parameters
 	local startTime		= GetTime();
-	local zoneW, zoneH	= Tourist:GetZoneYardSize(BZ[zonename]);
+	local zoneW, zoneH	= Routes.zoneData[BZ[zonename]][1], Routes.zoneData[BZ[zonename]][2]
 
 	local INITIAL_PHEROMONE = parameters.initial_pheromone or 0;     -- Parameter: Initial pheromone trail value
 	local ALPHA             = parameters.alpha or 1;                 -- Parameter: Likelihood of ants to follow pheromone trails (larger value == more likely)
@@ -587,7 +586,7 @@ function TSP:InsertNode(nodes, zonename, nodeID, twoOpt, path)
 	numNodes = #nodes;
 
 	-- Step 1	- Initialize and generate the weight matrix, and prune matrix if doing 2-opt
-	local zoneW, zoneH = Tourist:GetZoneYardSize(BZ[zonename]);
+	local zoneW, zoneH = Routes.zoneData[BZ[zonename]][1], Routes.zoneData[BZ[zonename]][2];
 	local zoneW15 = zoneW * 0.15;
 	local weight = newTable();
 	local prune = newTable();
@@ -704,7 +703,7 @@ end
 --   pathLength	- The length of the route in yards.
 function TSP:PathLength(nodes, zonename)
 	assert(type(nodes) == "table", "PathLength() expected table in 1st argument, got "..type(nodes).." instead.");
-	local zoneW, zoneH = Tourist:GetZoneYardSize(BZ[zonename]);
+	local zoneW, zoneH = Routes.zoneData[BZ[zonename]][1], Routes.zoneData[BZ[zonename]][2];
 	local numNodes = #nodes;
 	local pathLength = 0;
 

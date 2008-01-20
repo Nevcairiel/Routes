@@ -12,7 +12,6 @@
 	<Include file="Libs\AceConsole-3.0\AceConsole-3.0.xml"/>
 	<Include file="Libs\AceConfig-3.0\AceConfig-3.0.xml"/>
 	<Include file="Libs\LibBabble-Zone-3.0\lib.xml"/>	
-	<Include file="Libs\LibTourist-3.0\lib.xml"/>
 	<!--
 	<Script file="Libs\Babble-Herbs-2.2\Babble-Herbs-2.2.lua"/>
 	<Script file="Libs\Babble-Ore-2.2\Babble-Ore-2.2.lua"/>

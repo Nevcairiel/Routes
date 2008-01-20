@@ -7,6 +7,9 @@ local L = LibStub("AceLocale-3.0"):NewLocale("Routes", "enUS", true)
 L["Routes"] = true
 L["routes"] = true -- slash command
 
+-- Options Config
+L["Options"] = true
+
 -- Add Route Config
 L["Add"] = true
 L["Routes in %s"] = true

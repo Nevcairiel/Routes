@@ -1,11 +1,12 @@
 ﻿-- This addon is in Alpha status and is probably not usable
 
-Routes = LibStub("AceAddon-3.0"):NewAddon("Routes", "AceConsole-3.0", "AceEvent-3.0")
+Routes = LibStub("AceAddon-3.0"):NewAddon("Routes", "AceConsole-3.0", "AceEvent-3.0", "AceHook-3.0")
 local Routes = Routes
 local L = LibStub("AceLocale-3.0"):GetLocale("Routes", false)
 local BZ = LibStub("LibBabble-Zone-3.0"):GetUnstrictLookupTable()
 local BZR = LibStub("LibBabble-Zone-3.0"):GetReverseLookupTable()
 local G = {} -- was Graph-1.0, but we removed the dependency
+local T = LibStub("LibTourist-3.0")
 
 
 
@@ -67,6 +68,13 @@ local options = {
 	get = function(k) return db.defaults[k.arg]	end,
 	set = function(k, v) db.defaults[k.arg] = v; Routes:DrawWorldmapLines(); Routes:DrawMinimapLines(); end,
 	args = {
+		options_group = {
+			type = "group",
+			name = L["Options"],
+			desc = L["Options"],
+			order = 0,
+			args = {},
+		},
 		add_group = {
 			type = "group",
 			name = L["Add"],
@@ -89,68 +97,17 @@ local options = {
 local pairs, ipairs, next = pairs, ipairs, next
 local tinsert, tremove = tinsert, tremove
 local floor = floor
+local format = string.format
+local math_abs = math.abs
+local math_sin = math.sin
+local math_cos = math.cos
 local WorldMapButton = WorldMapButton
+local Minimap = Minimap
 
 -- other locals we use
 local zoneNames = {} -- cache of localized zone names by continent and zoneID from WoW API
 local zoneNamesReverse = {}
 
-
-------------------------------------------------------------------------------------------------------
--- General event functions
-
-function Routes:OnInitialize()
-	-- Initialize database
-	self.db = LibStub("AceDB-3.0"):New("RoutesDB", defaults)
-	db = self.db.global
-
-	-- Initialize the ace options table
-	LibStub("AceConfigRegistry-3.0"):RegisterOptionsTable("Routes", options)
-	self:RegisterChatCommand(L["routes"], function() LibStub("AceConfigDialog-3.0"):Open("Routes") end)
-
-	-- Initialize zone names into a table
-	for index, zname in ipairs({GetMapZones(1)}) do
-		zoneNames[100 + index] = zname
-	end
-	for index, zname in ipairs({GetMapZones(2)}) do
-		zoneNames[200 + index] = zname
-	end
-	for index, zname in ipairs({GetMapZones(3)}) do
-		zoneNames[300 + index] = zname
-	end
-	for k, v in pairs(zoneNames) do
-		zoneNamesReverse[v] = k
-	end
-
-	-- Generate ace options table for each route
-	local opts = options.args.routes_group.args
-	for zone, zone_table in pairs(db.routes) do
-		-- do not show unless we have routes.
-		-- This because lua cant do '#' on hash-tables
-		if next(zone_table) ~= nil then
-			local localizedZoneName = BZ[zone] or zone
-			local zonekey = tostring(zoneNamesReverse[localizedZoneName])
-			opts[zonekey] = { -- use a 3 digit string which is alphabetically sorted zone names by continent
-				type = "group",
-				name = localizedZoneName,
-				desc = L["Routes in %s"]:format(localizedZoneName),
-				args = {},
-			}
-			for route in pairs(zone_table) do
-				local routekey = route:gsub("%s", "") -- can't have spaces in the key
-				opts[zonekey].args[routekey] = self:CreateAceOptRouteTable(zone, route)
-			end
-		end
-	end
-end
-
-function Routes:OnEnable()
-	self:RegisterEvent("WORLD_MAP_UPDATE", "DrawWorldmapLines")
-end
-
-function Routes:OnDisable()
-	-- Ace3 unregisters all events and hooks for us on disable
-end
 
 ------------------------------------------------------------------------------------------------------
 -- Core Routes functions
@@ -229,8 +186,536 @@ function Routes:DrawWorldmapLines()
 	end
 end
 
-function Routes:DrawMinimapLines()
+local MinimapShapes = {
+	-- quadrant booleans (same order as SetTexCoord)
+	-- {upper-left, lower-left, upper-right, lower-right}
+	-- true = rounded, false = squared
+	["ROUND"]                 = { true,  true,  true,  true},
+	["SQUARE"]                = {false, false, false, false},
+	["CORNER-TOPLEFT"]        = { true, false, false, false},
+	["CORNER-TOPRIGHT"]       = {false, false,  true, false},
+	["CORNER-BOTTOMLEFT"]     = {false,  true, false, false},
+	["CORNER-BOTTOMRIGHT"]    = {false, false, false,  true},
+	["SIDE-LEFT"]             = { true,  true, false, false},
+	["SIDE-RIGHT"]            = {false, false,  true,  true},
+	["SIDE-TOP"]              = { true, false,  true, false},
+	["SIDE-BOTTOM"]           = {false,  true, false,  true},
+	["TRICORNER-TOPLEFT"]     = { true,  true,  true, false},
+	["TRICORNER-TOPRIGHT"]    = { true, false,  true,  true},
+	["TRICORNER-BOTTOMLEFT"]  = { true,  true, false,  true},
+	["TRICORNER-BOTTOMRIGHT"] = {false,  true,  true,  true},
+}
+
+local minimap_radius
+local minimap_rotate
+local indoors = 'outdoor'
+
+local MinimapSize = { -- radius of minimap
+	indoor = {
+		[0] = 150,
+		[1] = 120,
+		[2] = 90,
+		[3] = 60,
+		[4] = 40,
+		[5] = 25,
+	},
+	outdoor = {
+		[0] = 233 + 1/3,
+		[1] = 200,
+		[2] = 166 + 2/3,
+		[3] = 133 + 1/3,
+		[4] = 100,
+		[5] = 66 + 2/3,
+	},
+}
+
+local function is_round( dx, dy )
+	local map_shape = GetMinimapShape and GetMinimapShape() or "ROUND"
+
+	local q = 1
+	if dx > 0 then q = q + 2 end -- right side
+	-- XXX Tripple check this
+	if dy > 0 then q = q + 1 end -- bottom side
+
+	return MinimapShapes[map_shape][q]
 end
+
+local function is_inside( sx, sy, cx, cy, radius )
+	local dx = sx - cx
+	local dy = sy - cy
+
+	if is_round( dx, dy ) then
+		return dx*dx+dy*dy <= radius*radius
+	else
+		return math_abs( dx ) <= radius and math_abs( dy ) <= radius
+	end
+end
+
+local last_X, last_Y, last_facing = 1/0, 1/0, 1/0
+
+-- implementation of cache - use zone in the key for an unique identifier
+-- because every zone has a different X/Y location and possible yardsizes
+local X_cache = {}
+local Y_cache = {}
+local XY_cache_mt = {
+	__index = function(t, key)
+		local zone, coord = (';'):split( key )
+		local yardX, yardY = T:GetZoneYardSize(BZ[zone])
+		local X, Y = yardX * (coord % 10001)/10000, yardY * floor(coord / 10001)/10000;
+
+		X_cache[key] = X
+		Y_cache[key] = Y
+
+		-- figure out which one to return
+		if t == X_cache then return X else return Y end
+	end
+}
+
+setmetatable( X_cache, XY_cache_mt )
+setmetatable( Y_cache, XY_cache_mt )
+
+function Routes:DrawMinimapLines(forceUpdate)
+	if not db.defaults.draw_minimap then
+		G:HideLines(Minimap)
+		return
+	end
+
+	local _x, _y = GetPlayerMapPosition("player")
+
+	-- invalid coordinates - clear map
+	if not _x or not _y or _x < 0 or _x > 1 or _y < 0 or _y > 1 then
+		G:HideLines(Minimap)
+		return
+	end
+
+	local zone = GetRealZoneText()
+
+	-- instance/indoor .. no routes
+	if T:IsInstance(zone) or indoors == "indoor" then
+		G:HideLines(Minimap)
+		return
+	end
+
+	local defaults = db.defaults
+	local zoneW, zoneH = T:GetZoneYardSize(zone)
+	local cx, cy = zoneW * _x, zoneH * _y
+
+	local facing, sin, cos
+	if minimap_rotate then
+		facing = -MiniMapCompassRing:GetFacing()
+	end
+
+	if (not forceUpdate) and facing == last_facing and (last_X-cx)^2 + (last_Y-cy)^2 < defaults.update_distance^2 then
+		-- no update!
+		return
+	end
+
+	last_X = cx
+	last_Y = cy
+	last_facing = facing
+
+	if minimap_rotate then
+		sin = math_sin(facing)
+		cos = math_cos(facing)
+	end
+
+	minimap_radius = MinimapSize[indoors][Minimap:GetZoom()]
+	local radius = minimap_radius
+	local radius2 = radius * radius
+
+	local minX = cx - radius
+	local maxX = cx + radius
+	local minY = cy - radius
+	local maxY = cy + radius
+
+	local div_by_zero_nudge = 0.000001
+
+	G:HideLines(Minimap)
+
+	if BZR[zone] then
+		zone = BZR[zone]
+	end
+
+	local minimap_w = Minimap:GetWidth()
+	local minimap_h = Minimap:GetHeight()
+	local scale_x = minimap_w / (radius*2)
+	local scale_y = minimap_h / (radius*2)
+
+	for route_name, route_data in pairs( db.routes[zone] ) do
+		if type(route_data) == "table" and type(route_data.route) == "table" and #route_data.route > 1 then
+			-- store color/width
+			local width = route_data.width_minimap or defaults.width_minimap
+			local color = route_data.color or defaults.color
+
+			-- unless we show hidden
+			if (not route_data.hidden and (route_data.visible or not defaults.use_auto_showhide)) or defaults.show_hidden then
+				-- use this special color
+				if route_data.hidden then
+					color = defaults.hidden_color
+				end
+
+				-- some state data
+				local last_x = nil
+				local last_y = nil
+				local last_inside = nil
+
+				-- if we loop - make sure the 'last' gets filled with the right info
+				if route_data.looped and route_data.route[ #route_data.route ] ~= defaults.fake_point then
+					local key = format("%s;%s", zone, route_data.route[ #route_data.route ])
+					last_x, last_y = X_cache[key], Y_cache[key]
+					if minimap_rotate then
+						local dx = last_x - cx
+						local dy = last_y - cy
+						last_x = cx + dx*cos - dy*sin
+						last_y = cy + dx*sin + dy*cos
+					end
+					last_inside = is_inside( last_x, last_y, cx, cy, radius )
+				end
+
+				-- loop over the route
+				for i = 1, #route_data.route do
+					local point = route_data.route[i]
+					local cur_x, cur_y, cur_inside
+
+					-- if we have a 'fake point' (gap) - clear current values
+					if point == defaults.fake_point then
+						cur_x = nil
+						cur_y = nil
+						cur_inside = false
+					else
+						local key = format("%s;%s", zone, point)
+						cur_x, cur_y = X_cache[key], Y_cache[key]
+						if minimap_rotate then
+							local dx = cur_x - cx
+							local dy = cur_y - cy
+							cur_x = cx + dx*cos - dy*sin
+							cur_y = cy + dx*sin + dy*cos
+						end
+						cur_inside = is_inside( cur_x, cur_y, cx, cy, radius )
+					end
+
+					-- check if we have any nil values (we cant draw) and check boundingbox
+					if cur_x and cur_y and last_x and last_y and not (
+						( cur_x < minX and last_x < minX ) or
+						( cur_x > maxX and last_x > maxX ) or
+						( cur_y < minY and last_y < minY ) or
+						( cur_y > maxY and last_y > maxY )
+					)
+					then
+						-- default all to not drawing
+						local draw_sx = nil
+						local draw_sy = nil
+						local draw_ex = nil
+						local draw_ey = nil
+
+						-- both inside - easy! draw
+						if cur_inside and last_inside then
+							draw_sx = last_x
+							draw_sy = last_y
+							draw_ex = cur_x
+							draw_ey = cur_y
+						else
+							-- direction of line
+							local dx = last_x - cur_x
+							local dy = last_y - cur_y
+
+							-- calculate point on perpendicular line
+							local zx = cx - dy
+							local zy = cy + dx
+
+							-- nudge it a bit so we dont get div by 0 problems
+							if dx == 0 then dx = div_by_zero_nudge end
+							if dy == 0 then dy = div_by_zero_nudge end
+
+							-- calculate intersection point
+							local nd = ((cx   -last_x)*(cy-zy) - (cx-zx)*(cy   -last_y)) /
+									   ((cur_x-last_x)*(cy-zy) - (cx-zx)*(cur_y-last_y))
+
+							-- perpendicular point (closest to center on the line given)
+							local px = last_x + nd * -dx
+							local py = last_y + nd * -dy
+
+							-- check range of intersect point
+							local dpc_x = cx - px
+							local dpc_y = cy - py
+
+							-- distance^2 of the perpendicular point
+							local lenpc = dpc_x*dpc_x + dpc_y*dpc_y
+
+							-- the line can only intersect if the perpendicular point is at
+							-- least closer than the furthest away point (one of the corners)
+							if lenpc < 2*radius2 then
+
+								-- if inside - ready to draw
+								if cur_inside then
+									draw_ex = cur_x
+									draw_ey = cur_y
+								else
+									-- if we're not inside we can still be in the square - if so dont do any intersection
+									-- calculations yet
+									if math_abs( cur_x - cx ) < radius and math_abs( cur_y - cy ) < radius then
+										draw_ex = cur_x
+										draw_ey = cur_y
+									else
+										-- need to intersect against the square
+										-- likely x/y to intersect with
+										local minimap_cur_x  = cx + radius * (dx < 0 and 1 or -1)
+										local minimap_cur_y  = cy + radius * (dy < 0 and 1 or -1)
+
+										-- which intersection is furthest?
+										local delta_cur_x = (minimap_cur_x - cur_x) / -dx
+										local delta_cur_y = (minimap_cur_y - cur_y) / -dy
+
+										-- dark magic - needs to be changed to positive signs whenever i can care about it
+										if delta_cur_x < delta_cur_y and delta_cur_x < 0 then
+											draw_ex = minimap_cur_x
+											draw_ey = cur_y + -dy*delta_cur_x
+										else
+											draw_ex = cur_x + -dx*delta_cur_y
+											draw_ey = minimap_cur_y
+										end
+
+										-- check if we didn't calculate some wonky offset - has to be inside with
+										-- some slack on accuracy
+										if math_abs( draw_ex - cx ) > radius*1.01 or
+										   math_abs( draw_ey - cy ) > radius*1.01
+										then
+											draw_ex = nil
+											draw_ey = nil
+										end
+									end
+
+									-- we might have a round corner here - lets see if the quarter with the intersection is round
+									if draw_ex and draw_ey and is_round( draw_ex - cx, draw_ey - cy ) then
+										-- if we are also within the circle-range
+										if lenpc < radius2 then
+											-- circle intersection
+											local dcx = cx - cur_x
+											local dcy = cy - cur_y
+											local len_dc = dcx*dcx + dcy*dcy
+
+											local len_d = dx*dx + dy*dy
+											local len_ddc = dx*dcx + dy*dcy
+
+											-- discriminant
+											local d_sqrt = ( len_ddc*len_ddc - len_d * (len_dc - radius2) )^0.5
+
+											-- calculate point
+											draw_ex = cur_x - dx * (-len_ddc + d_sqrt) / len_d
+											draw_ey = cur_y - dy * (-len_ddc + d_sqrt) / len_d
+
+											-- have to be on the *same* side of the perpendicular point else it's fake
+											if (draw_ex - px)/math_abs(draw_ex - px) ~= (cur_x- px)/math_abs(cur_x - px) or
+											   (draw_ey - py)/math_abs(draw_ey - py) ~= (cur_y- py)/math_abs(cur_y - py)
+											then
+												draw_ex = nil
+												draw_ey = nil
+											end
+										else
+											draw_ex = nil
+											draw_ey = nil
+										end
+									end
+								end
+
+								-- if inside - ready to draw
+								if last_inside then
+									draw_sx = last_x
+									draw_sy = last_y
+								else
+									-- if we're not inside we can still be in the square - if so dont do any intersection
+									-- calculations yet
+									if math_abs( last_x - cx ) < radius and math_abs( last_y - cy ) < radius then
+										draw_sx = last_x
+										draw_sy = last_y
+									else
+										-- need to intersect against the square
+										-- likely x/y to intersect with
+										local minimap_last_x = cx + radius * (dx > 0 and 1 or -1)
+										local minimap_last_y = cy + radius * (dy > 0 and 1 or -1)
+
+										-- which intersection is furthest?
+										local delta_last_x = (minimap_last_x - last_x) / dx
+										local delta_last_y = (minimap_last_y - last_y) / dy
+
+										-- dark magic - needs to be changed to positive signs whenever i can care about it
+										if delta_last_x < delta_last_y and delta_last_x < 0 then
+											draw_sx = minimap_last_x
+											draw_sy = last_y + dy*delta_last_x
+										else
+											draw_sx = last_x + dx*delta_last_y
+											draw_sy = minimap_last_y
+										end
+
+										-- check if we didn't calculate some wonky offset - has to be inside with
+										-- some slack on accuracy
+										if math_abs( draw_sx - cx ) > radius*1.01 or
+										   math_abs( draw_sy - cy ) > radius*1.01
+										then
+											draw_sx = nil
+											draw_sy = nil
+										end
+									end
+
+									-- we might have a round corner here - lets see if the quarter with the intersection is round
+									if draw_sx and draw_sy and is_round( draw_sx - cx, draw_sy - cy ) then
+										-- if we are also within the circle-range
+										if lenpc < radius2 then
+											-- circle intersection
+											local dcx = cx - cur_x
+											local dcy = cy - cur_y
+											local len_dc = dcx*dcx + dcy*dcy
+
+											local len_d = dx*dx + dy*dy
+											local len_ddc = dx*dcx + dy*dcy
+
+											-- discriminant
+											local d_sqrt = ( len_ddc*len_ddc - len_d * (len_dc - radius2) )^0.5
+
+											-- calculate point
+											draw_sx = cur_x - dx * (-len_ddc - d_sqrt) / len_d
+											draw_sy = cur_y - dy * (-len_ddc - d_sqrt) / len_d
+
+											-- have to be on the *same* side of the perpendicular point else it's fake
+											if (draw_sx - px)/math_abs(draw_sx - px) ~= (last_x- px)/math_abs(last_x - px) or
+											   (draw_sy - py)/math_abs(draw_sy - py) ~= (last_y- py)/math_abs(last_y - py)
+											then
+												draw_sx = nil
+												draw_sy = nil
+											end
+										else
+											draw_sx = nil
+											draw_sy = nil
+										end
+									end
+								end
+							end
+						end
+
+						if draw_sx and draw_sy and draw_ex and draw_ey then
+							-- translate to left bottom corner and apply scale
+							draw_sx =			 (draw_sx - minX) * scale_x
+							draw_sy = minimap_h - (draw_sy - minY) * scale_y
+							draw_ex =			 (draw_ex - minX) * scale_x
+							draw_ey = minimap_h - (draw_ey - minY) * scale_y
+
+							-- draw the line
+							G:DrawLine( Minimap, draw_sx, draw_sy, draw_ex, draw_ey, width, color , "ARTWORK")
+						end
+					end
+
+					-- store last point
+					last_x = cur_x
+					last_y = cur_y
+					last_inside = cur_inside
+				end
+			end
+		end
+	end
+end
+
+
+------------------------------------------------------------------------------------------------------
+-- General event functions
+
+function Routes:OnInitialize()
+	-- Initialize database
+	self.db = LibStub("AceDB-3.0"):New("RoutesDB", defaults)
+	db = self.db.global
+
+	-- Initialize the ace options table
+	LibStub("AceConfigRegistry-3.0"):RegisterOptionsTable("Routes", options)
+	self:RegisterChatCommand(L["routes"], function() LibStub("AceConfigDialog-3.0"):Open("Routes") end)
+
+	-- Initialize zone names into a table
+	for index, zname in ipairs({GetMapZones(1)}) do
+		zoneNames[100 + index] = zname
+	end
+	for index, zname in ipairs({GetMapZones(2)}) do
+		zoneNames[200 + index] = zname
+	end
+	for index, zname in ipairs({GetMapZones(3)}) do
+		zoneNames[300 + index] = zname
+	end
+	for k, v in pairs(zoneNames) do
+		zoneNamesReverse[v] = k
+	end
+
+	-- Generate ace options table for each route
+	local opts = options.args.routes_group.args
+	for zone, zone_table in pairs(db.routes) do
+		-- do not show unless we have routes.
+		-- This because lua cant do '#' on hash-tables
+		if next(zone_table) ~= nil then
+			local localizedZoneName = BZ[zone] or zone
+			local zonekey = tostring(zoneNamesReverse[localizedZoneName])
+			opts[zonekey] = { -- use a 3 digit string which is alphabetically sorted zone names by continent
+				type = "group",
+				name = localizedZoneName,
+				desc = L["Routes in %s"]:format(localizedZoneName),
+				args = {},
+			}
+			for route in pairs(zone_table) do
+				local routekey = route:gsub("%s", "") -- can't have spaces in the key
+				opts[zonekey].args[routekey] = self:CreateAceOptRouteTable(zone, route)
+			end
+		end
+	end
+end
+
+local function SetZoomHook()
+	Routes:DrawMinimapLines(true)
+end
+
+function Routes:MINIMAP_UPDATE_ZOOM()
+	self:Unhook(Minimap, "SetZoom")
+	local zoom = Minimap:GetZoom()
+	if GetCVar("minimapZoom") == GetCVar("minimapInsideZoom") then
+		Minimap:SetZoom(zoom < 2 and zoom + 1 or zoom - 1)
+	end
+	indoors = GetCVar("minimapZoom")+0 == Minimap:GetZoom() and "outdoor" or "indoor"
+	Minimap:SetZoom(zoom)
+	self:DrawMinimapLines(true)
+	self:SecureHook(Minimap, "SetZoom", SetZoomHook)
+end
+
+function Routes:CVAR_UPDATE(caller, event, cvar, value)
+	if cvar == "ROTATE_MINIMAP" then
+		minimap_rotate = value == "1"
+	end
+end
+
+local timerFrame = CreateFrame("Frame")
+timerFrame:Hide()
+timerFrame.elapsed = 0
+timerFrame:SetScript("OnUpdate", function(self, elapsed)
+	self.elapsed = self.elapsed + elapsed
+	if self.elapsed > 0.2 then
+		self.elapsed = 0
+		Routes:DrawMinimapLines()
+	end
+end)
+
+function Routes:OnEnable()
+	-- World Map line drawing
+	self:RegisterEvent("WORLD_MAP_UPDATE", "DrawWorldmapLines")
+	-- Minimap line drawing
+	self:SecureHook(Minimap, "SetZoom", SetZoomHook)
+	if db.defaults.draw_minimap then
+		self:RegisterEvent("MINIMAP_UPDATE_ZOOM")
+		self:RegisterEvent("CVAR_UPDATE")
+		timerFrame:Show()
+		self:RegisterEvent("MINIMAP_ZONE_CHANGED", "DrawMinimapLines", true)
+		minimap_rotate = GetCVar("rotateMinimap") == "1"
+		self:MINIMAP_UPDATE_ZOOM()  -- This has a DrawMinimapLines(true) call in it, and sets an "indoors" variable
+	end
+end
+
+function Routes:OnDisable()
+	-- Ace3 unregisters all events and hooks for us on disable
+	timerFrame:Hide()
+end
+
 
 ------------------------------------------------------------------------------------------------------
 -- Ace options table stuff

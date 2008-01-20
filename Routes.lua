@@ -3,6 +3,8 @@
 Routes = LibStub("AceAddon-3.0"):NewAddon("Routes", "AceConsole-3.0", "AceEvent-3.0")
 local Routes = Routes
 local L = LibStub("AceLocale-3.0"):GetLocale("Routes", false)
+local BZ = LibStub("LibBabble-Zone-3.0"):GetUnstrictLookupTable()
+local BZR = LibStub("LibBabble-Zone-3.0"):GetReverseLookupTable()
 local G = {} -- was Graph-1.0, but we removed the dependency
 
 
@@ -58,19 +60,119 @@ local defaults = {
 	}
 }
 
+-- localize some globals
+local pairs, ipairs, next = pairs, ipairs, next
+local tinsert, tremove = tinsert, tremove
+local floor = floor
+local WorldMapButton = WorldMapButton
+
+-- other locals we use
+local zoneNames = {} -- cache of zones names by continent and zoned id from WowAPI
+
+
+------------------------------------------------------------------------------------------------------
+-- General event functions
 
 function Routes:OnInitialize()
 	self.db = LibStub("AceDB-3.0"):New("RoutesDB", defaults)
 	db = self.db.global
+
+	-- Initialize zone names into a table
+	for index, zname in ipairs({GetMapZones(1)}) do
+		zoneNames[100 + index] = zname;
+	end
+	for index, zname in ipairs({GetMapZones(2)}) do
+		zoneNames[200 + index] = zname;
+	end
+	for index, zname in ipairs({GetMapZones(3)}) do
+		zoneNames[300 + index] = zname;
+	end
 end
 
 function Routes:OnEnable()
+	self:RegisterEvent("WORLD_MAP_UPDATE", "DrawWorldmapLines")
 end
 
 function Routes:OnDisable()
+	-- Ace3 unregisters all events and hooks for us on disable
 end
 
+------------------------------------------------------------------------------------------------------
+-- Core Routes functions
 
+--[[ Our coordinate format for Routes
+Warning: These are convenience functions, most of the :getXY() and :getID()
+code are inlined in critical code paths in various functions, changing
+the coord storage format requires changing the inlined code in numerous
+locations in addition to these 2 functions
+]]
+function Routes:getID(x, y)
+	return floor(x * 10000 + 0.5) * 10000 + floor(y * 10000 + 0.5)
+end
+function Routes:getXY(id)
+	return floor(id / 10000) / 10000, (id % 10000) / 10000
+end
+
+function Routes:DrawWorldmapLines()
+	-- setup locals
+	local zone = zoneNames[GetCurrentMapContinent()*100 + GetCurrentMapZone()]
+	if BZR[zone] then zone = BZR[zone] end
+	local BattlefieldMinimap = BattlefieldMinimap  -- local reference if it exists
+	local fh, fw = WorldMapButton:GetHeight(), WorldMapButton:GetWidth()
+	local bfh, bfw  -- BattlefieldMinimap height and width
+	local defaults = db.defaults
+
+	-- clear all the lines
+	G:HideLines(WorldMapButton)
+	if (BattlefieldMinimap) then
+		-- The Blizzard addon "Blizzard_BattlefieldMinimap" is loaded
+		G:HideLines(BattlefieldMinimap)
+		bfh, bfw = BattlefieldMinimap:GetHeight(), BattlefieldMinimap:GetWidth()
+	end
+
+	-- check for conditions not to draw the world map lines
+	if not zone then return end -- player is not viewing a zone map of a continent
+	local flag1 = defaults.draw_worldmap and WorldMapFrame:IsShown() -- Draw worldmap lines?
+	local flag2 = defaults.draw_battlemap and BattlefieldMinimap and BattlefieldMinimap:IsShown() -- Draw battlemap lines?
+	if (not flag1) and (not flag2) then	return end 	-- Nothing to draw
+
+	for route_name, route_data in pairs( db.routes[zone] ) do
+		if type(route_data) == "table" and type(route_data.route) == "table" and #route_data.route > 1 then
+			local width = route_data.width or defaults.width
+			local halfwidth = route_data.width_battlemap or defaults.width_battlemap
+			local color = route_data.color or defaults.color
+
+			if (not route_data.hidden and (route_data.visible or not defaults.use_auto_showhide)) or defaults.show_hidden then
+				if route_data.hidden then color = defaults.hidden_color end
+				local last_point
+				local sx, sy
+				if route_data.looped then
+					last_point = route_data.route[ #route_data.route ]
+					sx, sy = floor(last_point / 10000) / 10000, (last_point % 10000) / 10000
+					sy = (1 - sy)
+				end
+				for i = 1, #route_data.route do
+					local point = route_data.route[i]
+					if point == defaults.fake_point then
+						point = nil
+					end
+					if last_point and point then
+						local ex, ey = floor(point / 10000) / 10000, (point % 10000) / 10000
+						ey = (1 - ey)
+						if (flag1) then
+							G:DrawLine(WorldMapButton, sx*fw, sy*fh, ex*fw, ey*fh, width, color , "OVERLAY")
+						end
+						if (flag2) then
+							G:DrawLine(BattlefieldMinimap, sx*bfw, sy*bfh, ex*bfw, ey*bfh, halfwidth, color , "OVERLAY")
+						end
+						sx, sy = ex, ey
+					end
+					last_point = point
+				end
+			end
+		end
+	end
+end
 
 
 

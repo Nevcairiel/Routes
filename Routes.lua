@@ -691,7 +691,7 @@ timerFrame:Hide()
 timerFrame.elapsed = 0
 timerFrame:SetScript("OnUpdate", function(self, elapsed)
 	self.elapsed = self.elapsed + elapsed
-	if self.elapsed > 0.2 then
+	if self.elapsed > 0.04 then
 		self.elapsed = 0
 		Routes:DrawMinimapLines()
 	end

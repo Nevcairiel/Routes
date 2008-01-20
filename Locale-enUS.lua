@@ -26,6 +26,7 @@ L["Hide Route"] = true
 L["Hide the route from being shown on the maps"] = true
 L["Delete"] = true
 L["Permanently delete a route"] = true
+L["You may not delete a route that is being optimized in the background."] = true
 L["Reset"] = true
 L["Reset the line settings to defaults"] = true
 L["Optimize route"] = true

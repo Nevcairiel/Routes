@@ -957,7 +957,7 @@ function Routes:MINIMAP_UPDATE_ZOOM()
 	self:SecureHook(Minimap, "SetZoom", SetZoomHook)
 end
 
-function Routes:CVAR_UPDATE(caller, event, cvar, value)
+function Routes:CVAR_UPDATE(event, cvar, value)
 	if cvar == "ROTATE_MINIMAP" then
 		minimap_rotate = value == "1"
 	end

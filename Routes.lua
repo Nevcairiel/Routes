@@ -1321,7 +1321,7 @@ do
 	options.args.add_group.args = {
 		route_name = {
 			type = "input",
-			name = L["Name of route"],
+			name = L["Name of Route"],
 			desc = L["Name of the route to add"],
 			validate = function(info, name)
 				if name == "" or strtrim(name) == "" then
@@ -1365,8 +1365,8 @@ do
 			style = "radio",
 		},
 		data_choices = {
-			name = L["Data"], type = "multiselect",
-			desc = L["Which nodes to use in the route"],
+			name = L["Select data to use"], type = "multiselect",
+			desc = L["Select data to use in the route creation"],
 			order = 300,
 			values = function()
 				if not create_zone then return empty_table end
@@ -1408,7 +1408,26 @@ do
 					end
 				end
 				-- check for gathermate data
-				-- TODO
+				if GatherMate then
+					local LN = LibStub("AceLocale-3.0"):GetLocale("GatherMateNodes", true)
+					for db_type, db_data in pairs(GatherMate.gmdbs) do
+						db_type = "GM"..db_type
+						local amount_of = {}
+						-- only look for data for this currentzone
+						if db_data[GatherMate.zoneData[BZ[create_zone]][3]] then
+							-- count the unique values (structure is: location => itemID)
+							for _,node in pairs(db_data[GatherMate.zoneData[BZ[create_zone]][3]]) do
+								amount_of[node] = (amount_of[node] or 0) + 1
+							end
+							-- XXX Localize these strings
+							-- store combinations with all information we have
+							for node,count in pairs(amount_of) do
+								local translatednode = GatherMate.reverseNodeIDs[node]
+								create_data[ ("%s;%s;%s"):format(db_type, node, count) ] = ("%s - %s - %d"):format(L[db_type],translatednode,count)
+							end
+						end
+					end
+				end
 				-- found no data - insert dummy message
 				if not next(create_data) then
 					create_data[ db.defaults.fake_data ..";;" ] = L["No data found"]

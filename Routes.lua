@@ -237,7 +237,7 @@ end
 
 local ConfigHandler = {}
 
--- This table is referenced inside CreateAceOptRouteTable() defined right below this
+-- These tables are referenced inside CreateAceOptRouteTable() defined right below this
 local two_point_five_opt_table = {
 	name = L["Extra optimization"],
 	desc = L["ExtraOptDesc"],
@@ -246,6 +246,11 @@ local two_point_five_opt_table = {
 	get   = function() return db.defaults.tsp.two_point_five_opt end,
 	set   = function(k, v) db.defaults.tsp.two_point_five_opt = v end,
 }
+--[[local blank_line_table = {
+	type  = "description",
+	name  = "",
+	order = 225,
+}]]
 
 function Routes:CreateAceOptRouteTable(zone, route)
 	local t = db.routes[zone][route]
@@ -268,6 +273,24 @@ function Routes:CreateAceOptRouteTable(zone, route)
 						name  = L["These settings control the visibility and look of the drawn route."],
 						order = 0,
 					},
+					color = {
+						name  = L["Line Color"], type = "color",
+						desc  = L["Change the line color"],
+						get   = function()
+							local c = db.routes[zone][route].color or db.defaults.color
+							return unpack( c )
+						end,
+						set   = function(k,r,g,b,a) db.routes[zone][route].color = {r,g,b,a}; self:DrawWorldmapLines(); self:DrawMinimapLines(true) end,
+						order = 100,
+						hasAlpha = true,
+					},
+					hidden = {
+						name  = L["Hide Route"], type = "toggle",
+						desc  = L["Hide the route from being shown on the maps"],
+						get   = function() return db.routes[zone][route].hidden end,
+						set   = function(k, v) db.routes[zone][route].hidden = v; self:DrawWorldmapLines(); self:DrawMinimapLines(true) end,
+						order = 200,
+					},
 					width = {
 						name  = L["Width (Map)"], type = "range",
 						desc  = L["Width of the line in the map"],
@@ -276,7 +299,7 @@ function Routes:CreateAceOptRouteTable(zone, route)
 						step  = 1,
 						get   = function() return db.routes[zone][route].width or db.defaults.width end,
 						set   = function(k, v) db.routes[zone][route].width = v; self:DrawWorldmapLines() end,
-						order = 200,
+						order = 300,
 					},
 					width_minimap = {
 						name  = L["Width (Minimap)"], type = "range",
@@ -286,7 +309,7 @@ function Routes:CreateAceOptRouteTable(zone, route)
 						step  = 1,
 						get   = function() return db.routes[zone][route].width_minimap or db.defaults.width_minimap end,
 						set   = function(k, v) db.routes[zone][route].width_minimap = v; self:DrawMinimapLines(true) end,
-						order = 210,
+						order = 310,
 					},
 					width_battlemap = {
 						name  = L["Width (Zone Map)"], type = "range",
@@ -296,26 +319,9 @@ function Routes:CreateAceOptRouteTable(zone, route)
 						step  = 1,
 						get   = function() return db.routes[zone][route].width_battlemap or db.defaults.width_battlemap end,
 						set   = function(k, v) db.routes[zone][route].width_battlemap = v; self:DrawWorldmapLines() end,
-						order = 220,
+						order = 320,
 					},
-					color = {
-						name  = L["Line Color"], type = "color",
-						desc  = L["Change the line color"],
-						get   = function()
-							local c = db.routes[zone][route].color or db.defaults.color
-							return unpack( c )
-						end,
-						set   = function(k,r,g,b,a) db.routes[zone][route].color = {r,g,b,a}; self:DrawWorldmapLines(); self:DrawMinimapLines(true) end,
-						order = 300,
-						hasAlpha = true,
-					},
-					hidden = {
-						name  = L["Hide Route"], type = "toggle",
-						desc  = L["Hide the route from being shown on the maps"],
-						get   = function() return db.routes[zone][route].hidden end,
-						set   = function(k, v) db.routes[zone][route].hidden = v; self:DrawWorldmapLines(); self:DrawMinimapLines(true) end,
-						order = 400,
-					},
+					--blankline = blank_line_table,
 					--[[delete = {
 						name  = L["Delete"], type = "execute",
 						desc  = L["Permanently delete a route"],
@@ -338,7 +344,7 @@ function Routes:CreateAceOptRouteTable(zone, route)
 						end,
 						confirmText = L["Are you sure?"],
 						buttonText = L["Delete"],
-						order = 1200,
+						order = 400,
 					},]]
 					reset_all = {
 						name  = L["Reset"], type = "execute",
@@ -351,7 +357,7 @@ function Routes:CreateAceOptRouteTable(zone, route)
 							self:DrawWorldmapLines()
 							self:DrawMinimapLines(true)
 						end,
-						order = 1300,
+						order = 500,
 					},
 				},
 			},

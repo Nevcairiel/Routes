@@ -261,7 +261,7 @@ local XY_cache_mt = {
 	__index = function(t, key)
 		local zone, coord = (';'):split( key )
 		local yardX, yardY = T:GetZoneYardSize(BZ[zone])
-		local X, Y = yardX * (coord % 10001)/10000, yardY * floor(coord / 10001)/10000;
+		local X, Y = yardX * floor(coord / 10000) / 10000, yardY * (coord % 10000) / 10000;
 
 		X_cache[key] = X
 		Y_cache[key] = Y

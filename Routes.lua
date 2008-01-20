@@ -298,6 +298,7 @@ function Routes:DrawMinimapLines(forceUpdate)
 
 	local defaults = db.defaults
 	local zoneW, zoneH = T:GetZoneYardSize(zone)
+	if not zoneW then return end
 	local cx, cy = zoneW * _x, zoneH * _y
 
 	local facing, sin, cos

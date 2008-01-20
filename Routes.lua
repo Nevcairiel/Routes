@@ -315,7 +315,7 @@ options = {
 				waypoints = {
 					name = L["Waypoints"], type = "group",
 					desc = L["Integrated support options for Cartographer_Waypoints"],
-					disabled = function() return not Cartographer and Cartographer:HasModule("Waypoints") and Cartographer:IsModuleActive("Waypoints") end,
+					disabled = function() return not (Cartographer and Cartographer:HasModule("Waypoints") and Cartographer:IsModuleActive("Waypoints")) end,
 					order = 300,
 					args = {
 						hit_distance = {

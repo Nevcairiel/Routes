@@ -291,7 +291,7 @@ function Routes:DrawMinimapLines(forceUpdate)
 	local zone = GetRealZoneText()
 
 	-- instance/indoor .. no routes
-	if T:IsInstance(zone) or indoors == "indoor" then
+	if not zone or T:IsInstance(zone) or indoors == "indoor" then
 		G:HideLines(Minimap)
 		return
 	end

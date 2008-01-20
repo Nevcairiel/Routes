@@ -133,7 +133,7 @@ function Routes:OnInitialize()
 			opts[key] = { -- use a 3 digit string which is alphabetically sorted zone names by continent
 				type = "group",
 				name = localizedZoneName,
-				desc = L['Routes in %s']:format(localizedZoneName),
+				desc = L["Routes in %s"]:format(localizedZoneName),
 				args = {},
 			}
 			for route in pairs(zone_table) do
@@ -235,184 +235,281 @@ end
 ------------------------------------------------------------------------------------------------------
 -- Ace options table stuff
 
+-- Set of functions we use to edit route configs
 local ConfigHandler = {}
 
+function ConfigHandler:GetColor(info)
+	return unpack(db.routes[info.arg.zone][info.arg.route].color or db.defaults.color)
+end
+function ConfigHandler:SetColor(info, r, g, b, a)
+	local t = db.routes[info.arg.zone][info.arg.route]
+	t.color = t.color or {}
+	t = t.color
+	t[1] = r; t[2] = g; t[3] = b; t[4] = a;
+	Routes:DrawWorldmapLines()
+	Routes:DrawMinimapLines(true)
+end
+
+function ConfigHandler:GetHidden(info)
+	return db.routes[info.arg.zone][info.arg.route].hidden
+end
+function ConfigHandler:SetHidden(info, v)
+	db.routes[info.arg.zone][info.arg.route].hidden = v
+	Routes:DrawWorldmapLines()
+	Routes:DrawMinimapLines(true)
+end
+
+function ConfigHandler:GetWidth(info)
+	return db.routes[info.arg.zone][info.arg.route].width or db.defaults.width
+end
+function ConfigHandler:SetWidth(info, v)
+	db.routes[info.arg.zone][info.arg.route].width = v
+	Routes:DrawWorldmapLines()
+end
+
+function ConfigHandler:GetWidthMinimap(info)
+	return db.routes[info.arg.zone][info.arg.route].width_minimap or db.defaults.width_minimap
+end
+function ConfigHandler:SetWidthMinimap(info, v)
+	db.routes[info.arg.zone][info.arg.route].width_minimap = v
+	Routes:DrawMinimapLines(true)
+end
+
+function ConfigHandler:GetWidthBattleMap(info)
+	return db.routes[info.arg.zone][info.arg.route].width_battlemap or db.defaults.width_battlemap
+end
+function ConfigHandler:SetWidthBattleMap(info, v)
+	db.routes[info.arg.zone][info.arg.route].width_battlemap = v
+	Routes:DrawWorldmapLines()
+end
+
+function ConfigHandler:DeleteRoute(info)
+	--[[local is_running, route_table = Routes.TSP:IsTSPRunning()
+	if is_running and route_table == db.routes[zone][route].route then
+		self:Print(L["You may not delete a route that is being optimized in the background."])
+		return
+	end
+	db.routes[zone][route] = nil
+	aceopts[zone].args[route] = nil
+	if next(db.routes[zone]) == nil then
+		aceopts[zone] = nil
+	end
+	Routes:DrawWorldmapLines()
+	Routes:DrawMinimapLines(true)]]
+end
+
+function ConfigHandler:ResetLineSettings(info)
+	local t = db.routes[info.arg.zone][info.arg.route]
+	t.color = nil
+	t.width = nil
+	t.width_minimap = nil
+	t.width_battlemap = nil
+	Routes:DrawWorldmapLines()
+	Routes:DrawMinimapLines(true)
+end
+
+function ConfigHandler.GetRouteDesc(info)
+	local t = db.routes[info.arg.zone][info.arg.route]
+	return L["This route has %d nodes and is %d yards long."]:format(#t.route, t.length)
+end
+
+function ConfigHandler:GetTwoPointFiveOpt()
+	return db.defaults.tsp.two_point_five_opt
+end
+function ConfigHandler:SetTwoPointFiveOpt(info, v)
+	db.defaults.tsp.two_point_five_opt = v
+end
+
+function ConfigHandler:DoForeground(info)
+	local t = db.routes[info.arg.zone][info.arg.route]
+	local output, length, iter, timetaken = Routes.TSP:SolveTSP(t.route, info.arg.zone, db.defaults.tsp)
+	t.route = output
+	t.length = length
+	Routes:Print(L["Path with %d nodes found with length %.2f yards after %d iterations in %.2f seconds."]:format(#output, length, iter, timetaken))
+
+	-- redraw lines
+	Routes:DrawWorldmapLines()
+	Routes:DrawMinimapLines(true)
+end
+
+function ConfigHandler:DoBackground(info)
+	local t = db.routes[info.arg.zone][info.arg.route]
+	local running, errormsg = Routes.TSP:SolveTSPBackground(t.route, info.arg.zone, db.defaults.tsp)
+	if (running == 1) then
+		Routes:Print(L["Now running TSP in the background..."])
+		Routes.TSP:SetFinishFunction(function(output, length, iter, timetaken)
+			t.route = output
+			t.length = length
+			Routes:Print(L["Path with %d nodes found with length %.2f yards after %d iterations in %.2f seconds."]:format(#output, length, iter, timetaken))
+			-- redraw lines
+			Routes:DrawWorldmapLines()
+			Routes:DrawMinimapLines(true)
+		end)
+	elseif (running == 2) then
+		Routes:Print(L["There is already a TSP running in background. Wait for it to complete first."])
+	elseif (running == 3) then
+		-- This should never happen, but is here as a fallback
+		Routes:Print(L["The following error occured in the background path generation coroutine, please report to Grum or Xinhuan:"]);
+		Routes:Print(errormsg);
+	end
+end
+
 -- These tables are referenced inside CreateAceOptRouteTable() defined right below this
-local two_point_five_opt_table = {
-	name = L["Extra optimization"],
-	desc = L["ExtraOptDesc"],
-	type  = "toggle",
-	order = 1301,
-	get   = function() return db.defaults.tsp.two_point_five_opt end,
-	set   = function(k, v) db.defaults.tsp.two_point_five_opt = v end,
+local blank_line_table = {
+	name = "", type = "description",
+	order = 325,
 }
---[[local blank_line_table = {
+local two_point_five_group_table = {
+	type = "group",
+	order = 100,
+	name = L["Extra optimization"],
+	inline = true,
+	args = {
+		two_point_five_opt_disc = {
+			name = L["ExtraOptDesc"], type = "description",
+			order = 0,
+		},
+		two_point_five_opt = {
+			name = L["Extra optimization"], type = "toggle",
+			desc = L["ExtraOptDesc"],
+			get = "GetTwoPointFiveOpt", set = "SetTwoPointFiveOpt",
+			order = 100,
+		},
+	},
+}
+local foreground_table = {
 	type  = "description",
-	name  = "",
-	order = 225,
-}]]
+	name  = L["Foreground Disclaimer"],
+	order = 0,
+}
+local background_table = {
+	type  = "description",
+	name  = L["Background Disclaimer"],
+	order = 0,
+}
 
 function Routes:CreateAceOptRouteTable(zone, route)
-	local t = db.routes[zone][route]
+	local zone_route_table = {zone = zone, route = route}
 
 	-- Yes, return this huge table for given zone/route
 	return {
 		type = "group",
 		name = route,
 		desc = route,
+		childGroups = "tab",
+		handler = ConfigHandler,
 		args = {
 			setting_group = {
 				type = "group",
 				name = L["Line settings"],
 				desc = L["Line settings"],
-				inline = true,
 				order = 100,
 				args = {
 					desc = {
-						type  = "description",
-						name  = L["These settings control the visibility and look of the drawn route."],
+						type = "description",
+						name = L["These settings control the visibility and look of the drawn route."],
 						order = 0,
 					},
 					color = {
-						name  = L["Line Color"], type = "color",
-						desc  = L["Change the line color"],
-						get   = function()
-							local c = db.routes[zone][route].color or db.defaults.color
-							return unpack( c )
-						end,
-						set   = function(k,r,g,b,a) db.routes[zone][route].color = {r,g,b,a}; self:DrawWorldmapLines(); self:DrawMinimapLines(true) end,
+						name = L["Line Color"], type = "color",
+						desc = L["Change the line color"],
+						get = "GetColor", set = "SetColor",
+						arg = zone_route_table,
 						order = 100,
 						hasAlpha = true,
 					},
 					hidden = {
-						name  = L["Hide Route"], type = "toggle",
-						desc  = L["Hide the route from being shown on the maps"],
-						get   = function() return db.routes[zone][route].hidden end,
-						set   = function(k, v) db.routes[zone][route].hidden = v; self:DrawWorldmapLines(); self:DrawMinimapLines(true) end,
+						name = L["Hide Route"], type = "toggle",
+						desc = L["Hide the route from being shown on the maps"],
+						get = "GetHidden", set = "SetHidden",
+						arg = zone_route_table,
 						order = 200,
 					},
 					width = {
-						name  = L["Width (Map)"], type = "range",
-						desc  = L["Width of the line in the map"],
-						min   = 10,
-						max   = 100,
-						step  = 1,
-						get   = function() return db.routes[zone][route].width or db.defaults.width end,
-						set   = function(k, v) db.routes[zone][route].width = v; self:DrawWorldmapLines() end,
+						name = L["Width (Map)"], type = "range",
+						desc = L["Width of the line in the map"],
+						min = 10, max = 100, step = 1,
+						get = "GetWidth", set = "SetWidth",
+						arg = zone_route_table,
 						order = 300,
 					},
 					width_minimap = {
-						name  = L["Width (Minimap)"], type = "range",
-						desc  = L["Width of the line in the Minimap"],
-						min   = 10,
-						max   = 100,
-						step  = 1,
-						get   = function() return db.routes[zone][route].width_minimap or db.defaults.width_minimap end,
-						set   = function(k, v) db.routes[zone][route].width_minimap = v; self:DrawMinimapLines(true) end,
+						name = L["Width (Minimap)"], type = "range",
+						desc = L["Width of the line in the Minimap"],
+						min = 10, max = 100, step = 1,
+						get = "GetWidthMinimap", set = "SetWidthMinimap",
+						arg = zone_route_table,
 						order = 310,
 					},
 					width_battlemap = {
-						name  = L["Width (Zone Map)"], type = "range",
-						desc  = L["Width of the line in the Zone Map"],
-						min   = 10,
-						max   = 100,
-						step  = 1,
-						get   = function() return db.routes[zone][route].width_battlemap or db.defaults.width_battlemap end,
-						set   = function(k, v) db.routes[zone][route].width_battlemap = v; self:DrawWorldmapLines() end,
+						name = L["Width (Zone Map)"], type = "range",
+						desc = L["Width of the line in the Zone Map"],
+						min = 10, max = 100, step  = 1,
+						get = "GetWidthBattleMap", set = "SetWidthBattleMap",
+						arg = zone_route_table,
 						order = 320,
 					},
-					--blankline = blank_line_table,
-					--[[delete = {
-						name  = L["Delete"], type = "execute",
-						desc  = L["Permanently delete a route"],
-						func  = function()
-							local is_running, route_table = self.TSP:IsTSPRunning()
-							if is_running and route_table == db.routes[zone][route].route then
-								self:Print(L["You may not delete a route that is being optimized in the background."])
-								return
-							end
-							db.routes[zone][route] = nil
-							aceopts[zone].args[route] = nil
-							if db.edit_routes[zone] == route then
-								db.edit_routes[zone] = nil
-							end
-							if next(db.routes[zone]) == nil then
-								aceopts[zone] = nil
-							end
-							DrawWorldmapLines()
-							DrawMinimapLines(true)
-						end,
-						confirmText = L["Are you sure?"],
-						buttonText = L["Delete"],
+					blankline = blank_line_table,
+					delete = {
+						name = L["Delete"], type = "execute",
+						desc = L["Permanently delete a route"],
+						func = "DeleteRoute",
+						arg = zone_route_table,
 						order = 400,
-					},]]
+					},
 					reset_all = {
-						name  = L["Reset"], type = "execute",
-						desc  = L["Reset the line settings to defaults"],
-						func  = function()
-							db.routes[zone][route].color = nil
-							db.routes[zone][route].width = nil
-							db.routes[zone][route].width_minimap = nil
-							db.routes[zone][route].width_battlemap = nil
-							self:DrawWorldmapLines()
-							self:DrawMinimapLines(true)
-						end,
+						name = L["Reset"], type = "execute",
+						desc = L["Reset the line settings to defaults"],
+						func = "ResetLineSettings",
+						arg = zone_route_table,
 						order = 500,
 					},
 				},
 			},
 			optimize_group = {
 				type = "group",
-				inline = true,
 				order = 200,
-				name = function()
-					return L["Optimize route [%d nodes, %d yards]"]:format(#db.routes[zone][route].route, db.routes[zone][route].length)
-				end,
+				name = L["Optimize route"],
 				args = {
-					two_point_five_opt = two_point_five_opt_table,
-					--[[foreground = {
-						name  = L['Foreground'], type = 'execute',
-						desc  = L['Foreground Disclaimer'],
-						func  = function()
-							local output, length, iter, timetaken = self.TSP:SolveTSP(db.routes[zone][route].route, zone, db.defaults.tsp)
-							db.routes[zone][route].route = output
-							db.routes[zone][route].length = length
-							self:Print(L["Path with %d nodes found with length %.2f yards after %d iterations in %.2f seconds."]:format(#output, length, iter, timetaken))
-
-							-- redraw lines
-							DrawWorldmapLines()
-							DrawMinimapLines(true)
-						end,
-						confirmText = L["Are you sure?"],
-						buttonText = L["Optimize"],
-						order = 1310,
+					desc = {
+						type = "description",
+						name = ConfigHandler.GetRouteDesc,
+						arg = zone_route_table,
+						order = 0,
 					},
-					background = {
-						name  = L['Background'], type = 'execute',
-						desc  = L['Background Disclaimer'],
-						func  = function()
-							local running, errormsg = self.TSP:SolveTSPBackground(db.routes[zone][route].route, zone, db.defaults.tsp)
-							if (running == 1) then
-								self:Print(L["Now running TSP in the background..."])
-								self.TSP:SetFinishFunction(function(output, length, iter, timetaken)
-									db.routes[zone][route].route = output
-									db.routes[zone][route].length = length
-									self:Print(L["Path with %d nodes found with length %.2f yards after %d iterations in %.2f seconds."]:format(#output, length, iter, timetaken))
-									-- redraw lines
-									DrawWorldmapLines()
-									DrawMinimapLines(true)
-								end)
-							elseif (running == 2) then
-								self:Print(L["There is already a TSP running in background. Wait for it to complete first."])
-							elseif (running == 3) then
-								-- This should never happen, but is here as a fallback
-								self:Print(L["The following error occured in the background path generation coroutine, please report to Grum or Xinhuan:"]);
-								self:Print(errormsg);
-							end
-						end,
-						buttonText = L['Optimize'],
-						order = 1320,
-					},]]
+					two_point_five_group = two_point_five_group_table,
+					foreground_group = {
+						type = "group",
+						order = 200,
+						name = L["Foreground"],
+						inline = true,
+						args = {
+							foreground_disc = foreground_table,
+							foreground = {
+								name = L["Foreground"], type = "execute",
+								desc = L["Foreground Disclaimer"],
+								func = "DoForeground",
+								arg = zone_route_table,
+								order = 100,
+							},
+						},
+					},
+					background_group = {
+						type = "group",
+						order = 300,
+						name = L["Background"],
+						inline = true,
+						args = {
+							background_disc = background_table,
+							background = {
+								name = L["Background"], type = "execute",
+								desc = L["Background Disclaimer"],
+								func = "DoBackground",
+								arg = zone_route_table,
+								order = 100,
+							},
+						},
+					},
 				},
 			},
 		},

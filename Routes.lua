@@ -944,6 +944,8 @@ function Routes:CreateAceOptRouteTable(zone, route)
 						desc = L["Permanently delete a route"],
 						func = "DeleteRoute",
 						arg = zone_route_table,
+						confirm = true,
+						confirmText = L["Are you sure you want to delete this route?"],
 						order = 400,
 					},
 					reset_all = {

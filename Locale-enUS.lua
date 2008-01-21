@@ -83,15 +83,15 @@ L["No data selected for new route"] = true
 
 
 -- DB prefix abbreviations 
-L["CartHerbalism"] = "CHerb"
-L["CartMining"] = "CMine"
-L["CartFishing"] = "CFish"
-L["CartTreasure"] = "CTreasure"
-L["CartExtractGas"] = "CGas"
-L["GMHerb Gathering"] = "GMHerb"
-L["GMMining"] = "GMMine"
-L["GMFishing"] = "GMFish"
-L["GMExtract Gas"] = "GMGas"
+L["CartographerHerbalism"] = "CH"
+L["CartographerMining"] = "CM"
+L["CartographerFishing"] = "CF"
+L["CartographerTreasure"] = "CT"
+L["CartographerExtractGas"] = "CG"
+L["GatherMateHerb Gathering"] = "GMH"
+L["GatherMateMining"] = "GMM"
+L["GatherMateFishing"] = "GMF"
+L["GatherMateExtract Gas"] = "GMG"
 
 -- Route Config
 L["Line settings"] = true

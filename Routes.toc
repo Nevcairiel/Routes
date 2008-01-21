@@ -14,9 +14,15 @@
 
 embeds.xml
 
+# Locale files
 Locale-enUS.lua
 Locale-deDE.lua
 
+# Core Route files
 Routes.lua
 TSP.lua
 Data.lua
+
+# Addons we can draw data from
+Cartographer.lua
+GatherMate.lua

@@ -27,6 +27,9 @@ local defaults = {
 					selection       = {
 						['**'] = false  -- Node we're interested in tracking
 					},
+					db_type         = {
+						['**'] = false  -- db_types used for use with auto show/hide
+					},
 				},
 			},
 		},
@@ -85,6 +88,8 @@ local prof_options3 = { -- For Gas, which doesn't have tracking as a skill
 
 -- Ace Options Table for our addon
 local options
+-- Plugins table
+Routes.plugins = {}
 
 -- localize some globals
 local pairs, ipairs, next = pairs, ipairs, next
@@ -1384,57 +1389,10 @@ do
 				if last_zone == create_zone then return create_data end
 				-- reuse table
 				for k in pairs(create_data) do create_data[k] = nil end
-				-- update translation tables
-				Routes:UpdateTranslationTables()
-				-- check for cartographer
-				local CN = (Cartographer and Cartographer:HasModule("Notes")) and Cartographer:GetModule("Notes")
-				if CN then
-					for db_type,db_data in pairs(CN.externalDBs) do
-						-- get the babble localization for this db type
-						local LN = translate_type["Cart"..db_type]
-						-- if this is a valid node db as specified in translate_type[]
-						if LN then
-							local amount_of = {}
-							-- only look for data for this currentzone
-							if db_data[create_zone] then
-								-- count the unique values (structure is: location => item)
-								if db_type == "Treasure" then
-									for _,node in pairs(db_data[create_zone]) do
-										amount_of[node.title] = (amount_of[node.title] or 0) + 1
-									end
-								else
-									for _,node in pairs(db_data[create_zone]) do
-										amount_of[node] = (amount_of[node] or 0) + 1
-									end
-								end
-								-- XXX Localize these strings
-								-- store combinations with all information we have
-								for node,count in pairs(amount_of) do
-									local translatednode = LN:HasTranslation(node) and LN[node] or node
-									create_data[ ("%s;%s;%s;%s"):format("Cart", db_type, node, count) ] = ("%s - %s - %d"):format(L["Cart"..db_type],translatednode,count)
-								end
-							end
-						end
-					end
-				end
-				-- check for gathermate data
-				if GatherMate then
-					local LN = LibStub("AceLocale-3.0"):GetLocale("GatherMateNodes", true)
-					for db_type, db_data in pairs(GatherMate.gmdbs) do
-						local amount_of = {}
-						-- only look for data for this currentzone
-						if db_data[GatherMate.zoneData[BZ[create_zone]][3]] then
-							-- count the unique values (structure is: location => itemID)
-							for _,node in pairs(db_data[GatherMate.zoneData[BZ[create_zone]][3]]) do
-								amount_of[node] = (amount_of[node] or 0) + 1
-							end
-							-- XXX Localize these strings
-							-- store combinations with all information we have
-							for node,count in pairs(amount_of) do
-								local translatednode = GatherMate.reverseNodeIDs[node]
-								create_data[ ("%s;%s;%s;%s"):format("GM", db_type, node, count) ] = ("%s - %s - %d"):format(L["GM"..db_type],translatednode,count)
-							end
-						end
+				-- extract data from each plugin
+				for addon, plugin_table in pairs(Routes.plugins) do
+					if plugin_table.IsActive() then
+						plugin_table.Summarize(create_data, create_zone)
 					end
 				end
 				-- found no data - insert dummy message
@@ -1456,7 +1414,7 @@ do
 				if key == db.defaults.fake_data then return end
 				if not create_choices[create_zone] then create_choices[create_zone] = {} end
 				create_choices[create_zone][key] = value
-				--:Print(("Setting choice: %s to %s"):format(key or "nil", value and "true" or "false"));
+				--Routes:Print(("Setting choice: %s to %s"):format(key or "nil", value and "true" or "false"));
 			end,
 		},
 		add_route = {
@@ -1469,60 +1427,24 @@ do
 					Routes:Print(L["No name given for new route"])
 					return
 				end
-				--the real 'action', we use a temporary table in case of data corruption and only commit this to the db if successful
-				local new_route = { route = {}, selection = {} }
-				-- check for cartographer
-				local CN = (Cartographer and Cartographer:HasModule("Notes")) and Cartographer:GetModule("Notes")
-				local GatherMate = GatherMate
+				-- the real 'action', we use a temporary table in case of data corruption and only commit this to the db if successful
+				local new_route = { route = {}, selection = {}, db_type = {} }
 				-- if for every selected nodetype on this map
 				if type(create_choices[create_zone]) == "table" then
-					for data_string,wanted in pairs(create_choices[create_zone]) do
+					for data_string, wanted in pairs(create_choices[create_zone]) do
 						-- if we want em
 						if (wanted) then
 							local db_src, db_type, node_type, amount = (';'):split( data_string );
 							--Routes:Print(("found %s %s %s %s"):format( db_src,db_type,node_type,amount ))
-
-							-- ignore any fake data
-							if db_type ~= db.defaults.fake_data then
-								-- check if the db_type exists (could be disabled via _Professions)
-								if db_src == "Cart" and CN and CN.externalDBs[db_type] then
-									-- store the node_type we're interested in so we can auto-add them
-									new_route.selection[node_type] = true
-
-									-- Find all of the notes
-									for loc, t in pairs(CN.externalDBs[db_type][create_zone]) do
-										-- convert coordID from Cart format to GM format
-										local x, y = (loc % 10001)/10000, floor(loc / 10001)/10000
-										loc = floor(x * 10000 + 0.5) * 10000 + floor(y * 10000 + 0.5)
-										-- And are of a selected type - store
-										if db_type == "Treasure" and t.title == node_type then
-											tinsert( new_route.route, loc )
-										elseif t == node_type then
-											tinsert( new_route.route, loc )
-										end
-									end
-								elseif db_src == "GM" and GatherMate and GatherMate.gmdbs[db_type] then
-									node_type = tonumber(node_type)
-									-- store the node_type we're interested in so we can auto-add them
-									local LN = LibStub("AceLocale-3.0"):GetLocale("GatherMateNodes", true)
-									local translatednode = GatherMate.reverseNodeIDs[node_type]
-									for k, v in pairs(LN) do
-										if v == translatednode then
-											translatednode = k -- get the english name
-											break
-										end
-									end
-									new_route.selection[translatednode] = true
-								
-									-- Find all of the notes
-									--for loc, t in GatherMate:GetNodesForZone(BZ[create_zone], db_type) do
-									for loc, t in pairs(GatherMate.gmdbs[db_type][GatherMate.zoneData[BZ[create_zone]][3]]) do
-										-- And are of a selected type - store
-										if t == node_type then
-											tinsert( new_route.route, loc )
-										end
-									end
+							if db_src ~= db.defaults.fake_data then -- ignore any fake data
+								-- extract data from plugin
+								local plugin = Routes.plugins[db_src]
+								if plugin.IsActive() then
+									local english_node, type = plugin.AppendNodes(new_route.route, create_zone, db_type, node_type)
+									new_route.selection[english_node] = true
+									new_route.db_type[type] = true
 								end
+
 							end
 						end
 					end

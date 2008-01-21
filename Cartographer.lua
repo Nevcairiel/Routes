@@ -1,15 +1,26 @@
+local Routes = LibStub("AceAddon-3.0"):GetAddon("Routes", 1)
 if not Routes then return end
 
-local Routes = Routes
-local L = Routes.L
-local BZ = Routes.BZ
-local BZR = Routes.BZR
 local SourceName = "Cartographer"
 
-if type(Routes.data_source) ~= "table" then Routes.data_source = {} end
-if type(Routes.data_source[SourceName]) ~= "table" then Routes.data_source[SourceName] = {} end
+do
+	-- disable if the addon is not enabled, or
+	-- disable if there is a reason why it can't be loaded ("MISSING" or "DISABLED")
+	local name, title, notes, enabled, loadable, reason, security = GetAddOnInfo(SourceName)
+	if not enabled or (reason ~= nil) then return end
+end
 
-local source = Routes.data_source[SourceName]
+local L = LibStub("AceLocale-3.0"):GetLocale("Routes")
+
+------------------------------------------
+-- setup
+if type(Routes.plugins) ~= "table" then Routes.plugins = {} end
+if type(Routes.plugins[SourceName]) ~= "table" then Routes.plugins[SourceName] = {} end
+
+local source = Routes.plugins[SourceName]
+
+------------------------------------------
+-- functions
 
 -- XXX ugly! :(
 local translate_type = {}
@@ -28,21 +39,21 @@ end
 local function IsActive()
 	-- Can we gather data?
 	local CN = (Cartographer and Cartographer:HasModule("Notes")) and Cartographer:GetModule("Notes")
-	return not not CN
+	return CN and true
 end
 source.IsActive = IsActive
 
+local amount_of = {}
 local function Summarize(data, zone)
 	UpdateTranslationTables()
 
 	local CN = (Cartographer and Cartographer:HasModule("Notes")) and Cartographer:GetModule("Notes")
 	for db_type, db_data in pairs(CN.externalDBs) do
-		Routes:Print( db_type, translate_type[db_type] )
 		-- get the babble localization for this db type
 		local LN = translate_type[db_type]
 		-- if this is a valid node db as specified in translate_type[]
 		if LN then
-			local amount_of = {}
+			for k in pairs(amount_of) do amount_of[k] = nil end
 			-- only look for data for this currentzone
 			if db_data[zone] then
 				-- count the unique values (structure is: location => item)
@@ -55,12 +66,11 @@ local function Summarize(data, zone)
 						amount_of[node] = (amount_of[node] or 0) + 1
 					end
 				end
-
 				-- XXX Localize these strings
 				-- store combinations with all information we have
 				for node,count in pairs(amount_of) do
 					local translatednode = LN:HasTranslation(node) and LN[node] or node
-					data[ ("%s;%s;%s;%s"):format(SourceName, db_type, node, count) ] = ("%s%s - %s - %d"):format(L[SourceName.."Prefix"], db_type, translatednode, count)
+					data[ ("%s;%s;%s;%s"):format(SourceName, db_type, node, count) ] = ("%s - %s - %d"):format(L[SourceName..db_type], translatednode, count)
 				end
 			end
 		end
@@ -70,6 +80,7 @@ end
 source.Summarize = Summarize
 
 -- returns the english name for the node so we can store it was being requested
+-- also returns the type of db for use with auto show/hide route
 local function AppendNodes( node_list, zone, db_type, node_type )
 	local CN = (Cartographer and Cartographer:HasModule("Notes")) and Cartographer:GetModule("Notes")
 	if CN and CN.externalDBs[db_type] then
@@ -88,7 +99,7 @@ local function AppendNodes( node_list, zone, db_type, node_type )
 		end
 	end
 
-	return node_type
+	return node_type, db_type
 end
 source.AppendNodes = AppendNodes
 

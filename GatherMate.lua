@@ -1,25 +1,38 @@
+local Routes = LibStub("AceAddon-3.0"):GetAddon("Routes", 1)
 if not Routes then return end
 
-local Routes = Routes
-local L = Routes.L
-local BZ = Routes.BZ
-local BZR = Routes.BZR
 local SourceName = "GatherMate"
 
-if type(Routes.data_source) ~= "table" then Routes.data_source = {} end
-if type(Routes.data_source[SourceName]) ~= "table" then Routes.data_source[SourceName] = {} end
+do
+	-- disable if the addon is not enabled, or
+	-- disable if there is a reason why it can't be loaded ("MISSING" or "DISABLED")
+	local name, title, notes, enabled, loadable, reason, security = GetAddOnInfo(SourceName)
+	if not enabled or (reason ~= nil) then return end
+end
 
-local source = Routes.data_source[SourceName]
+local L = LibStub("AceLocale-3.0"):GetLocale("Routes")
+local LN = LibStub("AceLocale-3.0"):GetLocale("GatherMateNodes", true)
+local BZ = LibStub("LibBabble-Zone-3.0"):GetLookupTable()
 
+------------------------------------------
+-- setup
+if type(Routes.plugins) ~= "table" then Routes.plugins = {} end
+if type(Routes.plugins[SourceName]) ~= "table" then Routes.plugins[SourceName] = {} end
+local source = Routes.plugins[SourceName]
+
+------------------------------------------
+-- functions
 local function IsActive()
 	-- Can we gather data?
-	return not not GatherMate
+	return GatherMate and true
 end
 source.IsActive = IsActive
 
+local amount_of = {}
 local function Summarize( data, zone )
 	for db_type, db_data in pairs(GatherMate.gmdbs) do
-		local amount_of = {}
+		-- reuse table
+		for k in pairs(amount_of) do amount_of[k] = nil end
 		-- only look for data for this currentzone
 		if db_data[GatherMate.zoneData[BZ[zone]][3]] then
 			-- count the unique values (structure is: location => itemID)
@@ -30,7 +43,7 @@ local function Summarize( data, zone )
 			-- store combinations with all information we have
 			for node,count in pairs(amount_of) do
 				local translatednode = GatherMate.reverseNodeIDs[node]
-				data[ ("%s;%s;%s;%s"):format(SourceName, db_type, node, count) ] = ("%s%s - %s - %d"):format(L[SourceName.."Prefix"], db_type, translatednode, count)
+				data[ ("%s;%s;%s;%s"):format(SourceName, db_type, node, count) ] = ("%s - %s - %d"):format(L[SourceName..db_type], translatednode, count)
 			end
 		end
 	end
@@ -39,6 +52,13 @@ end
 source.Summarize = Summarize
 
 -- returns the english name for the node so we can store it was being requested
+-- also returns the type of db for use with auto show/hide route
+local translate_db_type = {
+	["Herb Gathering"] = "Herbalism",
+	["Mining"] = "Mining",
+	["Fishing"] = "Fishing",
+	["Extract Gas"] = "ExtractGas",
+}
 local function AppendNodes( node_list, zone, db_type, node_type )
 	if type(GatherMate.gmdbs[db_type]) == "table" then
 		node_type = tonumber(node_type)
@@ -52,11 +72,10 @@ local function AppendNodes( node_list, zone, db_type, node_type )
 		end
 
 		-- return the node_type for auto-adding
-		local LN = LibStub("AceLocale-3.0"):GetLocale("GatherMateNodes", true)
 		local translatednode = GatherMate.reverseNodeIDs[node_type]
 		for k, v in pairs(LN) do
 			if v == translatednode then
-				return k -- get the english name
+				return k, translate_db_type[db_type] -- get the english name
 			end
 		end
 	end

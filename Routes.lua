@@ -1507,10 +1507,6 @@ do
 					Routes:Print(L["No name given for new route"])
 					return
 				end
-				if #db.routes[create_zone][create_name].route > 0 then
-					Routes:Print(L["You already have a route with that name. Delete it first or use a different name."])
-					return
-				end
 				-- the real 'action', we use a temporary table in case of data corruption and only commit this to the db if successful
 				local new_route = { route = {}, selection = {}, db_type = {} }
 				-- if for every selected nodetype on this map
@@ -1572,6 +1568,13 @@ do
 			disabled = function()
 				return not create_name or strtrim(create_name) == ""
 			end,
+			confirm = function()
+				if #db.routes[create_zone][create_name].route > 0 then
+					return true
+				end
+				return false
+			end,
+			confirmText = L["A route with that name already exists. Overwrite?"],
 		},
 	}
 end

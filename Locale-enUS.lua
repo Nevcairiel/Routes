@@ -76,8 +76,8 @@ L["Select data to use"] = true
 L["Select data to use in the route creation"] = true
 L["No data found"] = true
 L["Create Route"] = true
+L["You already have a route with that name. Delete it first or use a different name."] = true
 L["No data selected for new route"] = true
-
 
 -- DB prefix abbreviations 
 L["CartographerHerbalism"] = "H"

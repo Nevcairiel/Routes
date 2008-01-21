@@ -1,10 +1,13 @@
 if not Routes then return end
 
 local Routes = Routes
+local L = Routes.L
+local BZ = Routes.BZ
+local BZR = Routes.BZR
 local SourceName = "Cartographer"
 
-if not type(Routes.data_source) == "table" then Routes.data_source = {} end
-if not type(Routes.data_source[SourceName]) == "table" then Routes.data_source[SourceName] = {} end
+if type(Routes.data_source) ~= "table" then Routes.data_source = {} end
+if type(Routes.data_source[SourceName]) ~= "table" then Routes.data_source[SourceName] = {} end
 
 local source = Routes.data_source[SourceName]
 
@@ -21,7 +24,6 @@ local function UpdateTranslationTables()
 	end
 	translate_type.ExtractGas = LibStub("Babble-Gas-2.2", 1)
 end
-UpdateTranslationTables()
 
 local function IsActive()
 	-- Can we gather data?
@@ -30,9 +32,12 @@ local function IsActive()
 end
 source.IsActive = IsActive
 
-local function Summarize(zone, data)
+local function Summarize(data, zone)
+	UpdateTranslationTables()
+
 	local CN = (Cartographer and Cartographer:HasModule("Notes")) and Cartographer:GetModule("Notes")
 	for db_type, db_data in pairs(CN.externalDBs) do
+		Routes:Print( db_type, translate_type[db_type] )
 		-- get the babble localization for this db type
 		local LN = translate_type[db_type]
 		-- if this is a valid node db as specified in translate_type[]
@@ -55,14 +60,14 @@ local function Summarize(zone, data)
 				-- store combinations with all information we have
 				for node,count in pairs(amount_of) do
 					local translatednode = LN:HasTranslation(node) and LN[node] or node
-					data[ ("%s;%s;%s;%s"):format(SourceName, db_type, node, count) ] = ("%s%s - %s - %d"):format(L[SourceName], db_type, translatednode, count)
+					data[ ("%s;%s;%s;%s"):format(SourceName, db_type, node, count) ] = ("%s%s - %s - %d"):format(L[SourceName.."Prefix"], db_type, translatednode, count)
 				end
 			end
 		end
 	end
 	return data
 end
-source.Summary = Summary
+source.Summarize = Summarize
 
 -- returns the english name for the node so we can store it was being requested
 local function AppendNodes( node_list, zone, db_type, node_type )
@@ -85,14 +90,14 @@ local function AppendNodes( node_list, zone, db_type, node_type )
 
 	return node_type
 end
-source.AppendNotes = AppendNotes
+source.AppendNodes = AppendNodes
 
-local function AddHook
+local function AddHook()
 	-- Hook calls for adding a node
 end
 source.AddHook = AddHook
 
-local function RemoveHook
+local function RemoveHook()
 	-- Hook calls for deleting of a node
 end
 source.RemoveHook = RemoveHook

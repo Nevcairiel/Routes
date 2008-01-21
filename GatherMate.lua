@@ -1,10 +1,13 @@
 if not Routes then return end
 
 local Routes = Routes
+local L = Routes.L
+local BZ = Routes.BZ
+local BZR = Routes.BZR
 local SourceName = "GatherMate"
 
-if not type(Routes.data_source) == "table" then Routes.data_source = {} end
-if not type(Routes.data_source[SourceName]) == "table" then Routes.data_source[SourceName] = {} end
+if type(Routes.data_source) ~= "table" then Routes.data_source = {} end
+if type(Routes.data_source[SourceName]) ~= "table" then Routes.data_source[SourceName] = {} end
 
 local source = Routes.data_source[SourceName]
 
@@ -14,7 +17,7 @@ local function IsActive()
 end
 source.IsActive = IsActive
 
-local function Summarize(zone, data)
+local function Summarize( data, zone )
 	for db_type, db_data in pairs(GatherMate.gmdbs) do
 		local amount_of = {}
 		-- only look for data for this currentzone
@@ -27,13 +30,13 @@ local function Summarize(zone, data)
 			-- store combinations with all information we have
 			for node,count in pairs(amount_of) do
 				local translatednode = GatherMate.reverseNodeIDs[node]
-				data[ ("%s;%s;%s;%s"):format(SourceName, db_type, node, count) ] = ("%s%s - %s - %d"):format(L[SourceName], db_type, translatednode, count)
+				data[ ("%s;%s;%s;%s"):format(SourceName, db_type, node, count) ] = ("%s%s - %s - %d"):format(L[SourceName.."Prefix"], db_type, translatednode, count)
 			end
 		end
 	end
 	return data
 end
-source.Summary = Summary
+source.Summarize = Summarize
 
 -- returns the english name for the node so we can store it was being requested
 local function AppendNodes( node_list, zone, db_type, node_type )
@@ -58,14 +61,14 @@ local function AppendNodes( node_list, zone, db_type, node_type )
 		end
 	end
 end
-source.AppendNotes = AppendNotes
+source.AppendNodes = AppendNodes
 
-local function AddHook
+local function AddHook()
 	-- Hook calls for adding a node
 end
 source.AddHook = AddHook
 
-local function RemoveHook
+local function RemoveHook()
 	-- Hook calls for deleting of a node
 end
 source.RemoveHook = RemoveHook

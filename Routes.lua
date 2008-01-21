@@ -708,6 +708,7 @@ function Routes:OnEnable()
 		minimap_rotate = GetCVar("rotateMinimap") == "1"
 		self:MINIMAP_UPDATE_ZOOM()  -- This has a DrawMinimapLines(true) call in it, and sets an "indoors" variable
 	end
+	self:SetupSourcesOptTables()
 end
 
 function Routes:OnDisable()
@@ -1349,11 +1350,13 @@ do
 	local create_name = ""
 	local create_zones = {}
 	local create_zone
-	local last_zone
+	local last_zone = {}
 	local create_choices = {}
 	local create_data = {}
 	local empty_table = {}
-	local translate_type = {}
+	local source_data_choice = {}
+	local source_data = {}
+
 	local function deep_copy_table(a, b)
 		for k, v in pairs(b) do
 			if type(v) == "table" then
@@ -1364,17 +1367,66 @@ do
 			end
 		end
 	end
-	function Routes:UpdateTranslationTables()
-		-- See if these libraries exist
-		translate_type.CartHerbalism = LibStub:GetLibrary("Babble-Herbs-2.2", 1)
-		translate_type.CartMining = LibStub:GetLibrary("Babble-Ore-2.2", 1)
-		translate_type.CartFishing = LibStub:GetLibrary("Babble-Fish-2.2", 1)
-		local AL = LibStub:GetLibrary("AceLocale-2.2", 1)
-		if AL then
-			translate_type.CartTreasure = AL:new("Cartographer_Treasure") -- Get the AceLocale registered translation table for Treasure
+
+	local function get_source_values(info)
+		if not create_zone then return empty_table end
+		local create_data = create_data[info.arg]
+		if last_zone[info.arg] == create_zone then return create_data end
+		-- reuse table
+		for k in pairs(create_data) do create_data[k] = nil end
+		-- extract data from plugin
+		if Routes.plugins[info.arg].IsActive() then
+			Routes.plugins[info.arg].Summarize(create_data, create_zone)
 		end
-		translate_type.CartExtractGas = LibStub("Babble-Gas-2.2", 1)
+		-- found no data - insert dummy message
+		if not next(create_data) then
+			create_data[ db.defaults.fake_data ..";;;" ] = L["No data found"]
+		end
+		last_zone[info.arg] = create_zone
+		return create_data
 	end
+
+	local function get_source_value(info, key)
+		--Routes:Print(("Getting choice for: %s"):format(key or "nil"));
+		if not create_zone then return end
+		if key == db.defaults.fake_data then return end
+		if not create_choices[create_zone] then create_choices[create_zone] = {} end
+		return create_choices[create_zone][key]
+	end
+
+	local function set_source_value(info, key, value)
+		if not create_zone then return end
+		if key == db.defaults.fake_data then return end
+		if not create_choices[create_zone] then create_choices[create_zone] = {} end
+		create_choices[create_zone][key] = value
+		--Routes:Print(("Setting choice: %s to %s"):format(key or "nil", value and "true" or "false"));
+	end
+
+	function Routes:SetupSourcesOptTables()
+		-- reuse table
+		for k in pairs(source_data) do source_data[k] = nil end
+		-- create a checkbox for each plugin, then setup the aceopt table
+		local order = 300
+		for addon, plugin_table in pairs(Routes.plugins) do
+			local addonkey = addon:gsub("%s", "_")
+			source_data[addonkey] = addon
+			if not options.args.add_group.args[addonkey] then
+				order = order + 1
+				create_data[addonkey] = {}
+				options.args.add_group.args[addonkey] = {
+					name = addon..L[" Data"], type = "multiselect",
+					order = order,
+					arg = addon,
+					values = get_source_values,
+					get = get_source_value,
+					set = set_source_value,
+					disabled = not plugin_table.IsActive(),
+					guiHidden = not plugin_table.IsActive(),
+				}
+			end
+		end
+	end
+
 	options.args.add_group.args = {
 		route_name = {
 			type = "input",
@@ -1417,46 +1469,33 @@ do
 				end
 				return create_zones
 			end,
-			get = function() return create_zone end,
+			get = function()
+				return create_zone
+			end,
 			set = function(info, key) create_zone = key end,
 			style = "radio",
 		},
-		data_choices = {
-			name = L["Select data to use"], type = "multiselect",
-			desc = L["Select data to use in the route creation"],
-			order = 300,
-			values = function()
-				if not create_zone then return empty_table end
-				if last_zone == create_zone then return create_data end
-				-- reuse table
-				for k in pairs(create_data) do create_data[k] = nil end
-				-- extract data from each plugin
-				for addon, plugin_table in pairs(Routes.plugins) do
-					if plugin_table.IsActive() then
-						plugin_table.Summarize(create_data, create_zone)
+		source_choices = {
+			name = L["Select sources of data"], type = "multiselect",
+			order = 250,
+			values = source_data,
+			get = function(info, k)
+				if Routes.plugins[k].IsActive() then
+					if source_data_choice[k] == nil then
+						source_data_choice[k] = true
 					end
+					return source_data_choice[k]
+				else
+					return nil
 				end
-				-- found no data - insert dummy message
-				if not next(create_data) then
-					create_data[ db.defaults.fake_data ..";;;" ] = L["No data found"]
-				end
-				last_zone = create_zone
-				return create_data
 			end,
-			get = function(info, key)
-				--Routes:Print(("Getting choice for: %s"):format(key or "nil"));
-				if not create_zone then return end
-				if key == db.defaults.fake_data then return end
-				if not create_choices[create_zone] then create_choices[create_zone] = {} end
-				return create_choices[create_zone][key]
+			set = function(info, k, v)
+				if v == nil then v = false end
+				source_data_choice[k] = v
+				options.args.add_group.args[k].disabled = not v
+				options.args.add_group.args[k].guiHidden = not v
 			end,
-			set = function(info, key, value)
-				if not create_zone then return end
-				if key == db.defaults.fake_data then return end
-				if not create_choices[create_zone] then create_choices[create_zone] = {} end
-				create_choices[create_zone][key] = value
-				--Routes:Print(("Setting choice: %s to %s"):format(key or "nil", value and "true" or "false"));
-			end,
+			tristate = true,
 		},
 		add_route = {
 			name = L["Create Route"], type = "execute",
@@ -1473,9 +1512,10 @@ do
 				-- if for every selected nodetype on this map
 				if type(create_choices[create_zone]) == "table" then
 					for data_string, wanted in pairs(create_choices[create_zone]) do
+						local db_src, db_type, node_type, amount = (';'):split(data_string);
+						local addonkey = db_src:gsub("%s", "_")
 						-- if we want em
-						if (wanted) then
-							local db_src, db_type, node_type, amount = (';'):split( data_string );
+						if (wanted and source_data_choice[addonkey]) then
 							--Routes:Print(("found %s %s %s %s"):format( db_src,db_type,node_type,amount ))
 							if db_src ~= db.defaults.fake_data then -- ignore any fake data
 								-- extract data from plugin

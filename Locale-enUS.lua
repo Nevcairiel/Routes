@@ -70,6 +70,8 @@ L["Name of the route to add"] = true
 L["No name given for new route"] = true
 L["Select Zone"] = true
 L["Zone to create route in"] = true
+L["Select sources of data"] = true
+L[" Data"] = true
 L["Select data to use"] = true
 L["Select data to use in the route creation"] = true
 L["No data found"] = true
@@ -78,15 +80,15 @@ L["No data selected for new route"] = true
 
 
 -- DB prefix abbreviations 
-L["CartographerHerbalism"] = "CH"
-L["CartographerMining"] = "CM"
-L["CartographerFishing"] = "CF"
-L["CartographerTreasure"] = "CT"
-L["CartographerExtractGas"] = "CG"
-L["GatherMateHerb Gathering"] = "GMH"
-L["GatherMateMining"] = "GMM"
-L["GatherMateFishing"] = "GMF"
-L["GatherMateExtract Gas"] = "GMG"
+L["CartographerHerbalism"] = "H"
+L["CartographerMining"] = "M"
+L["CartographerFishing"] = "F"
+L["CartographerTreasure"] = "T"
+L["CartographerExtractGas"] = "G"
+L["GatherMateHerb Gathering"] = "H"
+L["GatherMateMining"] = "M"
+L["GatherMateFishing"] = "F"
+L["GatherMateExtract Gas"] = "G"
 
 -- Node types
 L["Herbalism"] = true

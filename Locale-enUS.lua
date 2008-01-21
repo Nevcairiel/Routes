@@ -40,15 +40,10 @@ L["Auto show and hide routes based on your professions"] = true
 L["Use Auto Show/Hide"] = true
 L["Auto Show/Hide per route type"] = true
 L["Auto Show/Hide settings"] = true
-L["Fish"] = true
 L["Routes with Fish"] = true
-L["Gas"] = true
 L["Routes with Gas"] = true
-L["Herbs"] = true
 L["Routes with Herbs"] = true
-L["Ore"] = true
 L["Routes with Ore"] = true
-L["Treasure"] = true
 L["Routes with Treasure"] = true
 L["Always show"] = true
 L["Only with profession"] = true
@@ -93,8 +88,18 @@ L["GatherMateMining"] = "GMM"
 L["GatherMateFishing"] = "GMF"
 L["GatherMateExtract Gas"] = "GMG"
 
+-- Node types
+L["Herbalism"] = true
+L["Mining"] = true
+L["Fishing"] = true
+L["Treasure"] = true
+L["ExtractGas"] = "Gas"
+
 -- Route Config
 L["Information"] = true
+L["This route has |cFFFFFFFF%d|r nodes and is |cFFFFFFFF%d|r yards long."] = true
+L["This route has nodes that belong to the following categories:\n"] = true
+L["This route contains the following nodes:\n"] = true
 
 L["Line settings"] = true
 L["These settings control the visibility and look of the drawn route."] = true
@@ -116,7 +121,6 @@ L["Reset"] = true
 L["Reset the line settings to defaults"] = true
 
 L["Optimize route"] = true
-L["This route has |cFFFFFFFF%d|r nodes and is |cFFFFFFFF%d|r yards long."] = true
 L["Extra optimization"] = true
 L["ExtraOptDesc"] = "Turning on this option will make optimizing the route take approximately 40% longer, but will generate -slightly- better routes. Recommended setting is OFF."
 L["Foreground"] = true

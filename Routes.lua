@@ -924,28 +924,28 @@ options.args.options_group.args = {
 				get = function(info) return db.defaults.prof_options[info.arg] end,
 				args = {
 					fishing = {
-						name = L["Fish"], type = "select",
+						name = L["Fishing"], type = "select",
 						desc = L["Routes with Fish"],
 						order = 100,
 						values = prof_options,
 						arg = "Fishing",
 					},
 					gas = {
-						name = L["Gas"], type = "select",
+						name = L["ExtractGas"], type = "select",
 						desc = L["Routes with Gas"],
 						order = 200,
 						values = prof_options3,
 						arg = "ExtractGas",
 					},
 					herbalism = {
-						name = L["Herbs"], type = "select",
+						name = L["Herbalism"], type = "select",
 						desc = L["Routes with Herbs"],
 						order = 300,
 						values = prof_options,
 						arg = "Herbalism",
 					},
 					mining = {
-						name = L["Ore"], type = "select",
+						name = L["Mining"], type = "select",
 						desc = L["Routes with Ore"],
 						order = 400,
 						values = prof_options,
@@ -1093,16 +1093,16 @@ do
 		for k in pairs(str) do str[k] = nil end
 		local t = db.routes[info.arg.zone][info.arg.route]
 		local num = 1
-		str[num] = "This route has nodes that belong to the following categories:\n"
+		str[num] = L["This route has nodes that belong to the following categories:\n"]
 		for k in pairs(t.db_type) do
 			num = num + 1
-			str[num] = "|cFFFFFFFF     "..k.."|r\n"
+			str[num] = "|cFFFFFFFF     "..L[k].."|r\n"
 		end
 		num = num + 1
-		str[num] = "This route contains the following nodes:\n"
+		str[num] = L["This route contains the following nodes:\n"]
 		for k in pairs(t.selection) do
 			num = num + 1
-			str[num] = "|cFFFFFFFF     "..k.."|r\n"
+			str[num] = "|cFFFFFFFF     "..k.."|r\n" -- TODO: NEED LOCALIZATION
 		end
 		return table.concat(str)
 	end

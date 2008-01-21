@@ -1485,7 +1485,6 @@ do
 									new_route.selection[english_node] = true
 									new_route.db_type[type] = true
 								end
-
 							end
 						end
 					end

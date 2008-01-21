@@ -2,34 +2,36 @@ local Routes = LibStub("AceAddon-3.0"):GetAddon("Routes", 1)
 if not Routes then return end
 
 local SourceName = "GatherMate"
-
-do
-	-- disable if the addon is not enabled, or
-	-- disable if there is a reason why it can't be loaded ("MISSING" or "DISABLED")
-	local name, title, notes, enabled, loadable, reason, security = GetAddOnInfo(SourceName)
-	if not enabled or (reason ~= nil) then return end
-end
-
 local L = LibStub("AceLocale-3.0"):GetLocale("Routes")
 local LN = LibStub("AceLocale-3.0"):GetLocale("GatherMateNodes", true)
 local BZ = LibStub("LibBabble-Zone-3.0"):GetLookupTable()
 
 ------------------------------------------
 -- setup
-if type(Routes.plugins) ~= "table" then Routes.plugins = {} end
-if type(Routes.plugins[SourceName]) ~= "table" then Routes.plugins[SourceName] = {} end
+Routes.plugins[SourceName] = {}
 local source = Routes.plugins[SourceName]
+
+do
+	local loaded = true
+	local function IsActive() -- Can we gather data?
+		return GatherMate and loaded
+	end
+	source.IsActive = IsActive
+
+	-- stop loading if the addon is not enabled, or
+	-- stop loading if there is a reason why it can't be loaded ("MISSING" or "DISABLED")
+	local name, title, notes, enabled, loadable, reason, security = GetAddOnInfo(SourceName)
+	if not enabled or (reason ~= nil) then
+		loaded = false
+		return
+	end
+end
 
 ------------------------------------------
 -- functions
-local function IsActive()
-	-- Can we gather data?
-	return GatherMate and true
-end
-source.IsActive = IsActive
 
 local amount_of = {}
-local function Summarize( data, zone )
+local function Summarize(data, zone)
 	for db_type, db_data in pairs(GatherMate.gmdbs) do
 		-- reuse table
 		for k in pairs(amount_of) do amount_of[k] = nil end
@@ -59,7 +61,7 @@ local translate_db_type = {
 	["Fishing"] = "Fishing",
 	["Extract Gas"] = "ExtractGas",
 }
-local function AppendNodes( node_list, zone, db_type, node_type )
+local function AppendNodes(node_list, zone, db_type, node_type)
 	if type(GatherMate.gmdbs[db_type]) == "table" then
 		node_type = tonumber(node_type)
 

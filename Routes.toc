@@ -9,7 +9,7 @@
 ## X-eMail: cartographer_routes @ grum DOT nl & xinhuan @ gmail DOT com
 ## X-Name: Routes
 
-## OptionalDeps: Ace3, LibBabble-Zone-3.0, Cartographer, GatherMate
+## OptionalDeps: Ace3, LibBabble-Zone-3.0, Cartographer, GatherMate, Cartographer_Notes
 ## SavedVariables: RoutesDB
 
 embeds.xml

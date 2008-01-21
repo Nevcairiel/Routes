@@ -94,6 +94,8 @@ L["GatherMateFishing"] = "GMF"
 L["GatherMateExtract Gas"] = "GMG"
 
 -- Route Config
+L["Information"] = true
+
 L["Line settings"] = true
 L["These settings control the visibility and look of the drawn route."] = true
 L["Width (Map)"] = true
@@ -112,8 +114,9 @@ L["Are you sure you want to delete this route?"] = true
 L["You may not delete a route that is being optimized in the background."] = true
 L["Reset"] = true
 L["Reset the line settings to defaults"] = true
+
 L["Optimize route"] = true
-L["This route has %d nodes and is %d yards long."] = true
+L["This route has |cFFFFFFFF%d|r nodes and is |cFFFFFFFF%d|r yards long."] = true
 L["Extra optimization"] = true
 L["ExtraOptDesc"] = "Turning on this option will make optimizing the route take approximately 40% longer, but will generate -slightly- better routes. Recommended setting is OFF."
 L["Foreground"] = true

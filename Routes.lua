@@ -1084,7 +1084,28 @@ end
 
 function ConfigHandler.GetRouteDesc(info)
 	local t = db.routes[info.arg.zone][info.arg.route]
-	return L["This route has %d nodes and is %d yards long."]:format(#t.route, t.length)
+	return L["This route has |cFFFFFFFF%d|r nodes and is |cFFFFFFFF%d|r yards long."]:format(#t.route, t.length)
+end
+
+do
+	local str = {}
+	function ConfigHandler.GetDataDesc(info)
+		for k in pairs(str) do str[k] = nil end
+		local t = db.routes[info.arg.zone][info.arg.route]
+		local num = 1
+		str[num] = "This route has nodes that belong to the following categories:\n"
+		for k in pairs(t.db_type) do
+			num = num + 1
+			str[num] = "|cFFFFFFFF     "..k.."|r\n"
+		end
+		num = num + 1
+		str[num] = "This route contains the following nodes:\n"
+		for k in pairs(t.selection) do
+			num = num + 1
+			str[num] = "|cFFFFFFFF     "..k.."|r\n"
+		end
+		return table.concat(str)
+	end
 end
 
 function ConfigHandler:GetTwoPointFiveOpt()
@@ -1173,6 +1194,26 @@ function Routes:CreateAceOptRouteTable(zone, route)
 		childGroups = "tab",
 		handler = ConfigHandler,
 		args = {
+			info_group = {
+				type = "group",
+				name = L["Information"],
+				desc = L["Information"],
+				order = 0,
+				args = {
+					desc1 = {
+						type = "description",
+						name = ConfigHandler.GetRouteDesc,
+						arg = zone_route_table,
+						order = 0,
+					},
+					desc2 = {
+						type = "description",
+						name = ConfigHandler.GetDataDesc,
+						arg = zone_route_table,
+						order = 10,
+					},
+				},
+			},
 			setting_group = {
 				type = "group",
 				name = L["Line settings"],

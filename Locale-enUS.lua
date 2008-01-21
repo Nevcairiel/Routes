@@ -134,4 +134,11 @@ L["Now running TSP in the background..."] = true
 L["There is already a TSP running in background. Wait for it to complete first."] = true
 L["The following error occured in the background path generation coroutine, please report to Grum or Xinhuan:"] = true
 
+-- Profession Names in the skills tab in the character frame
+-- Doing these 4 localizations specifically to avoid using Babble-Spell
+L["Skill-Fishing"] = "Fishing"
+L["Skill-Herbalism"] = "Herbalism"
+L["Skill-Mining"] = "Mining"
+L["Skill-Engineering"] = "Engineering"
+
 -- vim: ts=4 noexpandtab

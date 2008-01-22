@@ -1,5 +1,5 @@
 ﻿-- Routes
--- frFR Localization file
+-- frFR Localization file, by pettigrow
 
 local L = LibStub("AceLocale-3.0"):NewLocale("Routes", "frFR")
 if not L then return end
@@ -81,15 +81,15 @@ L["No data selected for new route"] = "Aucune donnée n'a été sélectionnée p
 L["A route with that name already exists. Overwrite?"] = "Une route portant ce nom existe déjà. L'écraser ?"
 
 -- DB prefix abbreviations 
-L["CartHerbalism"] = "CHerb"
-L["CartMining"] = "CMine"
-L["CartFishing"] = "CFish"
-L["CartTreasure"] = "CTreasure"
-L["CartExtractGas"] = "CGas"
-L["GMHerb Gathering"] = "GMHerb"
-L["GMMining"] = "GMMine"
-L["GMFishing"] = "GMFish"
-L["GMExtract Gas"] = "GMGas"
+L["CartHerbalism"] = "H"
+L["CartMining"] = "M"
+L["CartFishing"] = "P"
+L["CartTreasure"] = "T"
+L["CartExtractGas"] = "G"
+L["GMHerb Gathering"] = "H"
+L["GMMining"] = "M"
+L["GMFishing"] = "P"
+L["GMExtract Gas"] = "G"
 
 -- Node types
 L["Herbalism"] = "Herboristerie"

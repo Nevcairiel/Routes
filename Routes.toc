@@ -25,5 +25,5 @@ TSP.lua
 Data.lua
 
 # Addons we can draw data from
-Cartographer.lua
-GatherMate.lua
+Plugins\Cartographer.lua
+Plugins\GatherMate.lua

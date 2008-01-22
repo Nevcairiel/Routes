@@ -25,6 +25,7 @@ TSP.lua
 Data.lua
 
 # Routes Module files
+Modules\AutoShow.lua
 Modules\Waypoints.lua
 
 # Addons we can draw data from

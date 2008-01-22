@@ -1054,11 +1054,16 @@ options.args.options_group.args = {
 		},
 	},
 	waypoints = {
-		name = L["Waypoints"], type = "group",
+		name = L["Waypoints (Carto)"], type = "group",
 		desc = L["Integrated support options for Cartographer_Waypoints"],
 		disabled = function() return not (Cartographer and Cartographer:HasModule("Waypoints") and Cartographer:IsModuleActive("Waypoints")) end,
 		order = 300,
 		args = {
+			desc = {
+				type  = "description",
+				name  = L["This section implements Cartographer_Waypoints support for Routes. Click Start to find the nearest node in a visible route in the current zone.\n"],
+				order = 0,
+			},
 			hit_distance = {
 				name = L["Waypoint hit distance"], type = "range",
 				desc = L["This is the distance in yards away from a waypoint to consider as having reached it so that the next node in the route can be added as the waypoint"],

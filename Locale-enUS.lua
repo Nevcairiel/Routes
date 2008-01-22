@@ -51,8 +51,9 @@ L["Only while tracking"] = true
 L["Never show"] = true
 
 -- Waypoints
-L["Waypoints"] = true
+L["Waypoints (Carto)"] = true
 L["Integrated support options for Cartographer_Waypoints"] = true
+L["This section implements Cartographer_Waypoints support for Routes. Click Start to find the nearest node in a visible route in the current zone.\n"] = true
 L["Waypoint hit distance"] = true
 L["This is the distance in yards away from a waypoint to consider as having reached it so that the next node in the route can be added as the waypoint"] = true
 L["Change direction"] = true

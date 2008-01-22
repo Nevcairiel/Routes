@@ -143,13 +143,6 @@ L["Now running TSP in the background..."] = "Führt TSP jetzt im Hintergrund aus
 L["There is already a TSP running in background. Wait for it to complete first."] = "Es läuft schon eine TSP im Hintergrund. Bitte warten Sie, bis die erste abgeschlossen ist."
 L["The following error occured in the background path generation coroutine, please report to Grum or Xinhuan:"] = "Der folgende Fehler trat bei der Berechnung des Pfades auf, bitte melden Sie ihn bei Grum oder Xinhuan:"
 
--- Profession Names in the skills tab in the character frame
--- Doing these 4 localizations specifically to avoid using Babble-Spell
-L["Skill-Fishing"] = "Angeln"
-L["Skill-Herbalism"] = "Kräuterkunde"
-L["Skill-Mining"] = "Bergbau"
-L["Skill-Engineering"] = "Ingenieurskunst"
-
 -- Cartographer_Waypoints support
 L["Cartographer_Waypoints module is missing or disabled"] = "Das Cartographer_Waypoints Modul fehlt oder ist deaktiviert"
 L["%s - Node %d"] = "%s - Knotenpunkt %d"

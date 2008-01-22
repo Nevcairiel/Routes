@@ -24,6 +24,9 @@ Routes.lua
 TSP.lua
 Data.lua
 
+# Routes Module files
+Modules\Waypoints.lua
+
 # Addons we can draw data from
 Plugins\Cartographer.lua
 Plugins\GatherMate.lua

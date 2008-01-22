@@ -9,16 +9,23 @@
 ## X-eMail: cartographer_routes @ grum DOT nl & xinhuan @ gmail DOT com
 ## X-Name: Routes
 
-## OptionalDeps: Ace3, LibBabble-Zone-3.0, Cartographer, GatherMate, Cartographer_Notes
+## OptionalDeps: Ace3, LibBabble-Zone-3.0, Cartographer, Cartographer_Notes, GatherMate
 ## SavedVariables: RoutesDB
 
+# Library files
 embeds.xml
 
 # Locale files
 Locale-enUS.lua
 Locale-deDE.lua
+Locale-esES.lua
+Locale-frFR.lua
+Locale-koKR.lua
+Locale-ruRU.lua
+Locale-zhCN.lua
+Locale-zhTW.lua
 
-# Core Route files
+# Core Routes files
 Routes.lua
 TSP.lua
 Data.lua

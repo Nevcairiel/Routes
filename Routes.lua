@@ -1680,9 +1680,20 @@ do
 	local node_num = 1
 	local zone
 	local stored_hit_distance
+	local function round(num, digits) -- copied from various Cartographer modules
+		-- banker's rounding
+		local mantissa = 10^digits
+		local norm = num*mantissa
+		norm = norm + 0.5
+		local norm_f = floor(norm)
+		if norm == norm_f and (norm_f % 2) ~= 0 then
+			return (norm_f-1)/mantissa
+		end
+		return norm_f/mantissa
+	end
 	
 	function Routes:FindClosestVisibleRoute()
-		if not (Cartographer:HasModule("Waypoints") and Cartographer:IsModuleActive("Waypoints")) then
+		if not (Cartographer and Cartographer:HasModule("Waypoints") and Cartographer:IsModuleActive("Waypoints")) then
 			self:Print(L["Cartographer_Waypoints module is missing or disabled"])
 			return
 		end
@@ -1697,8 +1708,8 @@ do
 			if type(route_data) == "table" and type(route_data.route) == "table" and #route_data.route > 1 then  -- if it is valid
 				if (not route_data.hidden and (route_data.visible or not defaults.use_auto_showhide)) or defaults.show_hidden then  -- if it is visible
 					for i = 1, #route_data.route do  -- for each node
-						local x, y = Cartographer_Notes.getXY(route_data.route[i])
-						local dist = Cartographer:GetDistanceToPoint(x, y, zone)
+						local x, y = floor(route_data.route[i] / 10000) / 10000, (route_data.route[i] % 10000) / 10000
+						local dist = Cartographer:GetDistanceToPoint(x, y, zone) -- If you have Cartographer_Waypoints, then you have Cartographer
 						if dist < min_distance then
 							min_distance = dist
 							closest_zone = zone
@@ -1713,7 +1724,7 @@ do
 	end
 
 	function Routes:QueueFirstNode()
-		if not (Cartographer:HasModule("Waypoints") and Cartographer:IsModuleActive("Waypoints")) then
+		if not (Cartographer and Cartographer:HasModule("Waypoints") and Cartographer:IsModuleActive("Waypoints")) then
 			self:Print(L["Cartographer_Waypoints module is missing or disabled"])
 			return
 		end
@@ -1727,20 +1738,26 @@ do
 			route_name = b
 			route_table = db.routes[a][b]
 			node_num = c
-			Cartographer_Waypoints:AddRoutesWaypoint(zone, route_table.route[node_num], L["%s - Node %d"]:format(route_name, node_num))
+			-- convert from GMID to CartID
+			local x, y = self:getXY(route_table.route[node_num])
+			local cartCoordID = round(x*10000, 0) + round(y*10000, 0)*10001
+			Cartographer_Waypoints:AddRoutesWaypoint(zone, cartCoordID, L["%s - Node %d"]:format(route_name, node_num))
 			self:RegisterMessage("CartographerWaypoints_WaypointHit", "WaypointHit")
 			stored_hit_distance = Cartographer_Waypoints:GetWaypointHitDistance()
 			Cartographer_Waypoints:SetWaypointHitDistance(db.defaults.waypoint_hit_distance)
 		end
 	end
 
-	function Routes:WaypointHit(namespace, event, waypoint)
+	function Routes:WaypointHit(event, waypoint)
 		if stored_hit_distance then
 			-- Try to match the removed waypointID with a node in the route. This
 			-- is necessary because the route could have changed dynamically from node
 			-- insertion/deletion/optimization/etc causing a change to the node numbers
 			local id = tonumber((gsub(waypoint.WaypointID, zone, ""))) -- Extra brackets necessary to reduce to 1 return value
 			if not id then return end -- Not a waypoint from this zone
+			-- convert from CartID to GMID
+			local x, y = (id % 10001)/10000, floor(id / 10001)/10000
+			id = self:getID(x, y)
 			local route = route_table.route
 			for i = 1, #route do
 				if id == route[i] then
@@ -1752,7 +1769,10 @@ do
 						node_num = #route
 					end
 					--self:Print("Adding node "..node_num)
-					Cartographer_Waypoints:AddRoutesWaypoint(zone, route[node_num], L["%s - Node %d"]:format(route_name, node_num))
+					-- convert from GMID to CartID
+					local x, y = self:getXY(route[node_num])
+					local cartCoordID = round(x*10000, 0) + round(y*10000, 0)*10001
+					Cartographer_Waypoints:AddRoutesWaypoint(zone, cartCoordID, L["%s - Node %d"]:format(route_name, node_num))
 					break
 				end
 			end
@@ -1760,12 +1780,15 @@ do
 	end
 
 	function Routes:RemoveQueuedNode()
-		if not (Cartographer:HasModule("Waypoints") and Cartographer:IsModuleActive("Waypoints")) then
+		if not (Cartographer and Cartographer:HasModule("Waypoints") and Cartographer:IsModuleActive("Waypoints")) then
 			self:Print(L["Cartographer_Waypoints module is missing or disabled"])
 			return
 		end
 		if stored_hit_distance then
-			Cartographer_Waypoints:CancelWaypoint(route_table.route[node_num]..zone)
+			-- convert from GMID to CartID
+			local x, y = self:getXY(route_table.route[node_num])
+			local cartCoordID = round(x*10000, 0) + round(y*10000, 0)*10001
+			Cartographer_Waypoints:CancelWaypoint(cartCoordID..zone)
 			Cartographer_Waypoints:SetWaypointHitDistance(stored_hit_distance)
 			stored_hit_distance = nil
 			self:UnregisterMessage("CartographerWaypoints_WaypointHit")

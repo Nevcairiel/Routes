@@ -683,7 +683,7 @@ function Routes:OnInitialize()
 				args = {},
 			}
 			for route in pairs(zone_table) do
-				local routekey = route:gsub("%s", "") -- can't have spaces in the key
+				local routekey = route:gsub("%s", "\255") -- can't have spaces in the key
 				opts[zonekey].args[routekey] = self:CreateAceOptRouteTable(zone, route)
 			end
 		end
@@ -982,7 +982,7 @@ function ConfigHandler:DeleteRoute(info)
 	end
 	db.routes[zone][route] = nil
 	local zonekey = tostring(zoneNamesReverse[BZ[zone] or zone]) -- use a 3 digit string which is alphabetically sorted zone names by continent
-	local routekey = route:gsub("%s", "") -- can't have spaces in the key
+	local routekey = route:gsub("%s", "\255") -- can't have spaces in the key
 	options.args.routes_group.args[zonekey].args[routekey] = nil -- delete route from aceopt
 	if next(db.routes[zone]) == nil then
 		options.args.routes_group.args[zonekey] = nil -- delete zone from aceopt if no routes remaining
@@ -1481,7 +1481,7 @@ do
 						args = {},
 					}
 				end
-				local routekey = create_name:gsub("%s", "") -- can't have spaces in the key
+				local routekey = create_name:gsub("%s", "\255") -- can't have spaces in the key
 				opts[zonekey].args[routekey] = Routes:CreateAceOptRouteTable(create_zone, create_name)
 
 				-- Draw it

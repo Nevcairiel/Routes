@@ -1310,6 +1310,15 @@ function Routes:CreateAceOptRouteTable(zone, route)
 						arg = zone_route_table,
 						order = 10,
 					},
+					delete = {
+						name = L["Delete"], type = "execute",
+						desc = L["Permanently delete a route"],
+						func = "DeleteRoute",
+						arg = zone_route_table,
+						confirm = true,
+						confirmText = L["Are you sure you want to delete this route?"],
+						order = 100,
+					},
 				},
 			},
 			setting_group = {
@@ -1363,15 +1372,6 @@ function Routes:CreateAceOptRouteTable(zone, route)
 						order = 320,
 					},
 					blankline = blank_line_table,
-					delete = {
-						name = L["Delete"], type = "execute",
-						desc = L["Permanently delete a route"],
-						func = "DeleteRoute",
-						arg = zone_route_table,
-						confirm = true,
-						confirmText = L["Are you sure you want to delete this route?"],
-						order = 400,
-					},
 					reset_all = {
 						name = L["Reset"], type = "execute",
 						desc = L["Reset the line settings to defaults"],

@@ -4,8 +4,8 @@
 local L = LibStub("AceLocale-3.0"):NewLocale("Routes", "deDE")
 if not L then return end
 
-L["Routes"] "= true"
-L["routes"] "= true" -- slash command
+L["Routes"] = true
+L["routes"] = true -- slash command
 
 
 -- Profession Names in the skills tab in the character frame
@@ -145,9 +145,9 @@ L["The following error occured in the background path generation coroutine, plea
 
 -- Profession Names in the skills tab in the character frame
 -- Doing these 4 localizations specifically to avoid using Babble-Spell
-L["Skill-Fishing"] = "Angeln""
-L["Skill-Herbalism"] = "Kräuterkunde""
-L["Skill-Mining"] = "Bergbau""
+L["Skill-Fishing"] = "Angeln"
+L["Skill-Herbalism"] = "Kräuterkunde"
+L["Skill-Mining"] = "Bergbau"
 L["Skill-Engineering"] = "Ingenieurskunst"
 
 -- Cartographer_Waypoints support

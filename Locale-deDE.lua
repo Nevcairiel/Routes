@@ -1,19 +1,11 @@
 ﻿-- Cartographer_Routes
--- deDE Localization file
+-- deDE Localization file, by Stanzilla
 
 local L = LibStub("AceLocale-3.0"):NewLocale("Routes", "deDE")
 if not L then return end
 
 L["Routes"] = true
 L["routes"] = true -- slash command
-
-
--- Profession Names in the skills tab in the character frame
--- Doing these 4 localizations specifically to avoid using Babble-Spell
-L["Skill-Fishing"] = "Angeln"
-L["Skill-Herbalism"] = "Kr\195\164uterkunde"
-L["Skill-Mining"] = "Bergbau"
-L["Skill-Engineering"] = "Ingenieurskunst"
 
 -- Options Config
 L["Options"] = "Optionen"
@@ -43,10 +35,10 @@ L["Show hidden routes"] = "Zeige versteckte Routen"
 L["Show hidden routes?"] = "Versteckte Routen anzeigen?"
 
 -- Auto show/hide
-L["Auto show/hide"] = "Automatischesn Anzeigen/Verstecken"
+L["Auto show/hide"] = "Auto. Anzeigen/Verstecken"
 L["Auto show and hide routes based on your professions"] = "Automatisches Anzeigen und Verstecken in Abhängigkeite ihrer Berufe"
-L["Use Auto Show/Hide"] = "Automatisches Anzeigen/Verstecken benutzen"
-L["Auto Show/Hide per route type"] = "Automatisches Anzeigen/Verstecken nach Routentyp"
+L["Use Auto Show/Hide"] = "Auto. Anzeigen/Verstecken benutzen"
+L["Auto Show/Hide per route type"] = "Auto. Anzeigen/Verstecken nach Routentyp"
 L["Auto Show/Hide settings"] = "Einstellungen für Automatisches Anzeigen/Verstecken"
 L["Routes with Fish"] = "Routen mit Fischen"
 L["Routes with Gas"] = "Routen mit Gasen"
@@ -142,6 +134,13 @@ L["Path with %d nodes found with length %.2f yards after %d iterations in %.2f s
 L["Now running TSP in the background..."] = "Führt TSP jetzt im Hintergrund aus..."
 L["There is already a TSP running in background. Wait for it to complete first."] = "Es läuft schon eine TSP im Hintergrund. Bitte warten Sie, bis die erste abgeschlossen ist."
 L["The following error occured in the background path generation coroutine, please report to Grum or Xinhuan:"] = "Der folgende Fehler trat bei der Berechnung des Pfades auf, bitte melden Sie ihn bei Grum oder Xinhuan:"
+
+-- Profession Names in the skills tab in the character frame
+-- Doing these 4 localizations specifically to avoid using Babble-Spell
+L["Skill-Fishing"] = "Angeln"
+L["Skill-Herbalism"] = "Kr\195\164uterkunde"
+L["Skill-Mining"] = "Bergbau"
+L["Skill-Engineering"] = "Ingenieurskunst"
 
 -- Cartographer_Waypoints support
 L["Cartographer_Waypoints module is missing or disabled"] = "Das Cartographer_Waypoints Modul fehlt oder ist deaktiviert"

@@ -640,44 +640,44 @@ function Routes:DrawMinimapLines(forceUpdate)
 	end
 end
 
+-- This frame is to throttle InsertNode() and DeleteNode() calls so that
+-- redrawing the map lines are delayed by 1 frame. These 2 functions can
+-- potentially be spammed by a source database importing nodes.
+local throttleFrame = CreateFrame("Frame")
+throttleFrame:Hide()
+throttleFrame:SetScript("OnUpdate", function(self, elapsed)
+	Routes:DrawMinimapLines()
+	Routes:DrawMinimapLines(true)
+	self:Hide()
+end)
+
 -- Accepts a zone, coord and node_name in English for inserting into relevant routes
 function Routes:InsertNode(zone, coord, node_name)
-	local modified = false
 	for route_name, route_data in pairs( db.routes[zone] ) do
 		-- for every route check if the route is created with this node
 		if route_data.selection and route_data.selection[node_name] then
 			-- Add the node
 			route_data.route, route_data.length = self.TSP:InsertNode(route_data.route, zone, coord, false)
-			modified = true
+			throttleFrame:Show()
 		end
-	end
-	if modified then
-		self:DrawWorldmapLines()
-		self:DrawMinimapLines(true)
 	end
 end
 
 -- Accepts a zone, coord and node_name in English for deleting from relevant routes
 function Routes:DeleteNode(zone, coord, node_name)
-	local modified = false
 	for route_name, route_data in pairs( db.routes[zone] ) do
 		-- for every route check if the route is created with this node
 		if route_data.selection and route_data.selection[node_name] then
-			-- Delete the node
+			-- Delete the node if it exists in this route
 			for i = 1, #route_data.route do
 				if coord == route_data.route[i] then
 					tremove(route_data.route, i)
 					route_data.length = self.TSP:PathLength(route_data.route, zone)
-					modified = true
+					throttleFrame:Show()
 					break
 				end
 			end
-
 		end
-	end
-	if modified then
-		self:DrawWorldmapLines()
-		self:DrawMinimapLines(true)
 	end
 end
 

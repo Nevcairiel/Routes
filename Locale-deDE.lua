@@ -152,43 +152,43 @@ L["FAQ"] = true
 L["Frequently Asked Questions"] = true
 L["FAQ_TEXT"] = [[
 |cFFFFFFFF
-When I try to create a route, it says no data is found. What am I doing wrong?
+Wenn ich versuche eine Route zu erstellen bekomme ich die Meldung, dass keine Daten gefunden wurden. Was mache ich falsch?
 |r
-It means exactly that: No data is found, mostly because the addon is not loaded or in standby mode. If you are using any of the |cffffff78Cartographer_<Profession>|r modules, then these modules must be loaded and active for data to be available.
+Es bedeutet genau das: Es wurden keine Daten gefunden, meistens weil das Addon nicht geladen oder im Standby Modus ist. Wenn Sie eines der |cffffff78Cartographer_<Beruf>|r Module benutzen, müssen diese Module geladen und aktiviert sein um Daten verfügbar zu machen.
 
-Note that |cffffff78Cartographer_<Profession>|r modules are all Load on Demand addons and require |cffffff78Cartographer_Professions|r to be enabled as it is the loading stub.
+Bitte beachten Sie, dass alle |cffffff78Cartographer_<Beruf>|r Module nur bei Bedarf geladen werden und |cffffff78Cartographer_Professions|r vorraussetzen um aktiviert zu werden.
 |cFFFFFFFF
-Can you make a progress indicator on how long a background route optimization would take?
+Könnt ihr einen Fortschrittsbalken einfügen, der anzeigt wie lange die Hintergrundoptimierung einer Route noch dauert?
 |r
-A progress bar is not possible for the optimization process as it is a non-linear algorithm. It works on a "multiple pass" basis, each pass improving on the previous pass until it reaches a point where the improvement made is too minimal and then it will stop.
+Nein, das ist leider nicht möglich, da der Optimierungsprozess ein nicht-linearer Algorithmus ist. Er funktioniert auf einer mehrflutigen Basis dessen Optimierungen immer auf der Vorrangegangenen aufbaut, bis er einen Punkt erreicht hat an dem die Verbesserungen zu gering wären.
 
-This is somewhat like the |cffffff78Windows XP Disk Defragmentation|r utility, and its progress bar is worthless because its only showing you the % of each pass, but it doesn't know how many passes it will take, it could be 3 passes, it could be 10 passes, it stops only when it thinks it has done enough. This is why in the |cffffff78Vista|r version, it no longer shows you a progress bar at all.
+Das ist ein bisschen so wie das |cffffff78Windows XP Festplatten Defragmentierungs|r Programm und dessen Fortschrittsbalken, der auch sinnlos ist, da er nur die % jedes Durchgangs anzeigt, aber nicht weiß wieviele Durchgänge es benötigt. Es könnten 3 Durchgänge oder auch 10 sein. Er hört auf wenn er denkt, dass er genug getan hat. Aus diesem Grund gibt es in der |cffffff78Vista|r Version keinen Fortschrittsbalken mehr.
 |cFFFFFFFF
-Do you plan on adding Gatherer support or perhaps questing addons node support?
+Plant ihr auch Gatherer oder Addons mit Questnotizen zu unterstützen?
 |r
-This is most likely a yes for |cffffff78Gatherer|r, and a maybe for questing.
+Im Falle von |cffffff78Gatherer|r gibt es ein klares Ja und ein Vielleicht fürs Questen.
 |cFFFFFFFF
-How does Routes perform its route optimization?
+Wie führt Routes die Routenoptimierung aus?
 |r
-Routes uses an algorithm called |cffffff78Ant Colony Optimization|r (ACO) which is a heuristic/probabilistic method of calculating optimal graphs based on observed real life ant behavior.
+Routes benutzt einen |cffffff78Ant Colony Optimization|r (ACO) genannten Algorithmus, der eine Methode zur heuristischen/wahrscheinlichkeitstheoretischen Berechnung für optimale Graphen, basierend auf den Beobachtungen des Verhaltens von Ameisen aus dem echten Leben, darstellt.
 
-ACO algorithms have been used to produce near-optimal solutions to the |cffffff78Traveling Salesman Problem|r (TSP). For more information, consult Google or Wikipedia.
+ACO Algorithmen wurden dazu benutzt um fast optimale Lösungen für das |cffffff78Traveling Salesman Problem|r (TSP) zu finden. Für weitere Informationen, befragen Sie bitte Google oder Wikipedia.
 |cFFFFFFFF
-What does the "Extra Optimization" option do?
+Was macht die "Extra Optimierung" Option?
 |r
-By default, we only used ACO along with the standard |cffffff782-opt algorithm|r to optimize routes. Turning on "extra optimization" tells Routes to also use 2.5-opt, which is a specific subset of 3-opt. 2-opt is the process where pairs of edges are exchanged (A-B and C-D becomes A-C and B-D) in order to produce shorter routes.
+Standardmäßig benutzen wir ACO nur mit dem Standard |cffffff782-opt Algorithmus|r um Routen zu optimieren. Wenn Sie "Extra Optimierung" anschalten, wird Routes auch 2.5-opt verwenden, der eine spezielle Untermenge von 3-opt ist. 2-opt ist der Prozess bei dem paarweise angeordnete Ecken ausgetauscht werden (A-B und C-D werden zu A-C und B-D) um kürzere Routen zu produzieren.
 |cFFFFFFFF
-I've found a bug! Where do I report it?
+Ich habe einen Fehler gefunden! Wo kann ich ihn melden?
 |r
-You can report bugs or give suggestions at |cffffff78http://www.wowace.com/forums/index.php?topic=10992.0|r
+Hier können Sie Fehler melden oder Vorschläge abgeben: |cffffff78http://www.wowace.com/forums/index.php?topic=10992.0|r
 
-Alternatively, you can also find us on |cffffff78irc://irc.freenode.org/wowace|r
+Alternativ finden Sie uns auch auf |cffffff78irc://irc.freenode.org/wowace|r
 
-When reporting a bug, make sure you include the |cffffff78steps on how to reproduce the bug|r, supply any |cffffff78error messages|r with stack traces if possible, give the |cffffff78revision number|r of Routes the problem occured in and state whether you are using an |cffffff78English client or otherwise|r.
+Wenn Sie einen Fehler melden, fügen Sie bitte die |cffffff78nötigen Schritte an, die dazu nötig sind den Fehler zu reproduzieren|r. Geben Sie wenn möglich alle|cffffff78Fehlermeldungen|r mit Stapelspeicherverfolgungen, die |cffffff78Revisions Nummer|r von Routes, in der das Problem auftrat, sowie die |cffffff78Sprachversion ihres WoW-Spiels|r an.
 |cFFFFFFFF
-Who wrote this cool addon?
+Wer hat dieses coole Addon geschrieben?
 |r
-|cffffff78Xaros|r on EU Doomhammer Alliance & |cffffff78Xinhuan|r on US Blackrock Alliance did.
+|cffffff78Xaros|r von EU Doomhammer Allianz & |cffffff78Xinhuan|r von US Blackrock Allianz waren es.
 ]]
 
 -- vim: ts=4 noexpandtab

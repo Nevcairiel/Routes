@@ -147,5 +147,48 @@ L["Cartographer_Waypoints module is missing or disabled"] = true
 L["%s - Node %d"] = true
 L["Direction changed"] = true
 
+-- FAQ
+L["FAQ"] = true
+L["Frequently Asked Questions"] = true
+L["FAQ_TEXT"] = [[
+|cFFFFFFFF
+When I try to create a route, it says no data is found. What am I doing wrong?
+|r
+It means exactly that: No data is found, mostly because the addon is not loaded or in standby mode. If you are using any of the |cffffff78Cartographer_<Profession>|r modules, then these modules must be loaded and active for data to be available.
+
+Note that |cffffff78Cartographer_<Profession>|r modules are all Load on Demand addons and require |cffffff78Cartographer_Professions|r to be enabled as it is the loading stub.
+|cFFFFFFFF
+Can you make a progress indicator on how long a background route optimization would take?
+|r
+A progress bar is not possible for the optimization process as it is a non-linear algorithm. It works on a "multiple pass" basis, each pass improving on the previous pass until it reaches a point where the improvement made is too minimal and then it will stop.
+
+This is somewhat like the |cffffff78Windows XP Disk Defragmentation|r utility, and its progress bar is worthless because its only showing you the % of each pass, but it doesn't know how many passes it will take, it could be 3 passes, it could be 10 passes, it stops only when it thinks it has done enough. This is why in the |cffffff78Vista|r version, it no longer shows you a progress bar at all.
+|cFFFFFFFF
+Do you plan on adding Gatherer support or perhaps questing addons node support?
+|r
+This is most likely a yes for |cffffff78Gatherer|r, and a maybe for questing.
+|cFFFFFFFF
+How does Routes perform its route optimization?
+|r
+Routes uses an algorithm called |cffffff78Ant Colony Optimization|r (ACO) which is a heuristic/probabilistic method of calculating optimal graphs based on observed real life ant behavior.
+
+ACO algorithms have been used to produce near-optimal solutions to the |cffffff78Traveling Salesman Problem|r (TSP). For more information, consult Google or Wikipedia.
+|cFFFFFFFF
+What does the "Extra Optimization" option do?
+|r
+By default, we only used ACO along with the standard |cffffff782-opt algorithm|r to optimize routes. Turning on "extra optimization" tells Routes to also use 2.5-opt, which is a specific subset of 3-opt. 2-opt is the process where pairs of edges are exchanged (A-B and C-D becomes A-C and B-D) in order to produce shorter routes.
+|cFFFFFFFF
+I've found a bug! Where do I report it?
+|r
+You can report bugs or give suggestions at |cffffff78http://www.wowace.com/forums/index.php?topic=10992.0|r
+
+Alternatively, you can also find us on |cffffff78irc://irc.freenode.org/wowace|r
+
+When reporting a bug, make sure you include the |cffffff78steps on how to reproduce the bug|r, supply any |cffffff78error messages|r with stack traces if possible, give the |cffffff78revision number|r of Routes the problem occured in and state whether you are using an |cffffff78English client or otherwise|r.
+|cFFFFFFFF
+Who wrote this cool addon?
+|r
+|cffffff78Xaros|r on EU Doomhammer Alliance & |cffffff78Xinhuan|r on US Blackrock Alliance did.
+]]
 
 -- vim: ts=4 noexpandtab

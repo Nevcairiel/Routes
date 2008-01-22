@@ -1,4 +1,48 @@
-﻿-- This addon is in Alpha status and is probably not usable
+﻿--[[
+********************************************************************************
+Routes
+22 January 2008
+(Written for live servers v2.3.2.7741)
+
+Author: Xaros @ EU Doomhammer Alliance & Xinhuan @ US Blackrock Alliance
+********************************************************************************
+
+Description:
+	Routes allow you to draw lines on the worldmap linking nodes together into
+	an efficient farming route from existing databases. The route will be shown
+	(by default) on the minimap and zone map as well.
+
+Features:
+	- Select node-types to build a line upon. The following are supported
+	   * Cartographer_Fishing
+	   * Cartographer_Mining
+	   * Cartographer_Herbalism
+	   * Cartographer_ExtractGas
+	   * Cartographer_Treasure
+	   * GatherMate
+	- Optimize your route using the traveling salesmen problem (TSP) ant
+	  colony optimization (ACO) algorithm
+	- Background (nonblocking) and foreground (blocking) optimization
+	- Select color/thickness/transparancy/visibility for each route
+	- For any route created, finding a new node will try to add that as
+	  optimal as possible
+	- Fubar plugin available to quickly access your routes
+	- Cartographer_Waypoints support for quickly following a route
+
+Download:
+	Routes is currently in Beta and is only available on the branches on
+	the wowace SVN. Once it is fully released after the launch of Ace3, we
+	will update this with download links.
+
+Contact:
+	If you find any bugs or have any suggestions, you can contact us on:
+
+	Forum: http://www.wowace.com/forums/index.php?topic=10992.0
+	IRC  : Grum or Xinhuan on irc://irc.freenode.org/wowace
+	Email: Grum ( cartographer_routes AT grum DOT nl )
+	       Xinhuan ( xinhuan AT gmail DOT com )
+	       Paypal donations are welcome ;)
+]]
 
 Routes = LibStub("AceAddon-3.0"):NewAddon("Routes", "AceConsole-3.0", "AceEvent-3.0", "AceHook-3.0")
 local Routes = Routes
@@ -834,7 +878,25 @@ options = {
 			desc = L["Routes"],
 			order = 200,
 			args = {},
-		}
+		},
+		faq_group = {
+			type = "group",
+			name = L["FAQ"],
+			desc = L["Frequently Asked Questions"],
+			order = 300,
+			args = {
+				header = {
+					type = "header",
+					name = L["Frequently Asked Questions"],
+					order = 0,
+				},
+				desc = {
+					type = "description",
+					name = L["FAQ_TEXT"],
+					order = 1,
+				},
+			},
+		},
 	}
 }
 

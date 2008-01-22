@@ -17,14 +17,7 @@
 embeds.xml
 
 # Locale files
-Locale-enUS.lua
-Locale-deDE.lua
-Locale-esES.lua
-Locale-frFR.lua
-Locale-koKR.lua
-Locale-ruRU.lua
-Locale-zhCN.lua
-Locale-zhTW.lua
+Locales.xml
 
 # Core Routes files
 Routes.lua

@@ -141,4 +141,10 @@ L["Skill-Herbalism"] = "Herbalism"
 L["Skill-Mining"] = "Mining"
 L["Skill-Engineering"] = "Engineering"
 
+-- Cartographer_Waypoints support
+L["Cartographer_Waypoints module is missing or disabled"] = true
+L["%s - Node %d"] = true
+L["Direction changed"] = true
+
+
 -- vim: ts=4 noexpandtab

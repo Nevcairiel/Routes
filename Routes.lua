@@ -998,6 +998,8 @@ options.args.options_group.args = {
 						t.treasure.disabled = true
 						t.gas.disabled = true
 					end
+					Routes:DrawWorldmapLines()
+					Routes:DrawMinimapLines(true)
 				end,
 			},
 			auto_group = {
@@ -1070,7 +1072,7 @@ options.args.options_group.args = {
 				name  = L["Change direction"], type = "execute",
 				desc  = L["Change the direction of the nodes in the route being added as the next waypoint"],
 				func  = function()
-					--Cartographer_Routes:ChangeWaypointDirection()
+					Routes:ChangeWaypointDirection()
 				end,
 				order = 720,
 			},
@@ -1078,7 +1080,7 @@ options.args.options_group.args = {
 				name  = L["Start using Waypoints"], type = "execute",
 				desc  = L["Start using Cartographer_Waypoints by finding the closest visible route/node in the current zone and using that as the waypoint"],
 				func  = function()
-					--Cartographer_Routes:QueueFirstNode()
+					Routes:QueueFirstNode()
 				end,
 				order = 710,
 			},
@@ -1086,7 +1088,7 @@ options.args.options_group.args = {
 				name  = L["Stop using Waypoints"], type = "execute",
 				desc  = L["Stop using Cartographer_Waypoints by clearing the last queued node"],
 				func  = function()
-					--Cartographer_Routes:RemoveQueuedNode()
+					Routes:RemoveQueuedNode()
 				end,
 				order = 730,
 			},
@@ -1667,6 +1669,113 @@ do
 			confirmText = L["A route with that name already exists. Overwrite?"],
 		},
 	}
+end
+
+------------------------------------------------------------------------------------------------------
+-- Cartographer_Waypoints support
+do
+	local route_table
+	local route_name
+	local direction = 1
+	local node_num = 1
+	local zone
+	local stored_hit_distance
+	
+	function Routes:FindClosestVisibleRoute()
+		if not (Cartographer:HasModule("Waypoints") and Cartographer:IsModuleActive("Waypoints")) then
+			self:Print(L["Cartographer_Waypoints module is missing or disabled"])
+			return
+		end
+		local zone = GetRealZoneText()
+		if BZR[zone] then
+			zone = BZR[zone]
+		end
+		local closest_zone, closest_route, closest_node
+		local min_distance = 1/0
+		local defaults = db.defaults
+		for route_name, route_data in pairs(db.routes[zone]) do  -- for each route in current zone
+			if type(route_data) == "table" and type(route_data.route) == "table" and #route_data.route > 1 then  -- if it is valid
+				if (not route_data.hidden and (route_data.visible or not defaults.use_auto_showhide)) or defaults.show_hidden then  -- if it is visible
+					for i = 1, #route_data.route do  -- for each node
+						local x, y = Cartographer_Notes.getXY(route_data.route[i])
+						local dist = Cartographer:GetDistanceToPoint(x, y, zone)
+						if dist < min_distance then
+							min_distance = dist
+							closest_zone = zone
+							closest_route = route_name
+							closest_node = i
+						end
+					end
+				end
+			end
+		end
+		return closest_zone, closest_route, closest_node
+	end
+
+	function Routes:QueueFirstNode()
+		if not (Cartographer:HasModule("Waypoints") and Cartographer:IsModuleActive("Waypoints")) then
+			self:Print(L["Cartographer_Waypoints module is missing or disabled"])
+			return
+		end
+		local a, b, c = self:FindClosestVisibleRoute()
+		if a then
+			if stored_hit_distance then
+				-- We are already following a route in Waypoints
+				self:RemoveQueuedNode()
+			end
+			zone = a
+			route_name = b
+			route_table = db.routes[a][b]
+			node_num = c
+			Cartographer_Waypoints:AddRoutesWaypoint(zone, route_table.route[node_num], L["%s - Node %d"]:format(route_name, node_num))
+			self:RegisterMessage("CartographerWaypoints_WaypointHit", "WaypointHit")
+			stored_hit_distance = Cartographer_Waypoints:GetWaypointHitDistance()
+			Cartographer_Waypoints:SetWaypointHitDistance(db.defaults.waypoint_hit_distance)
+		end
+	end
+
+	function Routes:WaypointHit(namespace, event, waypoint)
+		if stored_hit_distance then
+			-- Try to match the removed waypointID with a node in the route. This
+			-- is necessary because the route could have changed dynamically from node
+			-- insertion/deletion/optimization/etc causing a change to the node numbers
+			local id = tonumber((gsub(waypoint.WaypointID, zone, ""))) -- Extra brackets necessary to reduce to 1 return value
+			if not id then return end -- Not a waypoint from this zone
+			local route = route_table.route
+			for i = 1, #route do
+				if id == route[i] then
+					-- Match found, get the next node to waypoint
+					node_num = i + direction
+					if node_num > #route then
+						node_num = 1
+					elseif node_num < 1 then
+						node_num = #route
+					end
+					--self:Print("Adding node "..node_num)
+					Cartographer_Waypoints:AddRoutesWaypoint(zone, route[node_num], L["%s - Node %d"]:format(route_name, node_num))
+					break
+				end
+			end
+		end
+	end
+
+	function Routes:RemoveQueuedNode()
+		if not (Cartographer:HasModule("Waypoints") and Cartographer:IsModuleActive("Waypoints")) then
+			self:Print(L["Cartographer_Waypoints module is missing or disabled"])
+			return
+		end
+		if stored_hit_distance then
+			Cartographer_Waypoints:CancelWaypoint(route_table.route[node_num]..zone)
+			Cartographer_Waypoints:SetWaypointHitDistance(stored_hit_distance)
+			stored_hit_distance = nil
+			self:UnregisterMessage("CartographerWaypoints_WaypointHit")
+		end
+	end
+
+	function Routes:ChangeWaypointDirection()
+		direction = -direction
+		self:Print(L["Direction changed"])
+	end
 end
 
 

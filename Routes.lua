@@ -1544,7 +1544,7 @@ function G:DrawLine(C, sx, sy, ex, ey, w, color, layer)
 	end
 
 	-- Calculate actual length of line
-	local l = sqrt((dx * dx) + (dy * dy));
+	local l = ((dx * dx) + (dy * dy)) ^ 0.5;
 
 	-- Sin and Cosine of rotation, and combination (for later)
 	local s,c = -dy / l, dx / l;

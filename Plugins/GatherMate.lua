@@ -53,7 +53,7 @@ local function Summarize(data, zone)
 end
 source.Summarize = Summarize
 
--- returns the english name for the node so we can store it was being requested
+-- returns the english name, translated name for the node so we can store it was being requested
 -- also returns the type of db for use with auto show/hide route
 local translate_db_type = {
 	["Herb Gathering"] = "Herbalism",
@@ -76,8 +76,8 @@ local function AppendNodes(node_list, zone, db_type, node_type)
 		-- return the node_type for auto-adding
 		local translatednode = GatherMate.reverseNodeIDs[node_type]
 		for k, v in pairs(LN) do
-			if v == translatednode then
-				return k, translate_db_type[db_type] -- get the english name
+			if v == translatednode then -- get the english name
+				return k, v, translate_db_type[db_type]
 			end
 		end
 	end

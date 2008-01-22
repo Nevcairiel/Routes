@@ -79,7 +79,7 @@ local function Summarize(data, zone)
 end
 source.Summarize = Summarize
 
--- returns the english name for the node so we can store it was being requested
+-- returns the english name, translated name for the node so we can store it was being requested
 -- also returns the type of db for use with auto show/hide route
 local function AppendNodes(node_list, zone, db_type, node_type)
 	local CN = (Cartographer and Cartographer:HasModule("Notes")) and Cartographer:GetModule("Notes")
@@ -98,8 +98,9 @@ local function AppendNodes(node_list, zone, db_type, node_type)
 			end
 		end
 	end
-
-	return node_type, db_type
+	local LN = translate_type[db_type]
+	local translatednode = LN:HasTranslation(node_type) and LN[node_type] or node_type -- fallback on english name if translation doesn't exist
+	return node_type, translatednode, db_type
 end
 source.AppendNodes = AppendNodes
 

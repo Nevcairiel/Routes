@@ -1019,9 +1019,10 @@ do
 		end
 		num = num + 1
 		str[num] = L["This route contains the following nodes:\n"]
-		for k in pairs(t.selection) do
+		for k, v in pairs(t.selection) do
 			num = num + 1
-			str[num] = "|cFFFFFFFF     "..k.."|r\n" -- TODO: NEED LOCALIZATION
+			if v == true then v = k end
+			str[num] = "|cFFFFFFFF     "..v.."|r\n"
 		end
 		return table.concat(str)
 	end
@@ -1447,8 +1448,8 @@ do
 								-- extract data from plugin
 								local plugin = Routes.plugins[db_src]
 								if plugin.IsActive() then
-									local english_node, type = plugin.AppendNodes(new_route.route, create_zone, db_type, node_type)
-									new_route.selection[english_node] = true
+									local english_node, localized_node, type = plugin.AppendNodes(new_route.route, create_zone, db_type, node_type)
+									new_route.selection[english_node] = localized_node
 									new_route.db_type[type] = true
 								end
 							end

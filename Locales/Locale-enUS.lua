@@ -99,6 +99,8 @@ L["Treasure"] = true
 L["ExtractGas"] = "Gas"
 
 -- Route Config
+L["When the following data sources add or delete node data, update my routes automatically by inserting or removing the same node in the relevant routes."] = true
+L["You have |cFFFFFFFF%d|r route(s) in |cFFFFFFFF%s|r."] = true
 L["Information"] = true
 L["This route has |cFFFFFFFF%d|r nodes and is |cFFFFFFFF%d|r yards long."] = true
 L["This route has nodes that belong to the following categories:\n"] = true

@@ -108,6 +108,9 @@ local defaults = {
 			},
 			use_auto_showhide = false,
 			waypoint_hit_distance = 50,
+			callbacks = {
+				['*'] = true
+			}
 		},
 	}
 }
@@ -732,13 +735,21 @@ function Routes:OnInitialize()
 		zoneNamesReverse[v] = k
 	end
 
+	local function GetZoneDescText(info)
+		local count = 0
+		for route in pairs(db.routes[info.arg]) do
+			count = count + 1
+		end
+		return L["You have |cFFFFFFFF%d|r route(s) in |cFFFFFFFF%s|r."]:format(count, BZ[info.arg])
+	end
+
 	-- Generate ace options table for each route
 	local opts = options.args.routes_group.args
 	for zone, zone_table in pairs(db.routes) do
 		-- do not show unless we have routes.
 		-- This because lua cant do '#' on hash-tables
 		if next(zone_table) ~= nil then
-			local localizedZoneName = BZ[zone] or zone
+			local localizedZoneName = BZ[zone]
 			local zonekey = tostring(zoneNamesReverse[localizedZoneName])
 			opts[zonekey] = { -- use a 3 digit string which is alphabetically sorted zone names by continent
 				type = "group",
@@ -750,6 +761,12 @@ function Routes:OnInitialize()
 				local routekey = route:gsub("%s", "\255") -- can't have spaces in the key
 				opts[zonekey].args[routekey] = self:CreateAceOptRouteTable(zone, route)
 			end
+			opts[zonekey].args.desc = {
+				type = "description",
+				name = GetZoneDescText,
+				arg = zone,
+				order = 0,
+			}
 		end
 	end
 end
@@ -1325,6 +1342,38 @@ function Routes:CreateAceOptRouteTable(zone, route)
 	}
 end
 
+local source_data = {}
+options.args.routes_group.args.desc = {
+	type = "description",
+	name = L["When the following data sources add or delete node data, update my routes automatically by inserting or removing the same node in the relevant routes."],
+	order = 0,
+}
+options.args.routes_group.args.callbacks = {
+	type = "multiselect",
+	name = L["Select sources of data"],
+	order = 100,
+	values = source_data,
+	get = function(info, k)
+		if Routes.plugins[k].IsActive() then
+			return db.defaults.callbacks[k]
+		else
+			return nil
+		end
+	end,
+	set = function(info, k, v)
+		-- If plugin is not active, don't toggle anything
+		if not Routes.plugins[k].IsActive() then return end
+		if v == nil then v = false end
+		db.defaults.callbacks[k] = v
+		if v then
+			Routes.plugins[k].AddCallbacks()
+		else
+			Routes.plugins[k].RemoveCallbacks()
+		end
+	end,
+	tristate = true,
+}
+
 -- AceOpt config table for route creation
 do
 	-- Some upvalues used in the aceopts[] table for creating new routes
@@ -1346,7 +1395,6 @@ do
 	local create_data = {}
 	local empty_table = {}
 	local source_data_choice = {}
-	local source_data = {}
 
 	local function deep_copy_table(a, b)
 		for k, v in pairs(b) do
@@ -1481,6 +1529,8 @@ do
 				end
 			end,
 			set = function(info, k, v)
+				-- If plugin is not active, don't toggle anything
+				if not Routes.plugins[k].IsActive() then return end
 				if v == nil then v = false end
 				source_data_choice[k] = v
 				options.args.add_group.args[k].disabled = not v

@@ -117,15 +117,17 @@ local function Ace2NoteDeleteEvent(event, zone, x, y, node, db_type)
 end
 
 local callback = {}
+if Cartographer.AddEventListener then -- User is using the Rock version of Cartographer
+	Rock("LibRockEvent-1.0"):Embed(callback)
+elseif Cartographer.RegisterEvent then
+	AceLibrary("AceEvent-2.0"):embed(callback) -- this is not a typo! it is a small e!
+end
 
 local function AddCallbacks()
 	if Cartographer.AddEventListener then
-		-- User is using the Rock version of Cartographer
-		Rock("LibRockEvent-1.0"):Embed(callback)
 		callback:AddEventListener(Cartographer_Notes.name, "NoteSet", RockNoteSetEvent)
 		callback:AddEventListener(Cartographer_Notes.name, "NoteDeleted", RockNoteDeleteEvent)
 	elseif Cartographer.RegisterEvent then
-		AceLibrary("AceEvent-2.0"):embed(callback) -- this is not a typo! it is a small e!
 		callback:RegisterEvent("CartographerNotes_NoteSet", Ace2NoteSetEvent)
 		callback:RegisterEvent("CartographerNotes_NoteDeleted", Ace2NoteDeleteEvent)
 	end
@@ -134,7 +136,6 @@ source.AddCallbacks = AddCallbacks
 
 local function RemoveCallbacks()
 	if Cartographer.AddEventListener then
-		-- User is using the Rock version of Cartographer
 		callback:RemoveEventListener(Cartographer_Notes.name, "NoteSet")
 		callback:RemoveEventListener(Cartographer_Notes.name, "NoteDeleted")
 	elseif Cartographer.RegisterEvent then

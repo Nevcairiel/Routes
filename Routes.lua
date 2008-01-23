@@ -993,7 +993,7 @@ options.args.options_group.args = {
 					},
 				},
 			},
-			draw_gap = {
+			line_gaps = {
 				name = L["Line gaps"], type = "toggle",
 				desc = L["Shorten the lines drawn on the minimap slightly so that they do not overlap the icons and minimap tracking blips."],
 				arg  = "line_gaps",

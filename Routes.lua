@@ -622,8 +622,21 @@ function Routes:DrawMinimapLines(forceUpdate)
 							draw_ex =			 (draw_ex - minX) * scale_x
 							draw_ey = minimap_h - (draw_ey - minY) * scale_y
 
-							-- draw the line
-							G:DrawLine( Minimap, draw_sx, draw_sy, draw_ex, draw_ey, width, color , "ARTWORK")
+							-- shorten the line by 5 pixels
+							local dx = draw_sx - draw_ex
+							local dy = draw_sy - draw_ey
+							local l = (dx*dx + dy*dy)^0.5
+							local x = 5 * dx / l
+							local y = 5 * dy / l
+							if last_inside and cur_inside and l > 10 then -- draw if line is 10 or more pixels
+								G:DrawLine( Minimap, draw_sx-x, draw_sy-y, draw_ex+x, draw_ey+y, width, color, "ARTWORK")
+							elseif last_inside and l > 5 then
+								G:DrawLine( Minimap, draw_sx-x, draw_sy-y, draw_ex, draw_ey, width, color, "ARTWORK")
+							elseif cur_inside and l > 5 then
+								G:DrawLine( Minimap, draw_sx, draw_sy, draw_ex+x, draw_ey+y, width, color, "ARTWORK")
+							else
+								G:DrawLine( Minimap, draw_sx, draw_sy, draw_ex, draw_ey, width, color, "ARTWORK")
+							end
 						end
 					end
 

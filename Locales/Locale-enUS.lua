@@ -33,6 +33,8 @@ L["Hidden route"] = true
 L["Change default hidden route color"] = true
 L["Show hidden routes"] = true
 L["Show hidden routes?"] = true
+L["Line gaps"] = true
+L["Shorten the lines drawn on the minimap slightly so that they do not overlap the icons and minimap tracking blips."] = true
 
 -- Auto show/hide
 L["Auto show/hide"] = true

@@ -108,6 +108,7 @@ local defaults = {
 			},
 			use_auto_showhide = false,
 			waypoint_hit_distance = 50,
+			line_gaps = true,
 			callbacks = {
 				['*'] = true
 			}
@@ -625,18 +626,22 @@ function Routes:DrawMinimapLines(forceUpdate)
 							draw_ex =			 (draw_ex - minX) * scale_x
 							draw_ey = minimap_h - (draw_ey - minY) * scale_y
 
-							-- shorten the line by 5 pixels
-							local dx = draw_sx - draw_ex
-							local dy = draw_sy - draw_ey
-							local l = (dx*dx + dy*dy)^0.5
-							local x = 5 * dx / l
-							local y = 5 * dy / l
-							if last_inside and cur_inside and l > 10 then -- draw if line is 10 or more pixels
-								G:DrawLine( Minimap, draw_sx-x, draw_sy-y, draw_ex+x, draw_ey+y, width, color, "ARTWORK")
-							elseif last_inside and l > 5 then
-								G:DrawLine( Minimap, draw_sx-x, draw_sy-y, draw_ex, draw_ey, width, color, "ARTWORK")
-							elseif cur_inside and l > 5 then
-								G:DrawLine( Minimap, draw_sx, draw_sy, draw_ex+x, draw_ey+y, width, color, "ARTWORK")
+							if defaults.line_gaps then
+								-- shorten the line by 5 pixels on endpoints inside the Minimap
+								local dx = draw_sx - draw_ex
+								local dy = draw_sy - draw_ey
+								local l = (dx*dx + dy*dy)^0.5
+								local x = 5 * dx / l
+								local y = 5 * dy / l
+								if last_inside and cur_inside and l > 10 then -- draw if line is 10 or more pixels
+									G:DrawLine( Minimap, draw_sx-x, draw_sy-y, draw_ex+x, draw_ey+y, width, color, "ARTWORK")
+								elseif last_inside and l > 5 then
+									G:DrawLine( Minimap, draw_sx-x, draw_sy-y, draw_ex, draw_ey, width, color, "ARTWORK")
+								elseif cur_inside and l > 5 then
+									G:DrawLine( Minimap, draw_sx, draw_sy, draw_ex+x, draw_ey+y, width, color, "ARTWORK")
+								else
+									G:DrawLine( Minimap, draw_sx, draw_sy, draw_ex, draw_ey, width, color, "ARTWORK")
+								end
 							else
 								G:DrawLine( Minimap, draw_sx, draw_sy, draw_ex, draw_ey, width, color, "ARTWORK")
 							end
@@ -878,13 +883,6 @@ options = {
 }
 
 options.args.options_group.args = {
-	update_distance = {
-		name = L["Update distance"], type = "range",
-		desc = L["Yards to move before triggering a minimap update"],
-		min = 0, max = 10, step = 0.1,
-		arg = "update_distance",
-		order = 1,
-	},
 	-- Mapdrawing menu entry
 	drawing = {
 		name = L["Map Drawing"], type = "group",
@@ -995,11 +993,24 @@ options.args.options_group.args = {
 					},
 				},
 			},
+			draw_gap = {
+				name = L["Line gaps"], type = "toggle",
+				desc = L["Shorten the lines drawn on the minimap slightly so that they do not overlap the icons and minimap tracking blips."],
+				arg  = "line_gaps",
+				order = 400,
+			},
 			show_hidden = {
 				name = L["Show hidden routes"], type = "toggle",
 				desc = L["Show hidden routes?"],
 				arg  = "show_hidden",
-				order = 400,
+				order = 450,
+			},
+			update_distance = {
+				name = L["Update distance"], type = "range",
+				desc = L["Yards to move before triggering a minimap update"],
+				min = 0, max = 10, step = 0.1,
+				arg = "update_distance",
+				order = 500,
 			},
 		},
 	},

@@ -105,17 +105,27 @@ end
 source.AppendNodes = AppendNodes
 
 local function RockNoteSetEvent(namespace, event, zone, x, y, node, db_type)
+	local coord = floor(x * 10000 + 0.5) * 10000 + floor(y * 10000 + 0.5)
+	Routes:InsertNode(zone, coord, node)
 end
 
 local function RockNoteDeleteEvent(namespace, event, zone, x, y, node, db_type)
+	local coord = floor(x * 10000 + 0.5) * 10000 + floor(y * 10000 + 0.5)
+	Routes:DeleteNode(zone, coord, node)
 end
 
 local function Ace2NoteSetEvent(event, zone, x, y, node, db_type)
+	local coord = floor(x * 10000 + 0.5) * 10000 + floor(y * 10000 + 0.5)
+	Routes:InsertNode(zone, coord, node)
 end
 
 local function Ace2NoteDeleteEvent(event, zone, x, y, node, db_type)
+	local coord = floor(x * 10000 + 0.5) * 10000 + floor(y * 10000 + 0.5)
+	Routes:DeleteNode(zone, coord, node)
 end
 
+-- This is a dummy table used to embed AceEvent-2.0 or LibRockEvent-1.0 in it
+-- without needing to register a new addon object (which is just a table anyway)
 local callback = {}
 if Cartographer.AddEventListener then -- User is using the Rock version of Cartographer
 	Rock("LibRockEvent-1.0"):Embed(callback)

@@ -104,5 +104,4 @@ local function RemoveCallbacks()
 end
 source.RemoveCallbacks = RemoveCallbacks
 
-
 -- vim: ts=4 noexpandtab

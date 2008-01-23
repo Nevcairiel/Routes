@@ -39,18 +39,17 @@ Contact:
 
 	Forum: http://www.wowace.com/forums/index.php?topic=10992.0
 	IRC  : Grum or Xinhuan on irc://irc.freenode.org/wowace
-	Email: Grum ( cartographer_routes AT grum DOT nl )
+	Email: Grum ( routes AT grum DOT nl )
 	       Xinhuan ( xinhuan AT gmail DOT com )
 	       Paypal donations are welcome ;)
 ]]
 
 Routes = LibStub("AceAddon-3.0"):NewAddon("Routes", "AceConsole-3.0", "AceEvent-3.0", "AceHook-3.0")
 local Routes = Routes
-local L = LibStub("AceLocale-3.0"):GetLocale("Routes", false)
-local BZ = LibStub("LibBabble-Zone-3.0"):GetUnstrictLookupTable()
+local L   = LibStub("AceLocale-3.0"):GetLocale("Routes", false)
+local BZ  = LibStub("LibBabble-Zone-3.0"):GetUnstrictLookupTable()
 local BZR = LibStub("LibBabble-Zone-3.0"):GetReverseLookupTable()
 local G = {} -- was Graph-1.0, but we removed the dependency
-
 
 -- database defaults
 local db
@@ -101,10 +100,10 @@ local defaults = {
 				two_point_five_opt = false, -- Perform optimized 2-opt pass
 			},
 			prof_options = {
-				Herbalism = "Always",
-				Mining = "Always",
-				Fishing = "Always",
-				Treasure = "Always",
+				Herbalism  = "Always",
+				Mining     = "Always",
+				Fishing    = "Always",
+				Treasure   = "Always",
 				ExtractGas = "Always",
 			},
 			use_auto_showhide = false,

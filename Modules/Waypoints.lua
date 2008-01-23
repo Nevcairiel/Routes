@@ -187,3 +187,5 @@ options = {
 		},
 	},
 }
+
+-- vim: ts=4 noexpandtab

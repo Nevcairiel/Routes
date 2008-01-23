@@ -8,9 +8,9 @@ local options
 local db
 
 local have_prof = {
-	Herbalism = false,
-	Mining = false,
-	Fishing = false,
+	Herbalism  = false,
+	Mining     = false,
+	Fishing    = false,
 	ExtractGas = false, -- Engineering
 }
 local texture_to_profession = {
@@ -80,23 +80,11 @@ function AutoShow:ApplyVisibility()
 end
 
 function AutoShow:SetupAutoShow()
-	local t = options.args.auto_group.args
 	if db.defaults.use_auto_showhide then
 		self:RegisterEvent("SKILL_LINES_CHANGED")
 		self:RegisterEvent("MINIMAP_UPDATE_TRACKING")
 		self:MINIMAP_UPDATE_TRACKING()
 		self:SKILL_LINES_CHANGED()
-		t.fishing.disabled = nil
-		t.herbalism.disabled = nil
-		t.mining.disabled = nil
-		t.treasure.disabled = nil
-		t.gas.disabled = nil
-	else
-		t.fishing.disabled = true
-		t.herbalism.disabled = true
-		t.mining.disabled = true
-		t.treasure.disabled = true
-		t.gas.disabled = true
 	end
 end
 
@@ -111,20 +99,20 @@ end
 
 
 local prof_options = {
-	["Always"] = L["Always show"],
+	["Always"]          = L["Always show"],
 	["With Profession"] = L["Only with profession"],
-	["When active"] = L["Only while tracking"],
-	["Never"] = L["Never show"],
+	["When active"]     = L["Only while tracking"],
+	["Never"]           = L["Never show"],
 }
 local prof_options2 = { -- For Treasure, which isn't a profession
-	["Always"] = L["Always show"],
-	["When active"] = L["Only while tracking"],
-	["Never"] = L["Never show"],
+	["Always"]          = L["Always show"],
+	["When active"]     = L["Only while tracking"],
+	["Never"]           = L["Never show"],
 }
 local prof_options3 = { -- For Gas, which doesn't have tracking as a skill
-	["Always"] = L["Always show"],
+	["Always"]          = L["Always show"],
 	["With Profession"] = L["Only with profession"],
-	["Never"] = L["Never show"],
+	["Never"]           = L["Never show"],
 }
 
 options = {
@@ -197,3 +185,5 @@ options = {
 		},
 	},
 }
+
+-- vim: ts=4 noexpandtab

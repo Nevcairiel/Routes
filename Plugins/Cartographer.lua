@@ -114,12 +114,12 @@ local function RockNoteDeleteEvent(namespace, event, zone, x, y, node, db_type)
 	Routes:DeleteNode(zone, coord, node)
 end
 
-local function Ace2NoteSetEvent(event, zone, x, y, node, db_type)
+local function Ace2NoteSetEvent(zone, x, y, node, db_type)
 	local coord = floor(x * 10000 + 0.5) * 10000 + floor(y * 10000 + 0.5)
 	Routes:InsertNode(zone, coord, node)
 end
 
-local function Ace2NoteDeleteEvent(event, zone, x, y, node, db_type)
+local function Ace2NoteDeleteEvent(zone, x, y, node, db_type)
 	local coord = floor(x * 10000 + 0.5) * 10000 + floor(y * 10000 + 0.5)
 	Routes:DeleteNode(zone, coord, node)
 end

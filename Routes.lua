@@ -358,9 +358,7 @@ function Routes:DrawMinimapLines(forceUpdate)
 
 	G:HideLines(Minimap)
 
-	if BZR[zone] then
-		zone = BZR[zone]
-	end
+	zone = BZR[zone] or zone
 
 	local minimap_w = Minimap:GetWidth()
 	local minimap_h = Minimap:GetHeight()
@@ -651,30 +649,43 @@ throttleFrame:SetScript("OnUpdate", function(self, elapsed)
 	self:Hide()
 end)
 
--- Accepts a zone, coord and node_name in English for inserting into relevant routes
+-- Accepts a zone name, coord and node_name (inputs can be english or localized)
+-- for inserting into relevant routes
 function Routes:InsertNode(zone, coord, node_name)
+	zone = BZR[zone] or zone
 	for route_name, route_data in pairs( db.routes[zone] ) do
 		-- for every route check if the route is created with this node
-		if route_data.selection and route_data.selection[node_name] then
-			-- Add the node
-			route_data.route, route_data.length = self.TSP:InsertNode(route_data.route, zone, coord, false)
-			throttleFrame:Show()
+		if route_data.selection then
+			for k, v in pairs(route_data.selection) do
+				if k == node_name or v == node_name then
+					-- Add the node
+					route_data.route, route_data.length = self.TSP:InsertNode(route_data.route, zone, coord, false)
+					throttleFrame:Show()
+					break
+				end
+			end
 		end
 	end
 end
 
--- Accepts a zone, coord and node_name in English for deleting from relevant routes
+-- Accepts a zone name, coord and node_name (inputs can be english or localized)
+-- for deleting into relevant routes
 function Routes:DeleteNode(zone, coord, node_name)
+	zone = BZR[zone] or zone
 	for route_name, route_data in pairs( db.routes[zone] ) do
 		-- for every route check if the route is created with this node
-		if route_data.selection and route_data.selection[node_name] then
-			-- Delete the node if it exists in this route
-			for i = 1, #route_data.route do
-				if coord == route_data.route[i] then
-					tremove(route_data.route, i)
-					route_data.length = self.TSP:PathLength(route_data.route, zone)
-					throttleFrame:Show()
-					break
+		if route_data.selection then
+			for k, v in pairs(route_data.selection) do
+				if k == node_name or v == node_name then
+					-- Delete the node if it exists in this route
+					for i = 1, #route_data.route do
+						if coord == route_data.route[i] then
+							tremove(route_data.route, i)
+							route_data.length = self.TSP:PathLength(route_data.route, zone)
+							throttleFrame:Show()
+							break
+						end
+					end
 				end
 			end
 		end

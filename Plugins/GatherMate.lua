@@ -84,14 +84,25 @@ local function AppendNodes(node_list, zone, db_type, node_type)
 end
 source.AppendNodes = AppendNodes
 
-local function AddHook()
-	-- Hook calls for adding a node
+local function InsertNode(event, zone, nodeType, coord, node_name)
+	Routes:InsertNode(zone, coord, node_name)
 end
-source.AddHook = AddHook
 
-local function RemoveHook()
-	-- Hook calls for deleting of a node
+local function DeleteNode(event, zone, nodeType, coord, node_name)
+	Routes:DeleteNode(zone, coord, node_name)
 end
-source.RemoveHook = RemoveHook
+
+local function AddCallbacks()
+	Routes:RegisterMessage("GatherMateNodeAdded", InsertNode)
+	Routes:RegisterMessage("GatherMateNodeDeleted", DeleteNode)
+end
+source.AddCallbacks = AddCallbacks
+
+local function RemoveCallbacks()
+	Routes:UnregisterMessage("GatherMateNodeAdded")
+	Routes:UnregisterMessage("GatherMateNodeDeleted")
+end
+source.RemoveCallbacks = RemoveCallbacks
+
 
 -- vim: ts=4 noexpandtab

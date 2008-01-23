@@ -104,14 +104,12 @@ local function AppendNodes(node_list, zone, db_type, node_type)
 end
 source.AppendNodes = AppendNodes
 
-local function AddHook()
-	-- Hook calls for adding a node
+local function AddCallbacks()
 end
-source.AddHook = AddHook
+source.AddCallbacks = AddCallbacks
 
-local function RemoveHook()
-	-- Hook calls for deleting of a node
+local function RemoveCallbacks()
 end
-source.RemoveHook = RemoveHook
+source.RemoveCallbacks = RemoveCallbacks
 
 -- vim: ts=4 noexpandtab

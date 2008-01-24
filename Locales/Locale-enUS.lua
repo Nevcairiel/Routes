@@ -92,6 +92,9 @@ L["GatherMateHerb Gathering"] = "H"
 L["GatherMateMining"] = "M"
 L["GatherMateFishing"] = "F"
 L["GatherMateExtract Gas"] = "G"
+L["GatherMINE"] = "M"
+L["GatherHERB"] = "H"
+L["GatherOPEN"] = "T"
 
 -- Node types
 L["Herbalism"] = true

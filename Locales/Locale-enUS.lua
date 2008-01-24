@@ -83,6 +83,7 @@ L["No data selected for new route"] = true
 L["A route with that name already exists. Overwrite?"] = true
 
 -- DB prefix abbreviations 
+-- M for Mining, H for Herbs, F for fishing, G for Gas, T for Treasure
 L["CartographerHerbalism"] = "H"
 L["CartographerMining"] = "M"
 L["CartographerFishing"] = "F"
@@ -92,9 +93,9 @@ L["GatherMateHerb Gathering"] = "H"
 L["GatherMateMining"] = "M"
 L["GatherMateFishing"] = "F"
 L["GatherMateExtract Gas"] = "G"
-L["GatherMINE"] = "M"
-L["GatherHERB"] = "H"
-L["GatherOPEN"] = "T"
+L["GathererMINE"] = "M"
+L["GathererHERB"] = "H"
+L["GathererOPEN"] = "T"
 
 -- Node types
 L["Herbalism"] = true
@@ -105,6 +106,7 @@ L["ExtractGas"] = "Gas"
 
 -- Route Config
 L["When the following data sources add or delete node data, update my routes automatically by inserting or removing the same node in the relevant routes."] = true
+L[" Gatherer currently does not support callbacks, so this is impossible for Gatherer."] = true
 L["You have |cFFFFFFFF%d|r route(s) in |cFFFFFFFF%s|r."] = true
 L["Information"] = true
 L["This route has |cFFFFFFFF%d|r nodes and is |cFFFFFFFF%d|r yards long."] = true

@@ -31,3 +31,4 @@ Modules\Waypoints.lua
 # Addons we can draw data from
 Plugins\Cartographer.lua
 Plugins\GatherMate.lua
+Plugins\Gatherer.lua

@@ -58,6 +58,7 @@ local translate_db_type = {
 local function AppendNodes(node_list, zone, db_type, node_type)
 	local continent = Routes.zoneNamesReverse[zone]
 	continent, zone = floor(continent / 100), continent % 100
+	node_type = tonumber(node_type)
 
 	for _, x, y in Gatherer.Storage.ZoneGatherNodes(continent, zone, node_type) do
 		tinsert( node_list, floor(x * 10000 + 0.5) * 10000 + floor(y * 10000 + 0.5) )

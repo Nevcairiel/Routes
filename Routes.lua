@@ -743,8 +743,10 @@ function Routes:OnInitialize()
 
 	local function GetZoneDescText(info)
 		local count = 0
-		for route in pairs(db.routes[info.arg]) do
-			count = count + 1
+		for route_name, route_table in pairs(db.routes[info.arg]) do
+			if #route_table.route > 0 then
+				count = count + 1
+			end
 		end
 		return L["You have |cFFFFFFFF%d|r route(s) in |cFFFFFFFF%s|r."]:format(count, BZ[info.arg])
 	end
@@ -1357,7 +1359,7 @@ end
 local source_data = {}
 options.args.routes_group.args.desc = {
 	type = "description",
-	name = L["When the following data sources add or delete node data, update my routes automatically by inserting or removing the same node in the relevant routes."],
+	name = L["When the following data sources add or delete node data, update my routes automatically by inserting or removing the same node in the relevant routes."]..L[" Gatherer currently does not support callbacks, so this is impossible for Gatherer."],
 	order = 0,
 }
 options.args.routes_group.args.callbacks = {
@@ -1366,7 +1368,7 @@ options.args.routes_group.args.callbacks = {
 	order = 100,
 	values = source_data,
 	get = function(info, k)
-		if Routes.plugins[k].IsActive() then
+		if Routes.plugins[k].IsActive() and k ~= "Gatherer" then
 			return db.defaults.callbacks[k]
 		else
 			return nil
@@ -1374,7 +1376,7 @@ options.args.routes_group.args.callbacks = {
 	end,
 	set = function(info, k, v)
 		-- If plugin is not active, don't toggle anything
-		if not Routes.plugins[k].IsActive() then return end
+		if not Routes.plugins[k].IsActive() or k == "Gatherer" then return end
 		if v == nil then v = false end
 		db.defaults.callbacks[k] = v
 		if v then

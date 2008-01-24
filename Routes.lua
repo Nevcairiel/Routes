@@ -664,7 +664,7 @@ end
 local throttleFrame = CreateFrame("Frame")
 throttleFrame:Hide()
 throttleFrame:SetScript("OnUpdate", function(self, elapsed)
-	Routes:DrawMinimapLines()
+	Routes:DrawWorldmapLines()
 	Routes:DrawMinimapLines(true)
 	self:Hide()
 end)

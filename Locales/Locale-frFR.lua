@@ -33,6 +33,8 @@ L["Hidden route"] = "Routes masquées"
 L["Change default hidden route color"] = "Change la couleur par défaut des routes masquées."
 L["Show hidden routes"] = "Voir les routes masquées"
 L["Show hidden routes?"] = "Affiche les routes masquées."
+L["Line gaps"] = "Lignes découpées"
+L["Shorten the lines drawn on the minimap slightly so that they do not overlap the icons and minimap tracking blips."] = "Raccourcit légèrement les dessins des lignes de la minicarte afin qu'elles ne se chevauchent pas les icônes et les spots du suivi."
 
 -- Auto show/hide
 L["Auto show/hide"] = "Afficher/masquer auto."
@@ -81,6 +83,7 @@ L["No data selected for new route"] = "Aucune donnée n'a été sélectionnée p
 L["A route with that name already exists. Overwrite?"] = "Une route portant ce nom existe déjà. L'écraser ?"
 
 -- DB prefix abbreviations 
+-- M pour Minage, H pour Herbes, P pour Pêche/Poisson, G pour Gaa, T pour Trésor
 L["CartHerbalism"] = "H"
 L["CartMining"] = "M"
 L["CartFishing"] = "P"
@@ -90,6 +93,9 @@ L["GMHerb Gathering"] = "H"
 L["GMMining"] = "M"
 L["GMFishing"] = "P"
 L["GMExtract Gas"] = "G"
+L["GathererMINE"] = "M"
+L["GathererHERB"] = "H"
+L["GathererOPEN"] = "T"
 
 -- Node types
 L["Herbalism"] = "Herboristerie"
@@ -99,6 +105,9 @@ L["Treasure"] = "Trésor"
 L["ExtractGas"] = "Gaz"
 
 -- Route Config
+L["When the following data sources add or delete node data, update my routes automatically by inserting or removing the same node in the relevant routes."] = "Quand les sources de données suivantes ajoutent ou suppriment des données d'un nœud, mettre à jour automatiquement mes routes en insérant ou en enlevant ce même nœud des routes appropriées."
+L[" Gatherer currently does not support callbacks, so this is impossible for Gatherer."] = " Gatherer ne supporte pas actuellement les callbacks, c'est donc impossible avec cet addon."
+L["You have |cFFFFFFFF%d|r route(s) in |cFFFFFFFF%s|r."] = "Vous avez |cFFFFFFFF%d|r route(s) à |cFFFFFFFF%s|r."
 L["Information"] = "Informations"
 L["This route has |cFFFFFFFF%d|r nodes and is |cFFFFFFFF%d|r yards long."] = "Cette route contient |cFFFFFFFF%d|r nœuds et est longue de |cFFFFFFFF%d|r mètres."
 L["This route has nodes that belong to the following categories:\n"] = "Cette route contient des nœuds des catégories suivantes :\n"

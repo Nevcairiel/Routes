@@ -3,10 +3,6 @@ if not Routes then return end
 
 local SourceName = "Gatherer"
 local L = LibStub("AceLocale-3.0"):GetLocale("Routes")
-local BZ = LibStub("LibBabble-Zone-3.0"):GetLookupTable()
-
-local zoneNamesReverse = Routes.zoneNamesReverse
-Routes.zoneNamesReverse = nil
 
 ------------------------------------------
 -- setup
@@ -34,7 +30,7 @@ end
 
 local amount_of = {}
 local function Summarize(data, zone)
-	local continent = zoneNamesReverse[zone]
+	local continent = Routes.zoneNamesReverse[zone]
 	continent, zone = floor(continent / 100), continent % 100
 
 	for node, db_type, count in Gatherer.Storage.ZoneGatherNames(continent, zone) do
@@ -60,7 +56,7 @@ local translate_db_type = {
 	["OPEN"] = "Treasure",
 }
 local function AppendNodes(node_list, zone, db_type, node_type)
-	local continent = zoneNamesReverse[zone]
+	local continent = Routes.zoneNamesReverse[zone]
 	continent, zone = floor(continent / 100), continent % 100
 
 	for _, x, y in Gatherer.Storage.ZoneGatherNodes(continent, zone, node_type) do
@@ -79,11 +75,15 @@ local function AppendNodes(node_list, zone, db_type, node_type)
 end
 source.AppendNodes = AppendNodes
 
-local function InsertNode(event, zone, nodeType, coord, node_name)
+-- continent/zone - GetMapZones() stuff
+-- nodeType - HERB/MINE/OPEN
+-- x, y - the coordinate [0,1]
+-- node_name - the node being removed, can be an ID, as long as I can convert this to a localized or english string of the node such as "Copper Vein"
+local function InsertNode(continent, zone, nodeType, x, y, node_name)
 	--Routes:InsertNode(zone, coord, node_name)
 end
 
-local function DeleteNode(event, zone, nodeType, coord, node_name)
+local function DeleteNode(continent, zone, nodeType, x, y, node_name)
 	--Routes:DeleteNode(zone, coord, node_name)
 end
 

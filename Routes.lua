@@ -739,6 +739,7 @@ function Routes:OnInitialize()
 	for k, v in pairs(zoneNames) do
 		zoneNamesReverse[v] = k
 	end
+	Routes.zoneNamesReverse = zoneNamesReverse
 
 	local function GetZoneDescText(info)
 		local count = 0

@@ -195,7 +195,7 @@ end
 -----------------------------------
 -- TSP:SolveTSP(nodes, zonename, parameters, path)
 -- Arguments
---   nodes	- The table containing a list of cartographer node IDs to path
+--   nodes	- The table containing a list of Routes node IDs to path
 --		  This list should only contain nodes on the same map. This
 --		  table should be indexed numerically from nodes[1] to nodes[n].
 --   zonename	- The English zone name of the map that the route to be
@@ -206,7 +206,7 @@ end
 --   nonblocking- A boolean to indicate whether the function should yield() regularly.
 -- Returns
 --   path	- The result TSP path is a table indexed numerically from path[1]
---		  to path[n], a list of cartographer node IDs.
+--		  to path[n], a list of Routes node IDs.
 --   length	- The length in yards of the path returned.
 --   iteration  - Number of interations taken.
 --   timeTaken  - Number of seconds used.
@@ -548,19 +548,19 @@ end
 -- TSP:InsertNode(nodes, zonename, nodeID, twoOpt, path)
 --   Inserts a node into an existing route.
 -- Arguments
---   nodes	- The table containing a list of cartographer node IDs to path
+--   nodes	- The table containing a list of Routes node IDs to path
 --		  This list should only contain nodes on the same map. This
 --		  table should be indexed numerically from nodes[1] to nodes[n].
 --   zonename	- The English zone name of the map that the route to be
 --		  generated is on.
---   nodeID     - The cartographer node ID to insert into the route.
+--   nodeID     - The Routes node ID to insert into the route.
 --   twoOpt	- Boolean indicating whether to perform 2-Opt on the route after
 --		  insertion.
 --   path	- An optional input table that is used to supply the result
 --		  table. If this is nil, the function returns a new table.
 -- Returns
 --   path	- The result TSP path is a table indexed numerically from path[1]
---		  to path[n], a list of cartographer node IDs.
+--		  to path[n], a list of Routes node IDs.
 --   pathLength	- The length of the route in yards.
 function TSP:InsertNode(nodes, zonename, nodeID, twoOpt, path)
 	assert(type(nodes) == "table", "InsertNode() expected table in 1st argument, got "..type(nodes).." instead.");
@@ -694,7 +694,7 @@ end
 -- TSP:PathLength(nodes, zonename)
 --   Returns how long a given route is in yards.
 -- Arguments
---   nodes	- The table containing a list of cartographer node IDs to path
+--   nodes	- The table containing a list of Routes node IDs to path
 --		  This list should only contain nodes on the same map. This
 --		  table should be indexed numerically from nodes[1] to nodes[n].
 --   zonename	- The English zone name of the map that the route to be

@@ -770,7 +770,6 @@ function TSP:ClusterRoute(nodes, zonename, radius)
 
 	local numNodes = #nodes
 	local zoneW, zoneH = Routes.zoneData[BZ[zonename]][1], Routes.zoneData[BZ[zonename]][2]
-	--local startTime = GetTime()
 
 	-- Create a copy of the nodes[] table and use this instead of the original because we want to modify this table
 	local nodes2 = newTable()
@@ -787,7 +786,7 @@ function TSP:ClusterRoute(nodes, zonename, radius)
 		for j = i+1, numNodes do
 			local x2, y2 = floor(nodes[j] / 10000) / 10000, (nodes[j] % 10000) / 10000
 			weight[i][j] = (((x2 - x)*zoneW)^2 + ((y2 - y)*zoneH)^2)^0.5	-- Calc distance between each node pair
-			weight[j][i] = weight[i][j]
+			weight[j][i] = true -- dummy value just to fill the lower half of the table so that tremove() will work on it
 		end
 	end
 
@@ -840,12 +839,13 @@ function TSP:ClusterRoute(nodes, zonename, radius)
 			-- Update number of nodes
 			numNodes = numNodes - 1
 			-- Update the weight table for all nodes relating to node1
-			for i = 1, numNodes do
-				if i ~= node1 then
-					local x, y = floor(nodes[i] / 10000) / 10000, (nodes[i] % 10000) / 10000
-					weight[node1][i] = (((node1x - x)*zoneW)^2 + ((node1y - y)*zoneH)^2)^0.5
-					weight[i][node1] = weight[node1][i]
-				end
+			for i = 1, node1-1 do
+				local x, y = floor(nodes[i] / 10000) / 10000, (nodes[i] % 10000) / 10000
+				weight[i][node1] = (((node1x - x)*zoneW)^2 + ((node1y - y)*zoneH)^2)^0.5
+			end
+			for i = node1+1, numNodes do
+				local x, y = floor(nodes[i] / 10000) / 10000, (nodes[i] % 10000) / 10000
+				weight[node1][i] = (((node1x - x)*zoneW)^2 + ((node1y - y)*zoneH)^2)^0.5
 			end
 		else
 			break -- loop termination
@@ -858,7 +858,6 @@ function TSP:ClusterRoute(nodes, zonename, radius)
 	-- Cleanup our used tables by recycling them
 	delTable(weight)
 
-	--startTime = GetTime() - startTime
 	return nodes, metadata, pathLength
 end
 

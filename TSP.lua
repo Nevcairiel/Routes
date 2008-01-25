@@ -723,4 +723,154 @@ function TSP:PathLength(nodes, zonename)
 	return pathLength;
 end
 
+-- TSP:ClusterRoute(nodes)
+-- Arguments
+-- nodes    - The table containing a list of Routes node IDs to path
+--            This list should only contain nodes on the same map. This
+--            table should be indexed numerically from nodes[1] to nodes[n].
+-- zonename - The English zone name of the route
+-- radius   - The radius in yards to cluster
+-- Returns
+-- path     - The result TSP path is a table indexed numerically from path[1]
+--            to path[n], a list of Routes node IDs. n is smaller than the
+--            original input
+-- metadata - The metadata table for path[] containing the original nodes
+--            clustered
+-- length   - The length of the new route in yards
+--[[
+Hierarchical Agglomerative Clustering
+
+Data clustering algorithms can be hierarchical or partitional. Hierarchical
+algorithms find successive clusters using previously established clusters,
+whereas partitional algorithms determine all clusters at once. Hierarchical
+algorithms can be agglomerative ("bottom-up") or divisive ("top-down").
+Agglomerative algorithms begin with each element as a separate cluster and
+merge them into successively larger clusters. Divisive algorithms begin with
+the whole set and proceed to divide it into successively smaller clusters.
+
+This method (Agglomerative) builds the hierarchy from the individual elements
+by progressively merging clusters. The first step is to determine which
+elements to merge in a cluster. Usually, we want to take the two closest
+elements, according to the chosen distance.
+
+Optionally, one can also construct a distance matrix at this stage, where the
+number in the i-th row j-th column is the distance between the i-th and j-th
+elements. Then, as clustering progresses, rows and columns are merged as the
+clusters are merged and the distances updated. This is a common way to
+implement this type of clustering, and has the benefit of catching distances
+between clusters.
+
+-- From Wikipedia, Cluster analysis
+-- http://en.wikipedia.org/wiki/Cluster_analysis
+-- 25 January 2008
+]]
+function TSP:ClusterRoute(nodes, zonename, radius)
+	local weight = newTable() -- weight matrix
+	local metadata = newTable() -- metadata after clustering
+
+	local numNodes = #nodes
+	local zoneW, zoneH = Routes.zoneData[BZ[zonename]][1], Routes.zoneData[BZ[zonename]][2]
+
+	-- Create a copy of the nodes[] table and use this instead of the original because data could get changed
+	local nodes2 = newTable()
+	for i = 1, numNodes do
+		nodes2[i] = nodes[i]
+	end
+	local nodes = nodes2
+
+	-- Step 1: Generate the weight table
+	for i = 1, numNodes do
+		local x, y = floor(nodes[i] / 10000) / 10000, (nodes[i] % 10000) / 10000
+		local u = i*numNodes-i
+		weight[u] = 0
+		for j = i+1, numNodes do
+			local x2, y2 = floor(nodes[j] / 10000) / 10000, (nodes[j] % 10000) / 10000
+			local u, v = i*numNodes-j, j*numNodes-i
+			weight[u] = (((x2 - x)*zoneW)^2 + ((y2 - y)*zoneH)^2)^0.5	-- Calc distance between each node pair
+			weight[v] = weight[u]
+		end
+	end
+
+	-- Step 2: Generate the initial metadata tables
+	for i = 1, numNodes do
+		metadata[i] = newTable()
+		metadata[i][1] = nodes[i]
+	end
+
+	-- Step 5: ...and loop until there is no such pair of nodes
+	while true do
+		-- Step 3: Find the closest pair of nodes within the merge radius
+		local smallestDist = 1/0
+		local node1, node2
+		for i = 1, numNodes-1 do
+			if nodes[i] ~= 1/0 then
+				for j = i+1, numNodes do
+					if nodes[j] ~= 1/0 then
+						local u = i*numNodes-j
+						if weight[u] < smallestDist and weight[u] < radius then
+							smallestDist = weight[u]
+							node1 = i
+							node2 = j
+						end
+					end
+				end
+			end
+		end
+		-- Step 4: Merge node2 into node1...
+		if node1 then -- we want to merge node2 into node1
+			local node1num, node2num = #metadata[node1], #metadata[node2]
+			-- Calculate the expanded centroid (x,y) for node1 and node2
+			local node1x, node1y = floor(nodes[node1] / 10000) / 10000 * node1num, (nodes[node1] % 10000) / 10000 * node1num
+			local node2x, node2y = floor(nodes[node2] / 10000) / 10000 * node2num, (nodes[node2] % 10000) / 10000 * node2num
+			-- First merge the metadata of node2 into node1
+			for i = 1, node2num do
+				tinsert(metadata[node1], metadata[node2][i])
+			end
+			delTable(metadata[node2]) -- delete the table
+			metadata[node2] = 1/0 -- temporary meaningless number
+			-- Calculate the new centroid of node1
+			node1num = node1num + node2num
+			node1x, node1y = (node1x + node2x) / node1num, (node1y + node2y) / node1num
+			local coord = floor(node1x * 10000 + 0.5) * 10000 + floor(node1y * 10000 + 0.5)
+			node1x, node1y = floor(coord / 10000) / 10000, (coord % 10000) / 10000 -- to round off the coordinate
+			-- Remove node2 from the weight table by setting every distance relating to node2 to 1/0
+			for i = 1, numNodes do
+				weight[i*numNodes-node2] = 1/0
+				weight[node2*numNodes-i] = 1/0
+			end
+			-- Set the new coord of node1 and node2
+			nodes[node1] = coord
+			nodes[node2] = 1/0
+			-- Update the weight table for all nodes relating to node1
+			for i = 1, numNodes do
+				if i ~= node1 and nodes[i] ~= 1/0 then
+					local x, y = floor(nodes[i] / 10000) / 10000, (nodes[i] % 10000) / 10000
+					local u, v = node1*numNodes-i, i*numNodes-node1
+					weight[u] = (((node1x - x)*zoneW)^2 + ((node1y - y)*zoneH)^2)^0.5
+					weight[v] = weight[u]
+				end
+			end
+		else
+			break -- loop termination
+		end
+	end
+
+	-- Remove the merged nodes from the nodes[] and metadata[]
+	for i = numNodes, 1, -1 do
+		if nodes[i] == 1/0 then
+			tremove(nodes, i)
+			tremove(metadata, i)
+		end
+	end
+
+	-- Get the new pathLength
+	local pathLength = self:PathLength(nodes, zonename)
+
+	-- Cleanup our used tables by recycling them
+	delTable(weight)
+
+	return nodes, metadata, pathLength
+end
+
 -- vim: ts=4 noexpandtab
+

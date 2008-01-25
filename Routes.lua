@@ -1,8 +1,8 @@
 ﻿--[[
 ********************************************************************************
 Routes
-22 January 2008
-(Written for live servers v2.3.2.7741)
+25 January 2008
+(Written for live servers v2.3.3.7799)
 
 Author: Xaros @ EU Doomhammer Alliance & Xinhuan @ US Blackrock Alliance
 ********************************************************************************
@@ -20,6 +20,7 @@ Features:
 	   * Cartographer_ExtractGas
 	   * Cartographer_Treasure
 	   * GatherMate
+	   * Gatherer
 	- Optimize your route using the traveling salesmen problem (TSP) ant
 	  colony optimization (ACO) algorithm
 	- Background (nonblocking) and foreground (blocking) optimization
@@ -635,11 +636,11 @@ function Routes:DrawMinimapLines(forceUpdate)
 								local y = 5 * dy / l
 								if last_inside and cur_inside and l > 10 then -- draw if line is 10 or more pixels
 									G:DrawLine( Minimap, draw_sx-x, draw_sy-y, draw_ex+x, draw_ey+y, width, color, "ARTWORK")
-								elseif last_inside and l > 5 then
+								elseif last_inside and not cur_inside and l > 5 then
 									G:DrawLine( Minimap, draw_sx-x, draw_sy-y, draw_ex, draw_ey, width, color, "ARTWORK")
-								elseif cur_inside and l > 5 then
+								elseif cur_inside and not last_inside and l > 5 then
 									G:DrawLine( Minimap, draw_sx, draw_sy, draw_ex+x, draw_ey+y, width, color, "ARTWORK")
-								else
+								elseif not last_inside and not cur_inside then
 									G:DrawLine( Minimap, draw_sx, draw_sy, draw_ex, draw_ey, width, color, "ARTWORK")
 								end
 							else
@@ -1086,6 +1087,14 @@ function ConfigHandler:DeleteRoute(info)
 	Routes:DrawMinimapLines(true)
 end
 
+function ConfigHandler:ClusterRoute(info)
+	local zone, route = info.arg.zone, info.arg.route
+	local t = db.routes[zone][route]
+	t.route, t.metadata, t.length = Routes.TSP:ClusterRoute(db.routes[zone][route].route, zone, 100)
+	Routes:DrawWorldmapLines()
+	Routes:DrawMinimapLines(true)
+end
+
 function ConfigHandler:ResetLineSettings(info)
 	local t = db.routes[info.arg.zone][info.arg.route]
 	t.color = nil
@@ -1244,6 +1253,13 @@ function Routes:CreateAceOptRouteTable(zone, route)
 						confirmText = L["Are you sure you want to delete this route?"],
 						order = 100,
 					},
+					--[[cluster = {
+						name = "Cluster", type = "execute",
+						desc = "Cluster Route",
+						func = "ClusterRoute",
+						arg = zone_route_table,
+						order = 200,
+					},]]
 				},
 			},
 			setting_group = {

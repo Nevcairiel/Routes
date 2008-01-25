@@ -781,11 +781,14 @@ function TSP:ClusterRoute(nodes, zonename, radius)
 
 	-- Step 1: Generate the weight table
 	for i = 1, numNodes do
-		local x, y = floor(nodes[i] / 10000) / 10000, (nodes[i] % 10000) / 10000
-		weight[i][i] = 0
+		local coord = nodes[i]
+		local x, y = floor(coord / 10000) / 10000, (coord % 10000) / 10000
+		local w = weight[i]
+		w[i] = 0
 		for j = i+1, numNodes do
-			local x2, y2 = floor(nodes[j] / 10000) / 10000, (nodes[j] % 10000) / 10000
-			weight[i][j] = (((x2 - x)*zoneW)^2 + ((y2 - y)*zoneH)^2)^0.5	-- Calc distance between each node pair
+			local coord = nodes[j]
+			local x2, y2 = floor(coord / 10000) / 10000, (coord % 10000) / 10000
+			w[j] = (((x2 - x)*zoneW)^2 + ((y2 - y)*zoneH)^2)^0.5	-- Calc distance between each node pair
 			weight[j][i] = true -- dummy value just to fill the lower half of the table so that tremove() will work on it
 		end
 	end
@@ -802,9 +805,11 @@ function TSP:ClusterRoute(nodes, zonename, radius)
 		local smallestDist = 1/0
 		local node1, node2
 		for i = 1, numNodes-1 do
+			local w = weight[i]
 			for j = i+1, numNodes do
-				if weight[i][j] < radius and weight[i][j] < smallestDist then
-					smallestDist = weight[i][j]
+				local w2 = w[j]
+				if w2 <= radius and w2 < smallestDist then
+					smallestDist = w2
 					node1 = i
 					node2 = j
 				end
@@ -812,40 +817,66 @@ function TSP:ClusterRoute(nodes, zonename, radius)
 		end
 		-- Step 4: Merge node2 into node1...
 		if node1 then
-			local node1num, node2num = #metadata[node1], #metadata[node2]
-			-- Calculate the expanded centroid (x,y) for node1 and node2
-			local node1x, node1y = floor(nodes[node1] / 10000) / 10000 * node1num, (nodes[node1] % 10000) / 10000 * node1num
-			local node2x, node2y = floor(nodes[node2] / 10000) / 10000 * node2num, (nodes[node2] % 10000) / 10000 * node2num
-			-- Merge the metadata of node2 into node1
-			for i = 1, node2num do
-				tinsert(metadata[node1], metadata[node2][i])
-			end
+			local m1, m2 = metadata[node1], metadata[node2]
+			local node1num, node2num = #m1, #m2
+			local totalnum = node1num + node2num
 			-- Calculate the new centroid of node1
-			node1num = node1num + node2num
-			node1x, node1y = (node1x + node2x) / node1num, (node1y + node2y) / node1num
+			local n1, n2 = nodes[node1], nodes[node2]
+			local node1x = ( floor(n1 / 10000) / 10000 * node1num + floor(n2 / 10000) / 10000 * node2num ) / totalnum
+			local node1y = ( (n1 % 10000) / 10000 * node1num + (n2 % 10000) / 10000 * node2num ) / totalnum
+			-- Calculate the new coord from the new (x,y)
 			local coord = floor(node1x * 10000 + 0.5) * 10000 + floor(node1y * 10000 + 0.5)
 			node1x, node1y = floor(coord / 10000) / 10000, (coord % 10000) / 10000 -- to round off the coordinate
-			-- Set the new coord of node1
-			nodes[node1] = coord
-			-- Delete node2 from metadata[]
-			delTable(tremove(metadata, node2))
-			-- Delete node2 from nodes[]
-			tremove(nodes, node2)
-			-- Remove node2 from the weight table
-			for i = 1, numNodes do
-				tremove(weight[i], node2) -- remove column
+			-- Check that the merged point is valid
+			for i = 1, node1num do
+				local coord = m1[i]
+				local x, y = floor(coord / 10000) / 10000, (coord % 10000) / 10000
+				local t = (((node1x - x)*zoneW)^2 + ((node1y - y)*zoneH)^2)^0.5
+				if t > radius then
+					-- Merging this node will cause the merged point to be too far away
+					-- from an original point, so taboo it by making the weight infinity
+					weight[node1][node2] = 1/0
+					break
+				end
 			end
-			delTable(tremove(weight, node2)) -- remove row
-			-- Update number of nodes
-			numNodes = numNodes - 1
-			-- Update the weight table for all nodes relating to node1
-			for i = 1, node1-1 do
-				local x, y = floor(nodes[i] / 10000) / 10000, (nodes[i] % 10000) / 10000
-				weight[i][node1] = (((node1x - x)*zoneW)^2 + ((node1y - y)*zoneH)^2)^0.5
+			for i = 1, node2num do
+				local coord = m2[i]
+				local x, y = floor(coord / 10000) / 10000, (coord % 10000) / 10000
+				local t = (((node1x - x)*zoneW)^2 + ((node1y - y)*zoneH)^2)^0.5
+				if t > radius then
+					weight[node1][node2] = 1/0
+					break
+				end
 			end
-			for i = node1+1, numNodes do
-				local x, y = floor(nodes[i] / 10000) / 10000, (nodes[i] % 10000) / 10000
-				weight[node1][i] = (((node1x - x)*zoneW)^2 + ((node1y - y)*zoneH)^2)^0.5
+			if weight[node1][node2] ~= 1/0 then
+				-- Merge the metadata of node2 into node1
+				for i = 1, node2num do
+					tinsert(m1, m2[i])
+				end
+				-- Set the new coord of node1
+				nodes[node1] = coord
+				-- Delete node2 from metadata[]
+				delTable(tremove(metadata, node2))
+				-- Delete node2 from nodes[]
+				tremove(nodes, node2)
+				-- Remove node2 from the weight table
+				for i = 1, numNodes do
+					tremove(weight[i], node2) -- remove column
+				end
+				delTable(tremove(weight, node2)) -- remove row
+				-- Update number of nodes
+				numNodes = numNodes - 1
+				-- Update the weight table for all nodes relating to node1
+				for i = 1, node1-1 do
+					local coord = nodes[i]
+					local x, y = floor(coord / 10000) / 10000, (coord % 10000) / 10000
+					weight[i][node1] = (((node1x - x)*zoneW)^2 + ((node1y - y)*zoneH)^2)^0.5
+				end
+				for i = node1+1, numNodes do
+					local coord = nodes[i]
+					local x, y = floor(coord / 10000) / 10000, (coord % 10000) / 10000
+					weight[node1][i] = (((node1x - x)*zoneW)^2 + ((node1y - y)*zoneH)^2)^0.5
+				end
 			end
 		else
 			break -- loop termination
@@ -853,7 +884,10 @@ function TSP:ClusterRoute(nodes, zonename, radius)
 	end
 
 	-- Get the new pathLength
-	local pathLength = self:PathLength(nodes, zonename)
+	local pathLength = weight[1][numNodes]
+	for i = 1, numNodes-1 do
+		pathLength = pathLength + weight[i][i+1]
+	end
 
 	-- Cleanup our used tables by recycling them
 	delTable(weight)

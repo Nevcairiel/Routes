@@ -137,13 +137,13 @@ local TSPUpdateFrame = CreateFrame("Frame");
 TSPUpdateFrame.running = false;
 
 function TSPUpdateFrame:OnUpdate(elapsed)
-	local status, path, shortestPathLength, count, timetaken = coroutine.resume(self.co);
+	local status, path, meta, shortestPathLength, count, timetaken = coroutine.resume(self.co);
 	if (status) then
 		if (coroutine.status(self.co) == "dead") then
 			-- Function finished, return results
 			self:SetScript("OnUpdate", nil);
 			self.running = false;
-			self.finishFunc(path, shortestPathLength, count, timetaken);
+			self.finishFunc(path, meta, shortestPathLength, count, timetaken);
 			self.finishFunc = nil;
 			self.co = nil;
 			self.nodes = nil;
@@ -164,13 +164,13 @@ function TSP:IsTSPRunning()
 	return TSPUpdateFrame.running, TSPUpdateFrame.nodes;
 end
 
-function TSP:SolveTSPBackground(nodes, zonename, parameters, path)
+function TSP:SolveTSPBackground(nodes, metadata, zonename, parameters, path)
 	if (not TSPUpdateFrame.running) then
 		TSPUpdateFrame.co = coroutine.create(TSP.SolveTSP);
 		TSPUpdateFrame:SetScript("OnUpdate", TSPUpdateFrame.OnUpdate);
 		TSPUpdateFrame.running = true;
 		TSPUpdateFrame.nodes = nodes;
-		local status = coroutine.resume(TSPUpdateFrame.co, TSP, nodes, zonename, parameters, path, true);
+		local status = coroutine.resume(TSPUpdateFrame.co, TSP, nodes, metadata, zonename, parameters, path, true);
 		if (status) then
 			-- Do nothing, path isn't complete because at least 1 yield() is called.
 			return 1;
@@ -210,7 +210,7 @@ end
 --   length	- The length in yards of the path returned.
 --   iteration  - Number of interations taken.
 --   timeTaken  - Number of seconds used.
-function TSP:SolveTSP(nodes, zonename, parameters, path, nonblocking)
+function TSP:SolveTSP(nodes, metadata, zonename, parameters, path, nonblocking)
 	-- Notes: Some of these code might look convoluted, with seemingly unnecessary use of too many locals
 	-- and make the code look longer. But they are for speed optimization.
 	assert(type(nodes) == "table", "SolveTSP() expected table in 1st argument, got "..type(nodes).." instead.");
@@ -243,6 +243,18 @@ function TSP:SolveTSP(nodes, zonename, parameters, path, nonblocking)
 		nodes2[i] = nodes[i]
 	end
 	local nodes = nodes2
+	-- Create a copy of the metadata[] table too, if there is one
+	local metadata2
+	if metadata then
+		metadata2 = newTable()
+		for i = 1, numNodes do
+			metadata2[i] = newTable()
+			for j = 1, #metadata[i] do
+				metadata2[i][j] = metadata[i][j]
+			end
+		end
+	end
+	local metadata = metadata2
 	
 	-- Setup ACO parameters
 	local startTime		= GetTime();
@@ -425,9 +437,17 @@ function TSP:SolveTSP(nodes, zonename, parameters, path, nonblocking)
 		shortestPathLength = pathLength;
 	else
 		-- TSP found a shorter path than the original, convert our shortest path to the output format wanted
-		for i = 1, numNodes do
-			path[i] = nodes[shortestPath[i]];
+		local meta
+		if metadata then
+			meta = newTable()
 		end
+		for i = 1, numNodes do
+			path[i] = nodes[shortestPath[i]]
+			if metadata then
+				meta[i] = metadata[shortestPath[i]]
+			end
+		end
+		metadata = meta
 	end
 
 	-- Cleanup our used tables by recycling them
@@ -440,7 +460,7 @@ function TSP:SolveTSP(nodes, zonename, parameters, path, nonblocking)
 	lastpath = nil;
 
 	startTime = GetTime() - startTime;
-	return path, shortestPathLength, count, startTime;
+	return path, metadata, shortestPathLength, count, startTime;
 end
 
 -- TSP:TwoOpt(path, weight)
@@ -544,6 +564,34 @@ function TSP:TwoOpt(path, weight, prune, twoPointFiveOpt, nonblocking)
 	return count;
 end
 
+-- Tries to insert node into an existing cluster
+-- Returns true if successful, false otherwise
+local function tryInsert(nodes, metadata, insertPoint, nodeID, radius, zoneW, zoneH)
+	local x, y = floor(nodeID / 10000) / 10000, (nodeID % 10000) / 10000
+	local x2, y2 = floor(nodes[insertPoint] / 10000) / 10000, (nodes[insertPoint] % 10000) / 10000
+	-- See if the node is within radius
+	local t = (((x2 - x)*zoneW)^2 + ((y2 - y)*zoneH)^2)^0.5
+	if t > radius then
+		return false
+	end
+	-- Calculate the new centroid and coord
+	local num = #metadata[insertPoint]
+	x2, y2 = (x2*num+x)/(num+1), (y2*num+y)/(num+1)
+	local coord = floor(x2 * 10000 + 0.5) * 10000 + floor(y2 * 10000 + 0.5)
+	x2, y2 = floor(coord / 10000) / 10000, (coord % 10000) / 10000 -- to round off the coordinate
+	-- Check that the merged point is valid
+	for i = 1, num do
+		local coord = metadata[insertPoint][i]
+		local x, y = floor(coord / 10000) / 10000, (coord % 10000) / 10000
+		local t = (((x2 - x)*zoneW)^2 + ((y2 - y)*zoneH)^2)^0.5
+		if t > radius then
+			return false
+		end
+	end
+	tinsert(metadata[insertPoint], nodeID)
+	nodes[insertPoint] = coord
+	return true
+end
 
 -- TSP:InsertNode(nodes, zonename, nodeID, twoOpt, path)
 --   Inserts a node into an existing route.
@@ -554,31 +602,20 @@ end
 --   zonename	- The English zone name of the map that the route to be
 --		  generated is on.
 --   nodeID     - The Routes node ID to insert into the route.
---   twoOpt	- Boolean indicating whether to perform 2-Opt on the route after
---		  insertion.
---   path	- An optional input table that is used to supply the result
---		  table. If this is nil, the function returns a new table.
 -- Returns
---   path	- The result TSP path is a table indexed numerically from path[1]
---		  to path[n], a list of Routes node IDs.
 --   pathLength	- The length of the route in yards.
-function TSP:InsertNode(nodes, zonename, nodeID, twoOpt, path)
+function TSP:InsertNode(nodes, metadata, zonename, nodeID, radius)
 	assert(type(nodes) == "table", "InsertNode() expected table in 1st argument, got "..type(nodes).." instead.");
-	if (type(path) == "table") then
-		clearTable(path);
-	else
-		path = newTable();
-	end
 
 	-- Check for trivial problem of 2 or less nodes
 	local numNodes = #nodes;
 	if (numNodes < 3) then
 		-- Trivial solution for an input size of 2 or less nodes
-		for i = 1, numNodes do
-			path[i] = nodes[i];
+		nodes[numNodes+1] = nodeID;
+		if metadata then
+			metadata[numNodes+1] = {nodeID}
 		end
-		path[numNodes+1] = nodeID;
-		return path, TSP:PathLength(path, zonename);
+		return TSP:PathLength(nodes, zonename);
 	end
 
 	-- Insert the node to be added at the end of the list.
@@ -587,68 +624,34 @@ function TSP:InsertNode(nodes, zonename, nodeID, twoOpt, path)
 
 	-- Step 1	- Initialize and generate the weight matrix, and prune matrix if doing 2-opt
 	local zoneW, zoneH = Routes.zoneData[BZ[zonename]][1], Routes.zoneData[BZ[zonename]][2];
-	local zoneW15 = zoneW * 0.15;
 	local weight = newTable();
-	local prune = newTable();
-	for i = 1, numNodes do
-		if (twoOpt) then
-			prune[i] = newTable();
-		end
-		path[i] = i;
+
+	-- Not doing a twoopt means we only need to generate O(2n) entries in the weight table
+	local x, y, x2, y2
+	for i = 1, numNodes-2 do
+		-- for every node i, calculate its distance to node i+1
+		x, y = floor(nodes[i] / 10000) / 10000, (nodes[i] % 10000) / 10000
+		x2, y2 = floor(nodes[i+1] / 10000) / 10000, (nodes[i+1] % 10000) / 10000
+		weight[i*numNodes-(i+1)] = (((x2 - x)*zoneW)^2 + ((y2 - y)*zoneH)^2)^0.5;	-- Calc distance
 	end
-	
-	if twoOpt then
-		-- Doing a twoopt requires the full weight table O(0.5n^2)
-		for i = 1, numNodes do
-			local x, y = floor(nodes[i] / 10000) / 10000, (nodes[i] % 10000) / 10000;
-			local u = i*numNodes-i;
-			weight[u] = 0;
-			for j = i+1, numNodes do
-				local x2, y2 = floor(nodes[j] / 10000) / 10000, (nodes[j] % 10000) / 10000;
-				local u, v = i*numNodes-j, j*numNodes-i;
-				weight[u] = (((x2 - x)*zoneW)^2 + ((y2 - y)*zoneH)^2)^0.5;	-- Calc distance between each node pair
-				weight[v] = weight[u];
-				-- Table containing data for 2-opt pruning operations. This is just a list of nodes that are near each node.
-				if (weight[u] < zoneW15) then
-					tinsert(prune[i], j);
-					tinsert(prune[j], i);
-				end
-			end
-		end
-	else
-		-- Not doing a twoopt means we only need to generate O(2n) entries in the weight table
-		local i, j, x, y, x2, y2, u, v
-		for a = 1, numNodes-2 do
-			-- for every node path[i], calculate its distance to path[i+1]
-			i, j = path[a], path[a+1];
-			x, y = floor(nodes[i] / 10000) / 10000, (nodes[i] % 10000) / 10000;
-			x2, y2 = floor(nodes[j] / 10000) / 10000, (nodes[j] % 10000) / 10000;
-			u = i*numNodes-j;
-			weight[u] = (((x2 - x)*zoneW)^2 + ((y2 - y)*zoneH)^2)^0.5;	-- Calc distance
-		end
-		-- do looparound node
-		i, j = path[numNodes-1], path[1];
+	-- do looparound node
+	x, y = floor(nodes[numNodes-1] / 10000) / 10000, (nodes[numNodes-1] % 10000) / 10000;
+	x2, y2 = floor(nodes[1] / 10000) / 10000, (nodes[1] % 10000) / 10000;
+	weight[(numNodes-1)*numNodes-1] = (((x2 - x)*zoneW)^2 + ((y2 - y)*zoneH)^2)^0.5;	-- Calc distance
+	-- calc distance for every node to the node to be inserted
+	x2, y2 = floor(nodes[numNodes] / 10000) / 10000, (nodes[numNodes] % 10000) / 10000;
+	for i = 1, numNodes-1 do
 		x, y = floor(nodes[i] / 10000) / 10000, (nodes[i] % 10000) / 10000;
-		x2, y2 = floor(nodes[j] / 10000) / 10000, (nodes[j] % 10000) / 10000;
-		weight[i*numNodes-j] = (((x2 - x)*zoneW)^2 + ((y2 - y)*zoneH)^2)^0.5;	-- Calc distance
-		-- calc distance for every node to the node to be inserted
-		j = path[numNodes]
-		x2, y2 = floor(nodes[j] / 10000) / 10000, (nodes[j] % 10000) / 10000;
-		for a = 1, numNodes-1 do
-			i = path[a];
-			x, y = floor(nodes[i] / 10000) / 10000, (nodes[i] % 10000) / 10000;
-			u, v = i*numNodes-j, j*numNodes-i;
-			weight[u] = (((x2 - x)*zoneW)^2 + ((y2 - y)*zoneH)^2)^0.5;	-- Calc distance
-			weight[v] = weight[u];
-		end
+		local u, v = i*numNodes-numNodes, numNodes*numNodes-i;
+		weight[u] = (((x2 - x)*zoneW)^2 + ((y2 - y)*zoneH)^2)^0.5;	-- Calc distance
+		weight[v] = weight[u];
 	end
 
 	-- Step 2	- Find the best place to insert the node
 	local shortestPathLength = 1e100;	-- Some large value
 	local insertPoint;
 	for i = 1, numNodes-2 do
-		local a, b = path[i], path[i+1];
-		local z = weight[a*numNodes-numNodes] + weight[numNodes*numNodes-b] - weight[a*numNodes-b];
+		local z = weight[i*numNodes-numNodes] + weight[numNodes*numNodes-(i+1)] - weight[i*numNodes-(i+1)];
 		if (z < shortestPathLength) then
 			shortestPathLength = z;
 			insertPoint = i + 1;
@@ -656,38 +659,46 @@ function TSP:InsertNode(nodes, zonename, nodeID, twoOpt, path)
 	end
 	if weight[(numNodes-1)*numNodes-numNodes] + weight[numNodes*numNodes-1] - weight[(numNodes-1)*numNodes-1] < shortestPathLength then
 		-- Do nothing, inserting the node at the last place is the best, already inserted here.
+		if metadata then
+			tremove(nodes)
+			local try1, try2 = numNodes-1, 1
+			if weight[(numNodes-1)*numNodes-numNodes] > weight[numNodes*numNodes-1] then
+				try1, try2 = try2, try1 -- try the closer node first
+			end
+			local flag = tryInsert(nodes, metadata, try1, nodeID, radius, zoneW, zoneH)
+			if not flag then
+				flag = tryInsert(nodes, metadata, try2, nodeID, radius, zoneW, zoneH)
+			end
+			if not flag then -- both clusters failed, so insert a new cluster
+				tinsert(nodes, nodeID)
+				tinsert(metadata, {nodeID})
+			end
+		end
 	else
 		-- Remove it from the last place in the path and insert it at the best place found.
-		tremove(path);
-		tinsert(path, insertPoint, numNodes);
-	end
-
-	-- Step 3	-- Now do 2-opt on it
-	while (twoOpt and TSP:TwoOpt(path, weight, prune, true) > 0) do
-	end
-
-	-- Step 4	-- Calculate the length of the path
-	local pathLength = 0;
-	local curnode = path[numNodes];
-	for i = 1, numNodes do
-		local nextnode = path[i];
-		pathLength = pathLength + weight[curnode*numNodes-nextnode];
-		curnode = nextnode;
-	end
-
-	-- Step 5	-- Convert our path to the output format wanted
-	for i = 1, numNodes do
-		path[i] = nodes[path[i]];
+		tremove(nodes)
+		if metadata then
+			local try1, try2 = insertPoint-1, insertPoint
+			if weight[(insertPoint-1)*numNodes-numNodes] > weight[numNodes*numNodes-insertPoint] then
+				try1, try2 = try2, try1
+			end
+			local flag = tryInsert(nodes, metadata, try1, nodeID, radius, zoneW, zoneH)
+			if not flag then
+				flag = tryInsert(nodes, metadata, try2, nodeID, radius, zoneW, zoneH)
+			end
+			if not flag then
+				tinsert(nodes, insertPoint, nodeID)
+				tinsert(metadata, insertPoint, {nodeID})
+			end
+		else
+			tinsert(nodes, insertPoint, nodeID)
+		end
 	end
 
 	-- Cleanup our used tables by recycling them
 	delTable(weight);
-	delTable(prune);
-	lastpath = nil;
-	-- Remove our modification to nodes[]
-	tremove(nodes);
 
-	return path, pathLength;
+	return TSP:PathLength(nodes, zonename)
 end
 
 
@@ -835,6 +846,8 @@ function TSP:ClusterRoute(nodes, zonename, radius)
 				if t > radius then
 					-- Merging this node will cause the merged point to be too far away
 					-- from an original point, so taboo it by making the weight infinity
+					-- And store a backup in the lower half of the table
+					weight[node2][node1] = weight[node1][node2]
 					weight[node1][node2] = 1/0
 					break
 				end
@@ -844,6 +857,7 @@ function TSP:ClusterRoute(nodes, zonename, radius)
 				local x, y = floor(coord / 10000) / 10000, (coord % 10000) / 10000
 				local t = (((node1x - x)*zoneW)^2 + ((node1y - y)*zoneH)^2)^0.5
 				if t > radius then
+					weight[node2][node1] = weight[node1][node2]
 					weight[node1][node2] = 1/0
 					break
 				end
@@ -886,7 +900,12 @@ function TSP:ClusterRoute(nodes, zonename, radius)
 	-- Get the new pathLength
 	local pathLength = weight[1][numNodes]
 	for i = 1, numNodes-1 do
-		pathLength = pathLength + weight[i][i+1]
+		local w = weight[i][i+1]
+		if w == 1/0 then -- use the backup in the lower half of the triangle since it was tabooed
+			pathLength = pathLength + weight[i+1][i]
+		else
+			pathLength = pathLength + w
+		end
 	end
 
 	-- Cleanup our used tables by recycling them

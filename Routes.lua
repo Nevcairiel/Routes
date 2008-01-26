@@ -680,7 +680,7 @@ function Routes:InsertNode(zone, coord, node_name)
 			for k, v in pairs(route_data.selection) do
 				if k == node_name or v == node_name then
 					-- Add the node
-					route_data.route, route_data.length = self.TSP:InsertNode(route_data.route, zone, coord, false)
+					route_data.length = self.TSP:InsertNode(route_data.route, route_data.metadata, zone, coord, 100)
 					throttleFrame:Show()
 					break
 				end
@@ -696,18 +696,51 @@ function Routes:DeleteNode(zone, coord, node_name)
 	for route_name, route_data in pairs( db.routes[zone] ) do
 		-- for every route check if the route is created with this node
 		if route_data.selection then
+			local flag = false
 			for k, v in pairs(route_data.selection) do
 				if k == node_name or v == node_name then
 					-- Delete the node if it exists in this route
-					for i = 1, #route_data.route do
-						if coord == route_data.route[i] then
-							tremove(route_data.route, i)
-							route_data.length = self.TSP:PathLength(route_data.route, zone)
-							throttleFrame:Show()
-							break
+					if route_data.metadata then
+						-- this is a clustered route
+						for i = 1, #route_data.route do
+							local num_data = #route_data.metadata[i]
+							for j = 1, num_data do
+								if coord == route_data.metadata[i][j] then
+									-- recalcuate centroid
+									local x, y = self:getXY(coord)
+									local cx, cy = self:getXY(route_data.route[i])
+									if num_data > 1 then
+										-- more than 1 node in this cluster
+										cx, cy = (cx * num_data - x) / (num_data-1), (cy * num_data - y) / (num_data-1)
+										tremove(route_data.metadata[i], j)
+										route_data.route[i] = self:getID(cx, cy)
+									else
+										-- only 1 node in this cluster, just remove it
+										tremove(route_data.metadata, i)
+										tremove(route_data.route, i)
+									end
+									route_data.length = self.TSP:PathLength(route_data.route, zone)
+									throttleFrame:Show()
+									flag = true
+									break
+								end
+							end
+							if flag then break end
+						end
+					else
+						-- this is not a clustered route
+						for i = 1, #route_data.route do
+							if coord == route_data.route[i] then
+								tremove(route_data.route, i)
+								route_data.length = self.TSP:PathLength(route_data.route, zone)
+								throttleFrame:Show()
+								flag = true
+								break
+							end
 						end
 					end
 				end
+				if flag then break end
 			end
 		end
 	end
@@ -827,10 +860,20 @@ function Routes:OnEnable()
 		self:MINIMAP_UPDATE_ZOOM()  -- This has a DrawMinimapLines(true) call in it, and sets an "indoors" variable
 	end
 	self:SetupSourcesOptTables()
+	for addon, plugin_table in pairs(Routes.plugins) do
+		if db.defaults.callbacks[k] and plugin_table.IsActive() then
+			plugin_table.AddCallbacks()
+		end
+	end	
 end
 
 function Routes:OnDisable()
 	-- Ace3 unregisters all events and hooks for us on disable
+	for addon, plugin_table in pairs(Routes.plugins) do
+		if db.defaults.callbacks[k] and plugin_table.IsActive() then
+			plugin_table.RemoveCallbacks()
+		end
+	end	
 	timerFrame:Hide()
 end
 
@@ -1095,6 +1138,40 @@ function ConfigHandler:ClusterRoute(info)
 	Routes:DrawMinimapLines(true)
 end
 
+function ConfigHandler:UnClusterRoute(info)
+	local zone, route = info.arg.zone, info.arg.route
+	local t = db.routes[zone][route]
+	local num = 0
+	for i = 1, #t.metadata do
+		for j = 1, #t.metadata[i] do
+			num = num+1
+			t.route[num] = t.metadata[i][j]
+		end
+	end
+	t.metadata = nil
+	t.length = Routes.TSP:PathLength(t.route, zone)
+	Routes:DrawWorldmapLines()
+	Routes:DrawMinimapLines(true)
+end
+
+function ConfigHandler:IsCluster(info)
+	local t = db.routes[info.arg.zone][info.arg.route]
+	if t.metadata then
+		return true
+	else
+		return false
+	end
+end
+
+function ConfigHandler:IsNotCluster(info)
+	local t = db.routes[info.arg.zone][info.arg.route]
+	if t.metadata then
+		return false
+	else
+		return true
+	end
+end
+
 function ConfigHandler:ResetLineSettings(info)
 	local t = db.routes[info.arg.zone][info.arg.route]
 	t.color = nil
@@ -1107,7 +1184,15 @@ end
 
 function ConfigHandler.GetRouteDesc(info)
 	local t = db.routes[info.arg.zone][info.arg.route]
-	return L["This route has |cFFFFFFFF%d|r nodes and is |cFFFFFFFF%d|r yards long."]:format(#t.route, t.length)
+	if t.metadata then
+		local num = 0
+		for i = 1, #t.metadata do
+			num = num + #t.metadata[i]
+		end
+		return L["This route has |cFFFFFFFF%d|r nodes and is |cFFFFFFFF%d|r yards long."]:format(#t.route, t.length)..("\nThis route is a clustered route, down from the original |cFFFFFFFF%d|r nodes."):format(num)
+	else
+		return L["This route has |cFFFFFFFF%d|r nodes and is |cFFFFFFFF%d|r yards long."]:format(#t.route, t.length)..("\nThis route is not a clustered route.")
+	end
 end
 
 do
@@ -1141,9 +1226,10 @@ end
 
 function ConfigHandler:DoForeground(info)
 	local t = db.routes[info.arg.zone][info.arg.route]
-	local output, length, iter, timetaken = Routes.TSP:SolveTSP(t.route, info.arg.zone, db.defaults.tsp)
+	local output, meta, length, iter, timetaken = Routes.TSP:SolveTSP(t.route, t.metadata, info.arg.zone, db.defaults.tsp)
 	t.route = output
 	t.length = length
+	t.metadata = meta
 	Routes:Print(L["Path with %d nodes found with length %.2f yards after %d iterations in %.2f seconds."]:format(#output, length, iter, timetaken))
 
 	-- redraw lines
@@ -1157,12 +1243,13 @@ end
 
 function ConfigHandler:DoBackground(info)
 	local t = db.routes[info.arg.zone][info.arg.route]
-	local running, errormsg = Routes.TSP:SolveTSPBackground(t.route, info.arg.zone, db.defaults.tsp)
+	local running, errormsg = Routes.TSP:SolveTSPBackground(t.route, t.metadata, info.arg.zone, db.defaults.tsp)
 	if (running == 1) then
 		Routes:Print(L["Now running TSP in the background..."])
-		Routes.TSP:SetFinishFunction(function(output, length, iter, timetaken)
+		Routes.TSP:SetFinishFunction(function(output, meta, length, iter, timetaken)
 			t.route = output
 			t.length = length
+			t.metadata = meta
 			Routes:Print(L["Path with %d nodes found with length %.2f yards after %d iterations in %.2f seconds."]:format(#output, length, iter, timetaken))
 			-- redraw lines
 			local AutoShow = Routes:GetModule("AutoShow", true)
@@ -1188,7 +1275,7 @@ local blank_line_table = {
 }
 local two_point_five_group_table = {
 	type = "group",
-	order = 100,
+	order = 150,
 	name = L["Extra optimization"],
 	inline = true,
 	args = {
@@ -1213,6 +1300,21 @@ local background_table = {
 	type  = "description",
 	name  = L["Background Disclaimer"],
 	order = 0,
+}
+local cluster_header_table = {
+	type = "header",
+	name = "Route Clustering",
+	order = 40,
+}
+local cluster_table = {
+	type  = "description",
+	name  = "Clustering a route makes Routes take all the nodes that are within 100 yards of each other and combine then into a single node as a travel point (i.e. about 50-70 yards radius). This process takes a while, but is reasonably fast.",
+	order = 50,
+}
+local optimize_header_table = {
+	type = "header",
+	name = "Route Optimizing",
+	order = 100,
 }
 
 function Routes:CreateAceOptRouteTable(zone, route)
@@ -1253,13 +1355,6 @@ function Routes:CreateAceOptRouteTable(zone, route)
 						confirmText = L["Are you sure you want to delete this route?"],
 						order = 100,
 					},
-					--[[cluster = {
-						name = "Cluster", type = "execute",
-						desc = "Cluster Route",
-						func = "ClusterRoute",
-						arg = zone_route_table,
-						order = 200,
-					},]]
 				},
 			},
 			setting_group = {
@@ -1333,6 +1428,27 @@ function Routes:CreateAceOptRouteTable(zone, route)
 						arg = zone_route_table,
 						order = 0,
 					},
+					cluster_header = cluster_header_table,
+					desc_cluster = cluster_table,
+					cluster = {
+						name = "Cluster", type = "execute",
+						desc = "Cluster Route",
+						func = "ClusterRoute",
+						arg = zone_route_table,
+						hidden = "IsCluster",
+						disabled = "IsCluster",
+						order = 60,
+					},
+					uncluster = {
+						name = "Un-Cluster", type = "execute",
+						desc = "Un-Cluster Route",
+						func = "UnClusterRoute",
+						arg = zone_route_table,
+						hidden = "IsNotCluster",
+						disabled = "IsNotCluster",
+						order = 70,
+					},
+					optimize_header = optimize_header_table,
 					two_point_five_group = two_point_five_group_table,
 					foreground_group = {
 						type = "group",

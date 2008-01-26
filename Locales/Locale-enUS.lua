@@ -110,8 +110,12 @@ L[" Gatherer currently does not support callbacks, so this is impossible for Gat
 L["You have |cFFFFFFFF%d|r route(s) in |cFFFFFFFF%s|r."] = true
 L["Information"] = true
 L["This route has |cFFFFFFFF%d|r nodes and is |cFFFFFFFF%d|r yards long."] = true
-L["This route has nodes that belong to the following categories:\n"] = true
-L["This route contains the following nodes:\n"] = true
+L["This route has nodes that belong to the following categories:"] = true
+L["This route contains the following nodes:"] = true
+L["This route is not a clustered route."] = true
+L["This route is a clustered route, down from the original |cFFFFFFFF%d|r nodes."] = true
+L["|cFFFFFFFF     %d|r node(s) are between |cFFFFFFFF%d|r-|cFFFFFFFF%d|r yards of a cluster point"] = true
+L["|cFFFFFFFF     %d|r node(s) are at |cFFFFFFFF0|r yards of a cluster point"] = true
 
 L["Line settings"] = true
 L["These settings control the visibility and look of the drawn route."] = true
@@ -133,6 +137,7 @@ L["Reset"] = true
 L["Reset the line settings to defaults"] = true
 
 L["Optimize route"] = true
+L["Route Optimizing"] = true
 L["Extra optimization"] = true
 L["ExtraOptDesc"] = "Turning on this option will make optimizing the route take approximately 40% longer, but will generate -slightly- better routes. Recommended setting is OFF."
 L["Foreground"] = true
@@ -143,6 +148,13 @@ L["Path with %d nodes found with length %.2f yards after %d iterations in %.2f s
 L["Now running TSP in the background..."] = true
 L["There is already a TSP running in background. Wait for it to complete first."] = true
 L["The following error occured in the background path generation coroutine, please report to Grum or Xinhuan:"] = true
+
+L["Route Clustering"] = true
+L["CLUSTER_DESC"] = "Clustering a route makes Routes take all the nodes that are within 130 yards of each other and combine then into a single node as a travel point (i.e. 65 yards radius). This process takes a while, but is reasonably fast."
+L["Cluster"] = true
+L["Cluster this route"] = true
+L["Uncluster"] = true
+L["Uncluster this route"] = true
 
 -- Profession Names in the skills tab in the character frame
 -- Doing these 4 localizations specifically to avoid using Babble-Spell

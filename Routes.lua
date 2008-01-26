@@ -1184,15 +1184,7 @@ end
 
 function ConfigHandler.GetRouteDesc(info)
 	local t = db.routes[info.arg.zone][info.arg.route]
-	if t.metadata then
-		local num = 0
-		for i = 1, #t.metadata do
-			num = num + #t.metadata[i]
-		end
-		return L["This route has |cFFFFFFFF%d|r nodes and is |cFFFFFFFF%d|r yards long."]:format(#t.route, t.length)..("\nThis route is a clustered route, down from the original |cFFFFFFFF%d|r nodes."):format(num)
-	else
-		return L["This route has |cFFFFFFFF%d|r nodes and is |cFFFFFFFF%d|r yards long."]:format(#t.route, t.length)..("\nThis route is not a clustered route.")
-	end
+	return L["This route has |cFFFFFFFF%d|r nodes and is |cFFFFFFFF%d|r yards long."]:format(#t.route, t.length)
 end
 
 do
@@ -1201,19 +1193,51 @@ do
 		for k in pairs(str) do str[k] = nil end
 		local t = db.routes[info.arg.zone][info.arg.route]
 		local num = 1
-		str[num] = L["This route has nodes that belong to the following categories:\n"]
+		str[num] = L["This route has nodes that belong to the following categories:"]
 		for k in pairs(t.db_type) do
 			num = num + 1
-			str[num] = "|cFFFFFFFF     "..L[k].."|r\n"
+			str[num] = "|cFFFFFFFF     "..L[k].."|r"
 		end
 		num = num + 1
-		str[num] = L["This route contains the following nodes:\n"]
+		str[num] = L["This route contains the following nodes:"]
 		for k, v in pairs(t.selection) do
 			num = num + 1
 			if v == true then v = k end
-			str[num] = "|cFFFFFFFF     "..v.."|r\n"
+			str[num] = "|cFFFFFFFF     "..v.."|r"
 		end
-		return table.concat(str)
+		return table.concat(str, "\n")
+	end
+
+	local data = {}
+	function ConfigHandler.GetClusterDesc(info)
+		for k in pairs(str) do str[k] = nil end
+		for k in pairs(data) do data[k] = nil end
+		local t = db.routes[info.arg.zone][info.arg.route]
+		if not t.metadata then
+			return L["This route is not a clustered route."]
+		end
+
+		local numNodes = 0
+		local maxt = 0
+		local zoneW, zoneH = Routes.zoneData[BZ[info.arg.zone]][1], Routes.zoneData[BZ[info.arg.zone]][2]
+		for i = 1, #t.metadata do
+			local numData = #t.metadata[i]
+			numNodes = numNodes + numData
+			local x, y = floor(t.route[i] / 10000) / 10000, (t.route[i] % 10000) / 10000
+			for j = 1, numData do
+				local x2, y2 = floor(t.metadata[i][j] / 10000) / 10000, (t.metadata[i][j] % 10000) / 10000 -- to round off the coordinate
+				local t = (((x2 - x)*zoneW)^2 + ((y2 - y)*zoneH)^2)^0.5 - 0.0001
+				t = floor(t / 10)
+				data[t] = (data[t] or 0) + 1
+				if t > maxt then maxt = t end
+			end
+		end
+		for i = 0, maxt do
+			str[i+3] = L["|cFFFFFFFF     %d|r node(s) are between |cFFFFFFFF%d|r-|cFFFFFFFF%d|r yards of a cluster point"]:format(data[i] or 0, i*10+1, i*10+10)
+		end
+		str[1] = L["This route is a clustered route, down from the original |cFFFFFFFF%d|r nodes."]:format(numNodes)
+		str[2] = L["|cFFFFFFFF     %d|r node(s) are at |cFFFFFFFF0|r yards of a cluster point"]:format(data[-1] or 0)
+		return table.concat(str, "\n")
 	end
 end
 
@@ -1303,17 +1327,17 @@ local background_table = {
 }
 local cluster_header_table = {
 	type = "header",
-	name = "Route Clustering",
+	name = L["Route Clustering"],
 	order = 40,
 }
 local cluster_table = {
 	type  = "description",
-	name  = "Clustering a route makes Routes take all the nodes that are within 130 yards of each other and combine then into a single node as a travel point (i.e. 65 yards radius). This process takes a while, but is reasonably fast.",
+	name  = L["CLUSTER_DESC"],
 	order = 50,
 }
 local optimize_header_table = {
 	type = "header",
-	name = "Route Optimizing",
+	name = L["Route Optimizing"],
 	order = 100,
 }
 
@@ -1345,6 +1369,12 @@ function Routes:CreateAceOptRouteTable(zone, route)
 						name = ConfigHandler.GetDataDesc,
 						arg = zone_route_table,
 						order = 10,
+					},
+					desc3 = {
+						type = "description",
+						name = ConfigHandler.GetClusterDesc,
+						arg = zone_route_table,
+						order = 20,
 					},
 					delete = {
 						name = L["Delete"], type = "execute",
@@ -1431,8 +1461,8 @@ function Routes:CreateAceOptRouteTable(zone, route)
 					cluster_header = cluster_header_table,
 					desc_cluster = cluster_table,
 					cluster = {
-						name = "Cluster", type = "execute",
-						desc = "Cluster Route",
+						name = L["Cluster"], type = "execute",
+						desc = L["Cluster this route"],
 						func = "ClusterRoute",
 						arg = zone_route_table,
 						hidden = "IsCluster",
@@ -1440,8 +1470,8 @@ function Routes:CreateAceOptRouteTable(zone, route)
 						order = 60,
 					},
 					uncluster = {
-						name = "Un-Cluster", type = "execute",
-						desc = "Un-Cluster Route",
+						name = L["Uncluster"], type = "execute",
+						desc = L["Uncluster this route"],
 						func = "UnClusterRoute",
 						arg = zone_route_table,
 						hidden = "IsNotCluster",

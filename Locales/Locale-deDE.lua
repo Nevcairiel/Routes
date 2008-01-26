@@ -81,6 +81,7 @@ L["No data selected for new route"] = "Keine Daten für neue Route ausgewählt"
 L["A route with that name already exists. Overwrite?"] = "Eine Route mit diesem Name existiert bereits. Überschreiben?"
 
 -- DB prefix abbreviations 
+-- M for Mining, H for Herbs, F for fishing, G for Gas, T for Treasure
 L["CartographerHerbalism"] = "H"
 L["CartographerMining"] = "M"
 L["CartographerFishing"] = "F"
@@ -90,6 +91,9 @@ L["GatherMateHerb Gathering"] = "H"
 L["GatherMateMining"] = "M"
 L["GatherMateFishing"] = "F"
 L["GatherMateExtract Gas"] = "G"
+L["GathererMINE"] = "M"
+L["GathererHERB"] = "H"
+L["GathererOPEN"] = "T"
 
 -- Node types
 L["Herbalism"] = "Kräuterkunde"
@@ -101,8 +105,8 @@ L["ExtractGas"] = "Gas"
 -- Route Config
 L["Information"] = true
 L["This route has |cFFFFFFFF%d|r nodes and is |cFFFFFFFF%d|r yards long."] = "Diese Route hat |cFFFFFFFF%d|r Knotenpunkte und ist |cFFFFFFFF%d|r yards lang."
-L["This route has nodes that belong to the following categories:\n"] = "Diese Route enthält Knotenpunkte folgender Kategorien:\n"
-L["This route contains the following nodes:\n"] = "Diese Route enthält folgende Knotenpunkte:\n"
+L["This route has nodes that belong to the following categories:"] = "Diese Route enthält Knotenpunkte folgender Kategorien:"
+L["This route contains the following nodes:"] = "Diese Route enthält folgende Knotenpunkte:"
 
 L["Line settings"] = "Linieneinstellungen"
 L["These settings control the visibility and look of the drawn route."] = "Diese Einstellungen kontrollieren die Sichtbarkeit und das Aussehen der gezeichneten Route"

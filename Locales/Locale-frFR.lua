@@ -112,6 +112,10 @@ L["Information"] = "Informations"
 L["This route has |cFFFFFFFF%d|r nodes and is |cFFFFFFFF%d|r yards long."] = "Cette route contient |cFFFFFFFF%d|r nœuds et est longue de |cFFFFFFFF%d|r mètres."
 L["This route has nodes that belong to the following categories:"] = "Cette route contient des nœuds des catégories suivantes :"
 L["This route contains the following nodes:"] ="Cette route contient les nœuds suivants :"
+L["This route is not a clustered route."] = "Cette route n'est pas une route d'agrégats."
+L["This route is a clustered route, down from the original |cFFFFFFFF%d|r nodes."] = "Cette route est une route d'agrégats (|cFFFFFFFF%d|r nœuds à l'origine)."
+L["|cFFFFFFFF     %d|r node(s) are between |cFFFFFFFF%d|r-|cFFFFFFFF%d|r yards of a cluster point"] = "|cFFFFFFFF     %d|r nœud(s) sont entre |cFFFFFFFF%d|r et |cFFFFFFFF%d|r mètres d'un point d'agrégats."
+L["|cFFFFFFFF     %d|r node(s) are at |cFFFFFFFF0|r yards of a cluster point"] = "|cFFFFFFFF     %d|r nœud(s) sont à |cFFFFFFFF0|r mètres d'un point d'agrégats."
 
 L["Line settings"] = "Paramètres des lignes"
 L["These settings control the visibility and look of the drawn route."] = "Ces paramètres contrôlent la visibilité et le look des routes dessinées."
@@ -133,8 +137,9 @@ L["Reset"] = "Réinitialiser"
 L["Reset the line settings to defaults"] = "Réinitialise les paramètres des lignes à leurs valeurs  par défaut."
 
 L["Optimize route"] = "Optimiser la route"
+L["Route Optimizing"] = "Optimisation de la route"
 L["Extra optimization"] = "Extra optimisation"
-L["ExtraOptDesc"] = "Activer cette option rendra le temps de génération 40% plus long, mais les routes générées seront -légèrement- meilleures. Il est recommandé de laisser ceci désactivé."
+L["ExtraOptDesc"] = "L4activation de cette option rendra le temps de génération 40% plus long, mais les routes générées seront -légèrement- meilleures. Il est recommandé de laisser ceci désactivé."
 L["Foreground"] = "Avant-plan"
 L["Foreground Disclaimer"] = "Génère un chemin pratiquement optimal pour l'ensemble des nœuds de cette route. Veuillez noter qu'en faisant ceci, votre client WoW restera 'bloqué' pendant quelques temps. Selon le nombre de nœuds (en ajouter cause une augmentation de durée pratiquement exponentielle) et la vitesse de votre CPU, vous risquez d'être déconnecté si cela prend trop longtemps."
 L["Background"] = "Arrière-plan"
@@ -143,6 +148,13 @@ L["Path with %d nodes found with length %.2f yards after %d iterations in %.2f s
 L["Now running TSP in the background..."] = "Exécution du TSP en arière-plan en cours..."
 L["There is already a TSP running in background. Wait for it to complete first."] = "Il y a déjà un TSP en cours en arrière-plan. Veuillez attendre que ce dernier soit terminé."
 L["The following error occured in the background path generation coroutine, please report to Grum or Xinhuan:"] = "L'erreur suivante est survenue dans la co-routine de génération du chemin en arrière-plan, veuillez le signaler à Grum ou Xinhuan : "
+
+L["Route Clustering"] = "Agrégation de la route"
+L["CLUSTER_DESC"] = "L'agrégation d'une route permet à Routes de prendre tous les nœuds situés à moins de 130 mètres les uns des autres et de les combiner dans un seul nœud qui servira de point de voyage (de 65 mètres de rayon par ex.). Ce processus prend pas mal de temps."
+L["Cluster"] = "Agréger"
+L["Cluster this route"] = "Agrège cette route."
+L["Uncluster"] = "Désagréger"
+L["Uncluster this route"] = "Désagrège cette route."
 
 -- Profession Names in the skills tab in the character frame
 -- Doing these 4 localizations specifically to avoid using Babble-Spell
@@ -193,7 +205,7 @@ Vous pouvez signaler des bogues ou faire des suggestions sur |cffffff78http://ww
 
 Vous pouvez également nous trouver sur |cffffff78irc://irc.freenode.org/wowace|r
 
-Quand vous voulez signaler un bogue, essayez de fournir les |cffffff78étapes à suivre pour reproduire ce bug|r, indiquez les |cffffff78messages d'erreur|r que vous avez vus, donnez le |cffffff78numéro de révision|r de Routes où le problème a été découvert et précisez également |cffffff78la langue de votre jeu|r.
+Quand vous voulez signaler un bogue, essayez de fournir les |cffffff78étapes à suivre pour reproduire ce bogue|r, indiquez les |cffffff78messages d'erreur|r que vous avez vus, donnez le |cffffff78numéro de révision|r de Routes où le problème a été découvert et précisez également la |cffffff78langue de votre jeu|r.
 |cFFFFFFFF
 Qui a écrit cet addon qui déchire ?
 |r

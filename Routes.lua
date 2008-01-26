@@ -680,7 +680,7 @@ function Routes:InsertNode(zone, coord, node_name)
 			for k, v in pairs(route_data.selection) do
 				if k == node_name or v == node_name then
 					-- Add the node
-					route_data.length = self.TSP:InsertNode(route_data.route, route_data.metadata, zone, coord, 100)
+					route_data.length = self.TSP:InsertNode(route_data.route, route_data.metadata, zone, coord, 65)
 					throttleFrame:Show()
 					break
 				end
@@ -1133,7 +1133,7 @@ end
 function ConfigHandler:ClusterRoute(info)
 	local zone, route = info.arg.zone, info.arg.route
 	local t = db.routes[zone][route]
-	t.route, t.metadata, t.length = Routes.TSP:ClusterRoute(db.routes[zone][route].route, zone, 100)
+	t.route, t.metadata, t.length = Routes.TSP:ClusterRoute(db.routes[zone][route].route, zone, 65)
 	Routes:DrawWorldmapLines()
 	Routes:DrawMinimapLines(true)
 end
@@ -1308,7 +1308,7 @@ local cluster_header_table = {
 }
 local cluster_table = {
 	type  = "description",
-	name  = "Clustering a route makes Routes take all the nodes that are within 100 yards of each other and combine then into a single node as a travel point (i.e. about 50-70 yards radius). This process takes a while, but is reasonably fast.",
+	name  = "Clustering a route makes Routes take all the nodes that are within 130 yards of each other and combine then into a single node as a travel point (i.e. 65 yards radius). This process takes a while, but is reasonably fast.",
 	order = 50,
 }
 local optimize_header_table = {

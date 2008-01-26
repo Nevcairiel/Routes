@@ -781,6 +781,8 @@ function TSP:ClusterRoute(nodes, zonename, radius)
 
 	local numNodes = #nodes
 	local zoneW, zoneH = Routes.zoneData[BZ[zonename]][1], Routes.zoneData[BZ[zonename]][2]
+	local diameter = radius * 2
+	--local taboo = 0
 
 	-- Create a copy of the nodes[] table and use this instead of the original because we want to modify this table
 	local nodes2 = newTable()
@@ -819,7 +821,7 @@ function TSP:ClusterRoute(nodes, zonename, radius)
 			local w = weight[i]
 			for j = i+1, numNodes do
 				local w2 = w[j]
-				if w2 <= radius and w2 < smallestDist then
+				if w2 <= diameter and w2 < smallestDist then
 					smallestDist = w2
 					node1 = i
 					node2 = j
@@ -849,17 +851,21 @@ function TSP:ClusterRoute(nodes, zonename, radius)
 					-- And store a backup in the lower half of the table
 					weight[node2][node1] = weight[node1][node2]
 					weight[node1][node2] = 1/0
+					--taboo = taboo + 1
 					break
 				end
 			end
-			for i = 1, node2num do
-				local coord = m2[i]
-				local x, y = floor(coord / 10000) / 10000, (coord % 10000) / 10000
-				local t = (((node1x - x)*zoneW)^2 + ((node1y - y)*zoneH)^2)^0.5
-				if t > radius then
-					weight[node2][node1] = weight[node1][node2]
-					weight[node1][node2] = 1/0
-					break
+			if weight[node1][node2] ~= 1/0 then
+				for i = 1, node2num do
+					local coord = m2[i]
+					local x, y = floor(coord / 10000) / 10000, (coord % 10000) / 10000
+					local t = (((node1x - x)*zoneW)^2 + ((node1y - y)*zoneH)^2)^0.5
+					if t > radius then
+						weight[node2][node1] = weight[node1][node2]
+						weight[node1][node2] = 1/0
+						--taboo = taboo + 1
+						break
+					end
 				end
 			end
 			if weight[node1][node2] ~= 1/0 then
@@ -899,18 +905,16 @@ function TSP:ClusterRoute(nodes, zonename, radius)
 
 	-- Get the new pathLength
 	local pathLength = weight[1][numNodes]
+	pathLength = pathLength == 1/0 and weight[numNodes][1] or pathLength
 	for i = 1, numNodes-1 do
 		local w = weight[i][i+1]
-		if w == 1/0 then -- use the backup in the lower half of the triangle since it was tabooed
-			pathLength = pathLength + weight[i+1][i]
-		else
-			pathLength = pathLength + w
-		end
+		pathLength = pathLength + (w == 1/0 and weight[i+1][i] or w) -- use the backup in the lower half of the triangle if it was tabooed
 	end
 
 	-- Cleanup our used tables by recycling them
 	delTable(weight)
 
+	--ChatFrame1:AddMessage(taboo.." tabooed")
 	return nodes, metadata, pathLength
 end
 

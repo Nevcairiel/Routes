@@ -119,6 +119,7 @@ L["This route is not a clustered route."] = true
 L["This route is a clustered route, down from the original |cFFFFFFFF%d|r nodes."] = true
 L["|cFFFFFFFF     %d|r node(s) are between |cFFFFFFFF%d|r-|cFFFFFFFF%d|r yards of a cluster point"] = true
 L["|cFFFFFFFF     %d|r node(s) are at |cFFFFFFFF0|r yards of a cluster point"] = true
+L["The cluster radius of this route is |cFFFFFFFF%d|r yards."] = true
 
 L["Line settings"] = "Linieneinstellungen"
 L["These settings control the visibility and look of the drawn route."] = "Diese Einstellungen kontrollieren die Sichtbarkeit und das Aussehen der gezeichneten Route"
@@ -153,7 +154,9 @@ L["There is already a TSP running in background. Wait for it to complete first."
 L["The following error occured in the background path generation coroutine, please report to Grum or Xinhuan:"] = "Der folgende Fehler trat bei der Berechnung des Pfades auf, bitte melden Sie ihn bei Grum oder Xinhuan:"
 
 L["Route Clustering"] = true
-L["CLUSTER_DESC"] = "Clustering a route makes Routes take all the nodes that are within 130 yards of each other and combine then into a single node as a travel point (i.e. 65 yards radius). This process takes a while, but is reasonably fast."
+L["CLUSTER_DESC"] = "Clustering a route makes Routes take all the nodes that are near each other and combine then into a single node as a travel point. This process takes a while, but is reasonably fast."
+L["Cluster Radius"] = true
+L["CLUSTER_RADIUS_DESC"] = "The maximum distance a node will be away from its cluster node point. The default is 60 yards because the detection radius of tracking skills is 80 yards."
 L["Cluster"] = true
 L["Cluster this route"] = true
 L["Uncluster"] = true

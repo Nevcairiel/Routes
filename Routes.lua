@@ -111,6 +111,7 @@ local defaults = {
 			waypoint_hit_distance = 50,
 			line_gaps = true,
 			line_gaps_skip_cluster = true,
+			cluster_dist = 60,
 			callbacks = {
 				['*'] = true
 			}
@@ -690,7 +691,7 @@ function Routes:InsertNode(zone, coord, node_name)
 			for k, v in pairs(route_data.selection) do
 				if k == node_name or v == node_name then
 					-- Add the node
-					route_data.length = self.TSP:InsertNode(route_data.route, route_data.metadata, zone, coord, 65)
+					route_data.length = self.TSP:InsertNode(route_data.route, route_data.metadata, zone, coord, route_data.cluster_dist)
 					throttleFrame:Show()
 					break
 				end
@@ -1158,7 +1159,8 @@ end
 function ConfigHandler:ClusterRoute(info)
 	local zone, route = info.arg.zone, info.arg.route
 	local t = db.routes[zone][route]
-	t.route, t.metadata, t.length = Routes.TSP:ClusterRoute(db.routes[zone][route].route, zone, 65)
+	t.route, t.metadata, t.length = Routes.TSP:ClusterRoute(db.routes[zone][route].route, zone, db.defaults.cluster_dist)
+	t.cluster_dist = db.defaults.cluster_dist
 	Routes:DrawWorldmapLines()
 	Routes:DrawMinimapLines(true)
 end
@@ -1174,6 +1176,7 @@ function ConfigHandler:UnClusterRoute(info)
 		end
 	end
 	t.metadata = nil
+	t.cluster_dist = nil
 	t.length = Routes.TSP:PathLength(t.route, zone)
 	Routes:DrawWorldmapLines()
 	Routes:DrawMinimapLines(true)
@@ -1187,14 +1190,15 @@ function ConfigHandler:IsCluster(info)
 		return false
 	end
 end
-
 function ConfigHandler:IsNotCluster(info)
-	local t = db.routes[info.arg.zone][info.arg.route]
-	if t.metadata then
-		return false
-	else
-		return true
-	end
+	return not self:IsCluster(info)
+end
+
+function ConfigHandler:GetDefaultClusterDist()
+	return db.defaults.cluster_dist
+end
+function ConfigHandler:SetDefaultClusterDist(info, v)
+	db.defaults.cluster_dist = v
 end
 
 function ConfigHandler:ResetLineSettings(info)
@@ -1210,6 +1214,25 @@ end
 function ConfigHandler.GetRouteDesc(info)
 	local t = db.routes[info.arg.zone][info.arg.route]
 	return L["This route has |cFFFFFFFF%d|r nodes and is |cFFFFFFFF%d|r yards long."]:format(#t.route, t.length)
+end
+
+function ConfigHandler.GetShortClusterDesc(info)
+	local t = db.routes[info.arg.zone][info.arg.route]
+	if not t.metadata then
+		return L["This route is not a clustered route."]
+	end
+	local numNodes = 0
+	for i = 1, #t.metadata do
+		numNodes = numNodes + #t.metadata[i]
+	end
+	return L["This route is a clustered route, down from the original |cFFFFFFFF%d|r nodes."]:format(numNodes)
+end
+
+function ConfigHandler.GetRouteClusterRadiusDesc(info)
+	local t = db.routes[info.arg.zone][info.arg.route]
+	if t.metadata then
+		return L["The cluster radius of this route is |cFFFFFFFF%d|r yards."]:format(t.cluster_dist or 65) -- 65 was an old default
+	end
 end
 
 do
@@ -1258,10 +1281,11 @@ do
 			end
 		end
 		for i = 0, maxt do
-			str[i+3] = L["|cFFFFFFFF     %d|r node(s) are between |cFFFFFFFF%d|r-|cFFFFFFFF%d|r yards of a cluster point"]:format(data[i] or 0, i*10+1, i*10+10)
+			str[i+4] = L["|cFFFFFFFF     %d|r node(s) are between |cFFFFFFFF%d|r-|cFFFFFFFF%d|r yards of a cluster point"]:format(data[i] or 0, i*10+1, i*10+10)
 		end
 		str[1] = L["This route is a clustered route, down from the original |cFFFFFFFF%d|r nodes."]:format(numNodes)
-		str[2] = L["|cFFFFFFFF     %d|r node(s) are at |cFFFFFFFF0|r yards of a cluster point"]:format(data[-1] or 0)
+		str[2] = L["The cluster radius of this route is |cFFFFFFFF%d|r yards."]:format(t.cluster_dist or 65) -- 65 was an old default
+		str[3] = L["|cFFFFFFFF     %d|r node(s) are at |cFFFFFFFF0|r yards of a cluster point"]:format(data[-1] or 0)
 		return table.concat(str, "\n")
 	end
 end
@@ -1483,8 +1507,33 @@ function Routes:CreateAceOptRouteTable(zone, route)
 						arg = zone_route_table,
 						order = 0,
 					},
+					desc2 = {
+						type = "description",
+						name = ConfigHandler.GetShortClusterDesc,
+						arg = zone_route_table,
+						order = 1,
+					},
+					desc3 = {
+						type = "description",
+						name = ConfigHandler.GetRouteClusterRadiusDesc,
+						arg = zone_route_table,
+						hidden = "IsNotCluster",
+						disabled = "IsNotCluster",
+						order = 2,
+					},
 					cluster_header = cluster_header_table,
 					desc_cluster = cluster_table,
+					cluster_dist = {
+						name = L["Cluster Radius"], type = "range",
+						desc = L["CLUSTER_RADIUS_DESC"],
+						min = 10, max = 200, step = 1,
+						get = "GetDefaultClusterDist",
+						set = "SetDefaultClusterDist",
+						arg = zone_route_table,
+						hidden = "IsCluster",
+						disabled = "IsCluster",
+						order = 60,
+					},
 					cluster = {
 						name = L["Cluster"], type = "execute",
 						desc = L["Cluster this route"],
@@ -1492,7 +1541,7 @@ function Routes:CreateAceOptRouteTable(zone, route)
 						arg = zone_route_table,
 						hidden = "IsCluster",
 						disabled = "IsCluster",
-						order = 60,
+						order = 70,
 					},
 					uncluster = {
 						name = L["Uncluster"], type = "execute",
@@ -1501,7 +1550,7 @@ function Routes:CreateAceOptRouteTable(zone, route)
 						arg = zone_route_table,
 						hidden = "IsNotCluster",
 						disabled = "IsNotCluster",
-						order = 70,
+						order = 80,
 					},
 					optimize_header = optimize_header_table,
 					two_point_five_group = two_point_five_group_table,

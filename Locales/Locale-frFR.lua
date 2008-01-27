@@ -119,6 +119,7 @@ L["This route is not a clustered route."] = "Cette route n'est pas une route d'a
 L["This route is a clustered route, down from the original |cFFFFFFFF%d|r nodes."] = "Cette route est une route d'agrégats (|cFFFFFFFF%d|r nœuds à l'origine)."
 L["|cFFFFFFFF     %d|r node(s) are between |cFFFFFFFF%d|r-|cFFFFFFFF%d|r yards of a cluster point"] = "|cFFFFFFFF     %d|r nœud(s) sont entre |cFFFFFFFF%d|r et |cFFFFFFFF%d|r mètres d'un point d'agrégats."
 L["|cFFFFFFFF     %d|r node(s) are at |cFFFFFFFF0|r yards of a cluster point"] = "|cFFFFFFFF     %d|r nœud(s) sont à |cFFFFFFFF0|r mètres d'un point d'agrégats."
+L["The cluster radius of this route is |cFFFFFFFF%d|r yards."] = true
 
 L["Line settings"] = "Paramètres des lignes"
 L["These settings control the visibility and look of the drawn route."] = "Ces paramètres contrôlent la visibilité et le look des routes dessinées."
@@ -153,7 +154,9 @@ L["There is already a TSP running in background. Wait for it to complete first."
 L["The following error occured in the background path generation coroutine, please report to Grum or Xinhuan:"] = "L'erreur suivante est survenue dans la co-routine de génération du chemin en arrière-plan, veuillez le signaler à Grum ou Xinhuan : "
 
 L["Route Clustering"] = "Agrégation de la route"
-L["CLUSTER_DESC"] = "L'agrégation d'une route permet à Routes de prendre tous les nœuds situés à moins de 130 mètres les uns des autres et de les combiner dans un seul nœud qui servira de point de voyage (de 65 mètres de rayon par ex.). Ce processus prend pas mal de temps."
+L["CLUSTER_DESC"] = true -- retranslate please, original description was edited
+L["Cluster Radius"] = true
+L["CLUSTER_RADIUS_DESC"] = "The maximum distance a node will be away from its cluster node point. The default is 60 yards because the detection radius of tracking skills is 80 yards."
 L["Cluster"] = "Agréger"
 L["Cluster this route"] = "Agrège cette route."
 L["Uncluster"] = "Désagréger"

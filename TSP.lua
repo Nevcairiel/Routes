@@ -3,7 +3,7 @@
 Ant Colony Optimization (ACO) for Travelling Salesman Problem (TSP)
 for Routes (a World of Warcraft addon)
 
-Copyright (C) 2007 Xinhuan
+Copyright (C) 2008 Xinhuan
 
 This program is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
@@ -83,7 +83,10 @@ local tinsert, tremove = tinsert, tremove;
 
 local pathR = {};
 local lastpath;
+local Routes = LibStub("AceAddon-3.0"):GetAddon("Routes");
 local BZ = LibStub("LibBabble-Zone-3.0"):GetLookupTable();
+local TSP = {};
+Routes.TSP = TSP;
 
 ----------------------------------
 -- Table Pool for recycling tables
@@ -126,10 +129,6 @@ local function clearTable(t)
 	end
 end
 
-local Routes = LibStub("AceAddon-3.0"):GetAddon("Routes");
-local TSP = {};
-Routes.TSP = TSP;
-
 -----------------------------------------------------
 -- Coroutine code to allow background pathing
 
@@ -164,6 +163,7 @@ function TSP:IsTSPRunning()
 	return TSPUpdateFrame.running, TSPUpdateFrame.nodes;
 end
 
+-- Same arguments as TSP:SolveTSP(), without the "nonblocking" argument
 function TSP:SolveTSPBackground(nodes, metadata, zonename, parameters, path)
 	if (not TSPUpdateFrame.running) then
 		TSPUpdateFrame.co = coroutine.create(TSP.SolveTSP);
@@ -193,23 +193,27 @@ function TSP:SetFinishFunction(func)
 end
 
 -----------------------------------
--- TSP:SolveTSP(nodes, zonename, parameters, path)
+-- TSP:SolveTSP(nodes, metadata, zonename, parameters, path, nonblocking)
 -- Arguments
---   nodes	- The table containing a list of Routes node IDs to path
---		  This list should only contain nodes on the same map. This
---		  table should be indexed numerically from nodes[1] to nodes[n].
---   zonename	- The English zone name of the map that the route to be
---		  generated is on.
---   parameters	- The table containing the ACO parameters to use.
---   path	- An optional input table that is used to supply the result
---		  table. If this is nil, the function returns a new table.
---   nonblocking- A boolean to indicate whether the function should yield() regularly.
+--   nodes       - The table containing a list of Routes node IDs to path
+--                 This list should only contain nodes on the same map. This
+--                 table should be indexed numerically from nodes[1] to nodes[n].
+--   metadata    - The table containing the cluster metadata, if available
+--   zonename    - The English zone name of the map that the route to be
+--                 generated is on.
+--   parameters  - The table containing the ACO parameters to use.
+--   path        - An optional input table that is used to supply the result
+--                 table. If this is nil, the function returns a new table.
+--   nonblocking - A boolean to indicate whether the function should yield() regularly.
 -- Returns
---   path	- The result TSP path is a table indexed numerically from path[1]
---		  to path[n], a list of Routes node IDs.
---   length	- The length in yards of the path returned.
---   iteration  - Number of interations taken.
---   timeTaken  - Number of seconds used.
+--   path        - The result TSP path is a table indexed numerically from path[1]
+--                 to path[n], a list of Routes node IDs.
+--   metadata    - The table containing the cluster metadata, if available
+--   length      - The length in yards of the path returned.
+--   iteration   - Number of interations taken.
+--   timeTaken   - Number of seconds used.
+-- Notes: A new nodes[] and metadata[] table is returned. The original tables
+--        sent in are unmodified.
 function TSP:SolveTSP(nodes, metadata, zonename, parameters, path, nonblocking)
 	-- Notes: Some of these code might look convoluted, with seemingly unnecessary use of too many locals
 	-- and make the code look longer. But they are for speed optimization.
@@ -447,7 +451,7 @@ function TSP:SolveTSP(nodes, metadata, zonename, parameters, path, nonblocking)
 				meta[i] = metadata[shortestPath[i]]
 			end
 		end
-		metadata = meta
+		metadata = meta -- prev metadata[] not recycled here, will go out of scope at function end and get GCed
 	end
 
 	-- Cleanup our used tables by recycling them
@@ -564,6 +568,7 @@ function TSP:TwoOpt(path, weight, prune, twoPointFiveOpt, nonblocking)
 	return count;
 end
 
+-- Helper function for TSP:InsertNode()
 -- Tries to insert node into an existing cluster
 -- Returns true if successful, false otherwise
 local function tryInsert(nodes, metadata, insertPoint, nodeID, radius, zoneW, zoneH)
@@ -596,14 +601,17 @@ end
 -- TSP:InsertNode(nodes, zonename, nodeID, twoOpt, path)
 --   Inserts a node into an existing route.
 -- Arguments
---   nodes	- The table containing a list of Routes node IDs to path
---		  This list should only contain nodes on the same map. This
---		  table should be indexed numerically from nodes[1] to nodes[n].
---   zonename	- The English zone name of the map that the route to be
---		  generated is on.
---   nodeID     - The Routes node ID to insert into the route.
+--   nodes       - The table containing a list of Routes node IDs to path
+--              This list should only contain nodes on the same map. This
+--              table should be indexed numerically from nodes[1] to nodes[n].
+--   metadata    - The table containing the cluster metadata, if available
+--   zonename    - The English zone name of the map that the route to be
+--              generated is on.
+--   nodeID      - The Routes node ID to insert into the route.
 -- Returns
---   pathLength	- The length of the route in yards.
+--   pathLength  - The length of the route in yards.
+-- Notes: This function modifies the original nodes[] and metadata[] tables
+--        directly
 function TSP:InsertNode(nodes, metadata, zonename, nodeID, radius)
 	assert(type(nodes) == "table", "InsertNode() expected table in 1st argument, got "..type(nodes).." instead.");
 
@@ -705,13 +713,13 @@ end
 -- TSP:PathLength(nodes, zonename)
 --   Returns how long a given route is in yards.
 -- Arguments
---   nodes	- The table containing a list of Routes node IDs to path
---		  This list should only contain nodes on the same map. This
---		  table should be indexed numerically from nodes[1] to nodes[n].
---   zonename	- The English zone name of the map that the route to be
---		  generated is on.
+--   nodes      - The table containing a list of Routes node IDs to path
+--                This list should only contain nodes on the same map. This
+--                table should be indexed numerically from nodes[1] to nodes[n].
+--   zonename   - The English zone name of the map that the route to be
+--                generated is on.
 -- Returns
---   pathLength	- The length of the route in yards.
+--   pathLength - The length of the route in yards.
 function TSP:PathLength(nodes, zonename)
 	assert(type(nodes) == "table", "PathLength() expected table in 1st argument, got "..type(nodes).." instead.");
 	local zoneW, zoneH = Routes.zoneData[BZ[zonename]][1], Routes.zoneData[BZ[zonename]][2];
@@ -734,20 +742,21 @@ function TSP:PathLength(nodes, zonename)
 	return pathLength;
 end
 
--- TSP:ClusterRoute(nodes)
+-- TSP:ClusterRoute(nodes, zonename, radius)
 -- Arguments
--- nodes    - The table containing a list of Routes node IDs to path
---            This list should only contain nodes on the same map. This
---            table should be indexed numerically from nodes[1] to nodes[n].
--- zonename - The English zone name of the route
--- radius   - The radius in yards to cluster
+--   nodes    - The table containing a list of Routes node IDs to path
+--              This list should only contain nodes on the same map. This
+--              table should be indexed numerically from nodes[1] to nodes[n].
+--   zonename - The English zone name of the route
+--   radius   - The radius in yards to cluster
 -- Returns
--- path     - The result TSP path is a table indexed numerically from path[1]
---            to path[n], a list of Routes node IDs. n is smaller than the
---            original input
--- metadata - The metadata table for path[] containing the original nodes
---            clustered
--- length   - The length of the new route in yards
+--   path     - The result TSP path is a table indexed numerically from path[1]
+--              to path[n], a list of Routes node IDs. n is usually smaller than
+--              the original input
+--   metadata - The metadata table for path[] containing the original nodes
+--              clustered
+--   length   - The length of the new route in yards
+-- Notes: The original table sent in is unmodified. New tables are returned.
 --[[
 Hierarchical Agglomerative Clustering
 
@@ -886,7 +895,7 @@ function TSP:ClusterRoute(nodes, zonename, radius)
 				delTable(tremove(weight, node2)) -- remove row
 				-- Update number of nodes
 				numNodes = numNodes - 1
-				-- Update the weight table for all nodes relating to node1
+				-- Update the weight table for all nodes relating to node1, this can untaboo nodes
 				for i = 1, node1-1 do
 					local coord = nodes[i]
 					local x, y = floor(coord / 10000) / 10000, (coord % 10000) / 10000

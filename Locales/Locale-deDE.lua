@@ -1,4 +1,4 @@
-﻿-- Cartographer_Routes
+﻿-- Routes
 -- deDE Localization file, by Stanzilla
 
 local L = LibStub("AceLocale-3.0"):NewLocale("Routes", "deDE")

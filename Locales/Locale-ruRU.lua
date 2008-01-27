@@ -1,4 +1,4 @@
-﻿-- Cartographer_Routes
+﻿-- Routes
 -- ruRU Localization file
 
 local L = LibStub("AceLocale-3.0"):NewLocale("Routes", "ruRU")

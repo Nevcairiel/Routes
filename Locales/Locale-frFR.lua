@@ -34,7 +34,10 @@ L["Change default hidden route color"] = "Change la couleur par défaut des rout
 L["Show hidden routes"] = "Voir les routes masquées"
 L["Show hidden routes?"] = "Affiche les routes masquées."
 L["Line gaps"] = "Lignes découpées"
+L["Draw line gaps"] = true
 L["Shorten the lines drawn on the minimap slightly so that they do not overlap the icons and minimap tracking blips."] = "Raccourcit légèrement les dessins des lignes de la minicarte afin qu'elles ne se chevauchent pas les icônes et les spots du suivi."
+L["Skip clustered node points"] = true
+L["Do not draw gaps for clustered node points in routes."] = true
 
 -- Auto show/hide
 L["Auto show/hide"] = "Afficher/masquer auto."

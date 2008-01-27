@@ -33,6 +33,11 @@ L["Hidden route"] = "Versteckte Route"
 L["Change default hidden route color"] = "Ändere die Standardfarbe einer versteckten Route"
 L["Show hidden routes"] = "Zeige versteckte Routen"
 L["Show hidden routes?"] = "Versteckte Routen anzeigen?"
+L["Line gaps"] = true
+L["Draw line gaps"] = true
+L["Shorten the lines drawn on the minimap slightly so that they do not overlap the icons and minimap tracking blips."] = true
+L["Skip clustered node points"] = true
+L["Do not draw gaps for clustered node points in routes."] = true
 
 -- Auto show/hide
 L["Auto show/hide"] = "Auto. Anzeigen/Verstecken"
@@ -103,10 +108,17 @@ L["Treasure"] = "Schätze"
 L["ExtractGas"] = "Gas"
 
 -- Route Config
+L["When the following data sources add or delete node data, update my routes automatically by inserting or removing the same node in the relevant routes."] = true
+L[" Gatherer currently does not support callbacks, so this is impossible for Gatherer."] = true
+L["You have |cFFFFFFFF%d|r route(s) in |cFFFFFFFF%s|r."] = true
 L["Information"] = true
 L["This route has |cFFFFFFFF%d|r nodes and is |cFFFFFFFF%d|r yards long."] = "Diese Route hat |cFFFFFFFF%d|r Knotenpunkte und ist |cFFFFFFFF%d|r yards lang."
 L["This route has nodes that belong to the following categories:"] = "Diese Route enthält Knotenpunkte folgender Kategorien:"
 L["This route contains the following nodes:"] = "Diese Route enthält folgende Knotenpunkte:"
+L["This route is not a clustered route."] = true
+L["This route is a clustered route, down from the original |cFFFFFFFF%d|r nodes."] = true
+L["|cFFFFFFFF     %d|r node(s) are between |cFFFFFFFF%d|r-|cFFFFFFFF%d|r yards of a cluster point"] = true
+L["|cFFFFFFFF     %d|r node(s) are at |cFFFFFFFF0|r yards of a cluster point"] = true
 
 L["Line settings"] = "Linieneinstellungen"
 L["These settings control the visibility and look of the drawn route."] = "Diese Einstellungen kontrollieren die Sichtbarkeit und das Aussehen der gezeichneten Route"
@@ -128,6 +140,7 @@ L["Reset"] = "Zurücksetzen"
 L["Reset the line settings to defaults"] = "Setzt die Linieneinstellungen auf ihre Ursprungswerte zurück"
 
 L["Optimize route"] = "Route optimieren"
+L["Route Optimizing"] = true
 L["Extra optimization"] = "Extra Optimierung"
 L["ExtraOptDesc"] = "Wenn Sie diese Option aktivieren, dauert das Optimieren der Route ungefähr 40% länger, aber es wird eine -leicht- bessere Route generiert. Empfohlene Einstellung ist AUS."
 L["Foreground"] = "Vordergrund"
@@ -138,6 +151,13 @@ L["Path with %d nodes found with length %.2f yards after %d iterations in %.2f s
 L["Now running TSP in the background..."] = "Führt TSP jetzt im Hintergrund aus..."
 L["There is already a TSP running in background. Wait for it to complete first."] = "Es läuft schon eine TSP im Hintergrund. Bitte warten Sie, bis die erste abgeschlossen ist."
 L["The following error occured in the background path generation coroutine, please report to Grum or Xinhuan:"] = "Der folgende Fehler trat bei der Berechnung des Pfades auf, bitte melden Sie ihn bei Grum oder Xinhuan:"
+
+L["Route Clustering"] = true
+L["CLUSTER_DESC"] = "Clustering a route makes Routes take all the nodes that are within 130 yards of each other and combine then into a single node as a travel point (i.e. 65 yards radius). This process takes a while, but is reasonably fast."
+L["Cluster"] = true
+L["Cluster this route"] = true
+L["Uncluster"] = true
+L["Uncluster this route"] = true
 
 -- Profession Names in the skills tab in the character frame
 -- Doing these 4 localizations specifically to avoid using Babble-Spell

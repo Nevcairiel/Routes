@@ -110,6 +110,7 @@ local defaults = {
 			use_auto_showhide = false,
 			waypoint_hit_distance = 50,
 			line_gaps = true,
+			line_gaps_skip_cluster = true,
 			callbacks = {
 				['*'] = true
 			}
@@ -634,13 +635,22 @@ function Routes:DrawMinimapLines(forceUpdate)
 								local l = (dx*dx + dy*dy)^0.5
 								local x = 5 * dx / l
 								local y = 5 * dy / l
-								if last_inside and cur_inside and l > 10 then -- draw if line is 10 or more pixels
+								local shorten1, shorten2
+								if last_inside then shorten1 = true else shorten1 = false end
+								if cur_inside then shorten2 = true else shorten2 = false end
+								if shorten2 and route_data.metadata and defaults.line_gaps_skip_cluster and #route_data.metadata[i] > 1 then
+									shorten2 = false
+								end
+								if shorten1 and route_data.metadata and defaults.line_gaps_skip_cluster and #route_data.metadata[(i-1 == 0) and #route_data.route or i-1] > 1 then
+									shorten1 = false
+								end
+								if shorten1 and shorten2 and l > 10 then -- draw if line is 10 or more pixels
 									G:DrawLine( Minimap, draw_sx-x, draw_sy-y, draw_ex+x, draw_ey+y, width, color, "ARTWORK")
-								elseif last_inside and not cur_inside and l > 5 then
+								elseif shorten1 and not shorten2 and l > 5 then
 									G:DrawLine( Minimap, draw_sx-x, draw_sy-y, draw_ex, draw_ey, width, color, "ARTWORK")
-								elseif cur_inside and not last_inside and l > 5 then
+								elseif shorten2 and not shorten1 and l > 5 then
 									G:DrawLine( Minimap, draw_sx, draw_sy, draw_ex+x, draw_ey+y, width, color, "ARTWORK")
-								elseif not last_inside and not cur_inside then
+								elseif not shorten1 and not shorten2 then
 									G:DrawLine( Minimap, draw_sx, draw_sy, draw_ex, draw_ey, width, color, "ARTWORK")
 								end
 							else
@@ -1040,11 +1050,26 @@ options.args.options_group.args = {
 					},
 				},
 			},
-			line_gaps = {
-				name = L["Line gaps"], type = "toggle",
-				desc = L["Shorten the lines drawn on the minimap slightly so that they do not overlap the icons and minimap tracking blips."],
-				arg  = "line_gaps",
+			line_gaps_group = {
+				name = L["Line gaps"], type = "group",
+				desc = L["Line gaps"],
+				inline = true,
 				order = 400,
+				args = {
+					line_gaps = {
+						name = L["Draw line gaps"], type = "toggle",
+						desc = L["Shorten the lines drawn on the minimap slightly so that they do not overlap the icons and minimap tracking blips."],
+						arg  = "line_gaps",
+						order = 400,
+					},
+					line_gaps_skip_cluster = {
+						name = L["Skip clustered node points"], type = "toggle",
+						desc = L["Do not draw gaps for clustered node points in routes."],
+						arg  = "line_gaps_skip_cluster",
+						disabled = function() return not db.defaults.line_gaps end,
+						order = 400,
+					},
+				},
 			},
 			show_hidden = {
 				name = L["Show hidden routes"], type = "toggle",

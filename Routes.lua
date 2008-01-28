@@ -51,6 +51,7 @@ local L   = LibStub("AceLocale-3.0"):GetLocale("Routes", false)
 local BZ  = LibStub("LibBabble-Zone-3.0"):GetUnstrictLookupTable()
 local BZR = LibStub("LibBabble-Zone-3.0"):GetReverseLookupTable()
 local G = {} -- was Graph-1.0, but we removed the dependency
+Routes.G = G
 
 -- database defaults
 local db

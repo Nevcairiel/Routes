@@ -33,11 +33,11 @@ L["Hidden route"] = "Routes masquées"
 L["Change default hidden route color"] = "Change la couleur par défaut des routes masquées."
 L["Show hidden routes"] = "Voir les routes masquées"
 L["Show hidden routes?"] = "Affiche les routes masquées."
-L["Line gaps"] = "Lignes découpées"
-L["Draw line gaps"] = true
-L["Shorten the lines drawn on the minimap slightly so that they do not overlap the icons and minimap tracking blips."] = "Raccourcit légèrement les dessins des lignes de la minicarte afin qu'elles ne se chevauchent pas les icônes et les spots du suivi."
-L["Skip clustered node points"] = true
-L["Do not draw gaps for clustered node points in routes."] = true
+L["Line gaps"] = "Sauts de ligne"
+L["Draw line gaps"] = "Dessiner les sauts de ligne"
+L["Shorten the lines drawn on the minimap slightly so that they do not overlap the icons and minimap tracking blips."] = "Raccourcit légèrement les dessins des lignes de la minicarte afin qu'elles ne chevauchent pas les icônes et les spots du suivi."
+L["Skip clustered node points"] = "Passer les pts d'agrégation"
+L["Do not draw gaps for clustered node points in routes."] = "Ne pas utiliser de sauts de ligne pour les points d'agrégation des routes."
 
 -- Auto show/hide
 L["Auto show/hide"] = "Afficher/masquer auto."
@@ -115,11 +115,11 @@ L["Information"] = "Informations"
 L["This route has |cFFFFFFFF%d|r nodes and is |cFFFFFFFF%d|r yards long."] = "Cette route contient |cFFFFFFFF%d|r nœuds et est longue de |cFFFFFFFF%d|r mètres."
 L["This route has nodes that belong to the following categories:"] = "Cette route contient des nœuds des catégories suivantes :"
 L["This route contains the following nodes:"] ="Cette route contient les nœuds suivants :"
-L["This route is not a clustered route."] = "Cette route n'est pas une route d'agrégats."
-L["This route is a clustered route, down from the original |cFFFFFFFF%d|r nodes."] = "Cette route est une route d'agrégats (|cFFFFFFFF%d|r nœuds à l'origine)."
-L["|cFFFFFFFF     %d|r node(s) are between |cFFFFFFFF%d|r-|cFFFFFFFF%d|r yards of a cluster point"] = "|cFFFFFFFF     %d|r nœud(s) sont entre |cFFFFFFFF%d|r et |cFFFFFFFF%d|r mètres d'un point d'agrégats."
-L["|cFFFFFFFF     %d|r node(s) are at |cFFFFFFFF0|r yards of a cluster point"] = "|cFFFFFFFF     %d|r nœud(s) sont à |cFFFFFFFF0|r mètres d'un point d'agrégats."
-L["The cluster radius of this route is |cFFFFFFFF%d|r yards."] = true
+L["This route is not a clustered route."] = "Cette route n'est pas une route d'agrégation."
+L["This route is a clustered route, down from the original |cFFFFFFFF%d|r nodes."] = "Cette route est une route d'agrégation (|cFFFFFFFF%d|r nœuds à l'origine)."
+L["|cFFFFFFFF     %d|r node(s) are between |cFFFFFFFF%d|r-|cFFFFFFFF%d|r yards of a cluster point"] = "|cFFFFFFFF     %d|r nœud(s) sont entre |cFFFFFFFF%d|r et |cFFFFFFFF%d|r mètres d'un point d'agrégation."
+L["|cFFFFFFFF     %d|r node(s) are at |cFFFFFFFF0|r yards of a cluster point"] = "|cFFFFFFFF     %d|r nœud(s) sont à |cFFFFFFFF0|r mètres d'un point d'agrégation."
+L["The cluster radius of this route is |cFFFFFFFF%d|r yards."] = "Le rayon d'agrégation de cette route est de |cFFFFFFFF%d|r mètres."
 
 L["Line settings"] = "Paramètres des lignes"
 L["These settings control the visibility and look of the drawn route."] = "Ces paramètres contrôlent la visibilité et le look des routes dessinées."
@@ -143,7 +143,7 @@ L["Reset the line settings to defaults"] = "Réinitialise les paramètres des li
 L["Optimize route"] = "Optimiser la route"
 L["Route Optimizing"] = "Optimisation de la route"
 L["Extra optimization"] = "Extra optimisation"
-L["ExtraOptDesc"] = "L4activation de cette option rendra le temps de génération 40% plus long, mais les routes générées seront -légèrement- meilleures. Il est recommandé de laisser ceci désactivé."
+L["ExtraOptDesc"] = "L'activation de cette option rendra le temps de génération 40% plus long, mais les routes générées seront -légèrement- meilleures. Il est recommandé de laisser ceci désactivé."
 L["Foreground"] = "Avant-plan"
 L["Foreground Disclaimer"] = "Génère un chemin pratiquement optimal pour l'ensemble des nœuds de cette route. Veuillez noter qu'en faisant ceci, votre client WoW restera 'bloqué' pendant quelques temps. Selon le nombre de nœuds (en ajouter cause une augmentation de durée pratiquement exponentielle) et la vitesse de votre CPU, vous risquez d'être déconnecté si cela prend trop longtemps."
 L["Background"] = "Arrière-plan"
@@ -154,9 +154,9 @@ L["There is already a TSP running in background. Wait for it to complete first."
 L["The following error occured in the background path generation coroutine, please report to Grum or Xinhuan:"] = "L'erreur suivante est survenue dans la co-routine de génération du chemin en arrière-plan, veuillez le signaler à Grum ou Xinhuan : "
 
 L["Route Clustering"] = "Agrégation de la route"
-L["CLUSTER_DESC"] = true -- retranslate please, original description was edited
-L["Cluster Radius"] = true
-L["CLUSTER_RADIUS_DESC"] = "The maximum distance a node will be away from its cluster node point. The default is 60 yards because the detection radius of tracking skills is 80 yards."
+L["CLUSTER_DESC"] = "L'agrégation d'une route permet à Routes de prendre tous les nœuds qui sont proches les uns des autres et de les combiner en un seul nœud qui servira de point de voyage. Ce processus prend un peu de temps."
+L["Cluster Radius"] = "Rayon d'agrégation"
+L["CLUSTER_RADIUS_DESC"] = "Détermine la distance maximale entre un nœud et son point d'agrégation. La valeur par défaut est de 60 mètres car le rayon de détection des compétences de suivi est de 80 mètres."
 L["Cluster"] = "Agréger"
 L["Cluster this route"] = "Agrège cette route."
 L["Uncluster"] = "Désagréger"

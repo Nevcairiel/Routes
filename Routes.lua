@@ -692,7 +692,7 @@ function Routes:InsertNode(zone, coord, node_name)
 			for k, v in pairs(route_data.selection) do
 				if k == node_name or v == node_name then
 					-- Add the node
-					route_data.length = self.TSP:InsertNode(route_data.route, route_data.metadata, zone, coord, route_data.cluster_dist)
+					route_data.length = self.TSP:InsertNode(route_data.route, route_data.metadata, zone, coord, route_data.cluster_dist or 65) -- 65 is the old default
 					throttleFrame:Show()
 					break
 				end

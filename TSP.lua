@@ -84,7 +84,6 @@ local tinsert, tremove = tinsert, tremove;
 local pathR = {};
 local lastpath;
 local Routes = LibStub("AceAddon-3.0"):GetAddon("Routes");
-local BZ = LibStub("LibBabble-Zone-3.0"):GetLookupTable();
 local TSP = {};
 Routes.TSP = TSP;
 
@@ -199,7 +198,7 @@ end
 --                 This list should only contain nodes on the same map. This
 --                 table should be indexed numerically from nodes[1] to nodes[n].
 --   metadata    - The table containing the cluster metadata, if available
---   zonename    - The English zone name of the map that the route to be
+--   zonename    - The localized zone name of the map that the route to be
 --                 generated is on.
 --   parameters  - The table containing the ACO parameters to use.
 --   path        - An optional input table that is used to supply the result
@@ -262,7 +261,7 @@ function TSP:SolveTSP(nodes, metadata, zonename, parameters, path, nonblocking)
 	
 	-- Setup ACO parameters
 	local startTime		= GetTime();
-	local zoneW, zoneH	= Routes.zoneData[BZ[zonename]][1], Routes.zoneData[BZ[zonename]][2]
+	local zoneW, zoneH	= Routes.zoneData[zonename][1], Routes.zoneData[zonename][2]
 
 	local INITIAL_PHEROMONE = parameters.initial_pheromone or 0;     -- Parameter: Initial pheromone trail value
 	local ALPHA             = parameters.alpha or 1;                 -- Parameter: Likelihood of ants to follow pheromone trails (larger value == more likely)
@@ -605,7 +604,7 @@ end
 --              This list should only contain nodes on the same map. This
 --              table should be indexed numerically from nodes[1] to nodes[n].
 --   metadata    - The table containing the cluster metadata, if available
---   zonename    - The English zone name of the map that the route to be
+--   zonename    - The localized zone name of the map that the route to be
 --              generated is on.
 --   nodeID      - The Routes node ID to insert into the route.
 -- Returns
@@ -631,7 +630,7 @@ function TSP:InsertNode(nodes, metadata, zonename, nodeID, radius)
 	numNodes = #nodes;
 
 	-- Step 1	- Initialize and generate the weight matrix, and prune matrix if doing 2-opt
-	local zoneW, zoneH = Routes.zoneData[BZ[zonename]][1], Routes.zoneData[BZ[zonename]][2];
+	local zoneW, zoneH = Routes.zoneData[zonename][1], Routes.zoneData[zonename][2];
 	local weight = newTable();
 
 	-- Not doing a twoopt means we only need to generate O(2n) entries in the weight table
@@ -716,13 +715,13 @@ end
 --   nodes      - The table containing a list of Routes node IDs to path
 --                This list should only contain nodes on the same map. This
 --                table should be indexed numerically from nodes[1] to nodes[n].
---   zonename   - The English zone name of the map that the route to be
+--   zonename   - The localized zone name of the map that the route to be
 --                generated is on.
 -- Returns
 --   pathLength - The length of the route in yards.
 function TSP:PathLength(nodes, zonename)
 	assert(type(nodes) == "table", "PathLength() expected table in 1st argument, got "..type(nodes).." instead.");
-	local zoneW, zoneH = Routes.zoneData[BZ[zonename]][1], Routes.zoneData[BZ[zonename]][2];
+	local zoneW, zoneH = Routes.zoneData[zonename][1], Routes.zoneData[zonename][2];
 	local numNodes = #nodes;
 	local pathLength = 0;
 
@@ -747,7 +746,7 @@ end
 --   nodes    - The table containing a list of Routes node IDs to path
 --              This list should only contain nodes on the same map. This
 --              table should be indexed numerically from nodes[1] to nodes[n].
---   zonename - The English zone name of the route
+--   zonename - The localized zone name of the route
 --   radius   - The radius in yards to cluster
 -- Returns
 --   path     - The result TSP path is a table indexed numerically from path[1]
@@ -789,7 +788,7 @@ function TSP:ClusterRoute(nodes, zonename, radius)
 	local metadata = newTable() -- metadata after clustering
 
 	local numNodes = #nodes
-	local zoneW, zoneH = Routes.zoneData[BZ[zonename]][1], Routes.zoneData[BZ[zonename]][2]
+	local zoneW, zoneH = Routes.zoneData[zonename][1], Routes.zoneData[zonename][2]
 	local diameter = radius * 2
 	--local taboo = 0
 

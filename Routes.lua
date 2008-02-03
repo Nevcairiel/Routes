@@ -688,7 +688,7 @@ function Routes:InsertNode(zone, coord, node_name)
 			for k, v in pairs(route_data.selection) do
 				if k == node_name or v == node_name then
 					-- Add the node
-					route_data.length = self.TSP:InsertNode(route_data.route, route_data.metadata, zone, coord, route_data.cluster_dist or 65) -- 65 is the old default
+					route_data.length = self.TSP:InsertNode(route_data.route, route_data.metadata, BZ[zone], coord, route_data.cluster_dist or 65) -- 65 is the old default
 					throttleFrame:Show()
 					break
 				end
@@ -727,7 +727,7 @@ function Routes:DeleteNode(zone, coord, node_name)
 										tremove(route_data.metadata, i)
 										tremove(route_data.route, i)
 									end
-									route_data.length = self.TSP:PathLength(route_data.route, zone)
+									route_data.length = self.TSP:PathLength(route_data.route, BZ[zone])
 									throttleFrame:Show()
 									flag = true
 									break
@@ -740,7 +740,7 @@ function Routes:DeleteNode(zone, coord, node_name)
 						for i = 1, #route_data.route do
 							if coord == route_data.route[i] then
 								tremove(route_data.route, i)
-								route_data.length = self.TSP:PathLength(route_data.route, zone)
+								route_data.length = self.TSP:PathLength(route_data.route, BZ[zone])
 								throttleFrame:Show()
 								flag = true
 								break
@@ -1141,7 +1141,7 @@ end
 function ConfigHandler:ClusterRoute(info)
 	local zone, route = info.arg.zone, info.arg.route
 	local t = db.routes[zone][route]
-	t.route, t.metadata, t.length = Routes.TSP:ClusterRoute(db.routes[zone][route].route, zone, db.defaults.cluster_dist)
+	t.route, t.metadata, t.length = Routes.TSP:ClusterRoute(db.routes[zone][route].route, BZ[zone], db.defaults.cluster_dist)
 	t.cluster_dist = db.defaults.cluster_dist
 	Routes:DrawWorldmapLines()
 	Routes:DrawMinimapLines(true)
@@ -1159,7 +1159,7 @@ function ConfigHandler:UnClusterRoute(info)
 	end
 	t.metadata = nil
 	t.cluster_dist = nil
-	t.length = Routes.TSP:PathLength(t.route, zone)
+	t.length = Routes.TSP:PathLength(t.route, BZ[zone])
 	Routes:DrawWorldmapLines()
 	Routes:DrawMinimapLines(true)
 end
@@ -1281,7 +1281,7 @@ end
 
 function ConfigHandler:DoForeground(info)
 	local t = db.routes[info.arg.zone][info.arg.route]
-	local output, meta, length, iter, timetaken = Routes.TSP:SolveTSP(t.route, t.metadata, info.arg.zone, db.defaults.tsp)
+	local output, meta, length, iter, timetaken = Routes.TSP:SolveTSP(t.route, t.metadata, BZ[info.arg.zone], db.defaults.tsp)
 	t.route = output
 	t.length = length
 	t.metadata = meta
@@ -1298,7 +1298,7 @@ end
 
 function ConfigHandler:DoBackground(info)
 	local t = db.routes[info.arg.zone][info.arg.route]
-	local running, errormsg = Routes.TSP:SolveTSPBackground(t.route, t.metadata, info.arg.zone, db.defaults.tsp)
+	local running, errormsg = Routes.TSP:SolveTSPBackground(t.route, t.metadata, BZ[info.arg.zone], db.defaults.tsp)
 	if (running == 1) then
 		Routes:Print(L["Now running TSP in the background..."])
 		Routes.TSP:SetFinishFunction(function(output, meta, length, iter, timetaken)
@@ -1813,7 +1813,7 @@ do
 				deep_copy_table(db.routes[create_zone][create_name], new_route)
 
 				-- TODO Check if we can do a one-pass TSP run here as well if the user selected it.
-				db.routes[create_zone][create_name].length = Routes.TSP:PathLength(new_route.route, create_zone)
+				db.routes[create_zone][create_name].length = Routes.TSP:PathLength(new_route.route, BZ[create_zone])
 
 				-- Create the aceopts table entry for our new route
 				local opts = options.args.routes_group.args

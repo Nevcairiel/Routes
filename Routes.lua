@@ -1,7 +1,7 @@
 ﻿--[[
 ********************************************************************************
 Routes
-25 January 2008
+3 February 2008
 (Written for live servers v2.3.3.7799)
 
 Author: Xaros @ EU Doomhammer Alliance & Xinhuan @ US Blackrock Alliance
@@ -826,8 +826,7 @@ function Routes:OnInitialize()
 			db.routes[zone] = nil
 		else
 			local localizedZoneName = self.zoneMapFile[zone]
-			local zonekey = tostring(self.zoneData[localizedZoneName][3])
-			opts[zonekey] = { -- use a 3 digit string which is alphabetically sorted zone names by continent
+			opts[zone] = {
 				type = "group",
 				name = localizedZoneName,
 				desc = L["Routes in %s"]:format(localizedZoneName),
@@ -835,9 +834,9 @@ function Routes:OnInitialize()
 			}
 			for route in pairs(zone_table) do
 				local routekey = route:gsub("%s", "\255") -- can't have spaces in the key
-				opts[zonekey].args[routekey] = self:CreateAceOptRouteTable(zone, route)
+				opts[zone].args[routekey] = self:CreateAceOptRouteTable(zone, route)
 			end
-			opts[zonekey].args.desc = {
+			opts[zone].args.desc = {
 				type = "description",
 				name = GetZoneDescText,
 				arg = zone,
@@ -1169,12 +1168,11 @@ function ConfigHandler:DeleteRoute(info)
 		return
 	end
 	db.routes[zone][route] = nil
-	local zonekey = tostring(Routes.zoneData[ Routes.zoneMapFile[zone] ][3]) -- use a 3 digit string which is alphabetically sorted zone names by continent
 	local routekey = route:gsub("%s", "\255") -- can't have spaces in the key
-	options.args.routes_group.args[zonekey].args[routekey] = nil -- delete route from aceopt
+	options.args.routes_group.args[zone].args[routekey] = nil -- delete route from aceopt
 	if next(db.routes[zone]) == nil then
 		db.routes[zone] = nil
-		options.args.routes_group.args[zonekey] = nil -- delete zone from aceopt if no routes remaining
+		options.args.routes_group.args[zone] = nil -- delete zone from aceopt if no routes remaining
 	end
 	Routes:DrawWorldmapLines()
 	Routes:DrawMinimapLines(true)
@@ -1850,15 +1848,14 @@ do
 
 				-- Create the aceopts table entry for our new route
 				local opts = options.args.routes_group.args
-				local zonekey = tostring(Routes.zoneData[create_zone][3])
-				if not opts[zonekey] then
-					opts[zonekey] = { -- use a 3 digit string which is alphabetically sorted zone names by continent
+				if not opts[mapfile] then
+					opts[mapfile] = { -- use a 3 digit string which is alphabetically sorted zone names by continent
 						type = "group",
 						name = create_zone,
 						desc = L["Routes in %s"]:format(create_zone),
 						args = {},
 					}
-					opts[zonekey].args.desc = {
+					opts[mapfile].args.desc = {
 						type = "description",
 						name = GetZoneDescText,
 						arg = mapfile,
@@ -1866,7 +1863,7 @@ do
 					}
 				end
 				local routekey = create_name:gsub("%s", "\255") -- can't have spaces in the key
-				opts[zonekey].args[routekey] = Routes:CreateAceOptRouteTable(mapfile, create_name)
+				opts[mapfile].args[routekey] = Routes:CreateAceOptRouteTable(mapfile, create_name)
 
 				-- Draw it
 				Routes:DrawWorldmapLines()

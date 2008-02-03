@@ -82,7 +82,6 @@ end })
 local zoneNames = {}
 local zoneList = {}  -- = setmetatable({}, { __index = function() return emptyZoneTbl end})
 local zoneMapFile = {}
-local zoneMapFileReverse = {}
 local continentList = {GetMapContinents()}
 for cID = 1, #continentList do
 	for zID, zname in ipairs({GetMapZones(cID)}) do
@@ -90,26 +89,28 @@ for cID = 1, #continentList do
 		SetMapZoom(cID, zID)
 		local mapfile = GetMapInfo()
 		zoneList[zname] = zone_data[mapfile]
-		zoneMapFile[zname] = mapfile
-		zoneMapFileReverse[mapfile] = zname
+		zoneList[zname][3] = zID -- overwrite GatherMate ZoneID with our own ZoneID
+		zoneList[zname][4] = mapfile
+		zoneMapFile[mapfile] = zname
 	end
 end
-for zID, zname in pairs(zoneNames) do
-	zoneList[zname][3] = zID -- overwrite GatherMate ZoneID with our own ZoneID
-end
+
 Routes.zoneNames = zoneNames
 Routes.zoneData = zoneList
 Routes.zoneMapFile = zoneMapFile
+
 zone_data = nil
+continentList = nil
 
 --[[
 Documatation of contents of these tables:
-If you are in the zone "Dun Morogh" then
+If you are in the zone "Dun Morogh" (continent 1, zone 7 in the enUS client) and
+	GetCurrentMapContinent()*100 + GetCurrentMapZone() == 107
 
-zoneNames[GetCurrentMapContinent()*100 + GetCurrentMapZone()] == "Dun Morogh"
-zoneData["Dun Morogh"] == { 4924.664537147015, 3283.109691431343, GetCurrentMapContinent()*100 + GetCurrentMapZone() }
-zoneMapFile["Dun Morogh"] == "DunMorogh"
-zoneMapFileReverse["DunMorogh"] == "Dun Morogh"
+then
+	zoneNames[107] == "Dun Morogh"
+	zoneData["Dun Morogh"] == { 4924.664537147015, 3283.109691431343, 107, "DunMorogh" }
+	zoneMapFile["DunMorogh"] == "Dun Morogh"
 
 Note that in all the above, "Dun Morogh" is a localized string
 ]]

@@ -754,6 +754,16 @@ function Routes:DeleteNode(zone, coord, node_name)
 	end
 end
 
+local function GetZoneDescText(info)
+	local count = 0
+	for route_name, route_table in pairs(db.routes[info.arg]) do
+		if #route_table.route > 0 then
+			count = count + 1
+		end
+	end
+	return L["You have |cFFFFFFFF%d|r route(s) in |cFFFFFFFF%s|r."]:format(count, BZ[info.arg])
+end
+
 
 ------------------------------------------------------------------------------------------------------
 -- General event functions
@@ -767,16 +777,6 @@ function Routes:OnInitialize()
 	-- Initialize the ace options table
 	LibStub("AceConfigRegistry-3.0"):RegisterOptionsTable("Routes", options)
 	self:RegisterChatCommand(L["routes"], function() LibStub("AceConfigDialog-3.0"):Open("Routes") end)
-
-	local function GetZoneDescText(info)
-		local count = 0
-		for route_name, route_table in pairs(db.routes[info.arg]) do
-			if #route_table.route > 0 then
-				count = count + 1
-			end
-		end
-		return L["You have |cFFFFFFFF%d|r route(s) in |cFFFFFFFF%s|r."]:format(count, BZ[info.arg])
-	end
 
 	-- Generate ace options table for each route
 	local opts = options.args.routes_group.args
@@ -1825,6 +1825,12 @@ do
 						name = localizedZoneName,
 						desc = L["Routes in %s"]:format(localizedZoneName),
 						args = {},
+					}
+					opts[zonekey].args.desc = {
+						type = "description",
+						name = GetZoneDescText,
+						arg = create_zone,
+						order = 0,
 					}
 				end
 				local routekey = create_name:gsub("%s", "\255") -- can't have spaces in the key

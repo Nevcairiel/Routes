@@ -48,8 +48,6 @@ Contact:
 Routes = LibStub("AceAddon-3.0"):NewAddon("Routes", "AceConsole-3.0", "AceEvent-3.0", "AceHook-3.0")
 local Routes = Routes
 local L   = LibStub("AceLocale-3.0"):GetLocale("Routes", false)
-local BZ  = LibStub("LibBabble-Zone-3.0"):GetUnstrictLookupTable()
-local BZR = LibStub("LibBabble-Zone-3.0"):GetReverseLookupTable()
 local G = {} -- was Graph-1.0, but we removed the dependency
 Routes.G = G
 
@@ -58,7 +56,7 @@ local db
 local defaults = {
 	global = {
 		routes = {
-			['*'] = { -- zone name
+			['*'] = { -- zone name, stored as the MapFile string constant
 				['*'] = { -- route name
 					route           = {},    -- point, point, point
 					color           = nil,   -- defaults to db.defaults.color if nil
@@ -156,7 +154,6 @@ end
 function Routes:DrawWorldmapLines()
 	-- setup locals
 	local zone = self.zoneNames[GetCurrentMapContinent()*100 + GetCurrentMapZone()]
-	if BZR[zone] then zone = BZR[zone] end
 	local BattlefieldMinimap = BattlefieldMinimap  -- local reference if it exists
 	local fh, fw = WorldMapButton:GetHeight(), WorldMapButton:GetWidth()
 	local bfh, bfw  -- BattlefieldMinimap height and width
@@ -176,7 +173,7 @@ function Routes:DrawWorldmapLines()
 	local flag2 = defaults.draw_battlemap and BattlefieldMinimap and BattlefieldMinimap:IsShown() -- Draw battlemap lines?
 	if (not flag1) and (not flag2) then	return end 	-- Nothing to draw
 
-	for route_name, route_data in pairs( db.routes[zone] ) do
+	for route_name, route_data in pairs( db.routes[ self.zoneData[zone][4] ] ) do
 		if type(route_data) == "table" and type(route_data.route) == "table" and #route_data.route > 1 then
 			local width = route_data.width or defaults.width
 			local halfwidth = route_data.width_battlemap or defaults.width_battlemap
@@ -288,7 +285,6 @@ local Y_cache = {}
 local XY_cache_mt = {
 	__index = function(t, key)
 		local zone, coord = (';'):split( key )
-		zone = BZ[zone]
 		local X = Routes.zoneData[zone][1] * floor(coord / 10000) / 10000
 		local Y = Routes.zoneData[zone][2] * (coord % 10000) / 10000
 		X_cache[key] = X
@@ -339,6 +335,18 @@ function Routes:DrawMinimapLines(forceUpdate)
 		return
 	end
 
+	do
+		local currentZoneID = self.zoneData[zone][3]
+		local mapZoneID = GetCurrentMapContinent()*100 + GetCurrentMapZone()
+		if currentZoneID ~= mapZoneID then
+			-- we are viewing a map that isn't the current zone (usually a continent
+			-- map), so the coordinates are wrong, unless we translate them
+			return
+		end
+	end
+
+	G:HideLines(Minimap)
+
 	last_X = cx
 	last_Y = cy
 	last_facing = facing
@@ -359,16 +367,12 @@ function Routes:DrawMinimapLines(forceUpdate)
 
 	local div_by_zero_nudge = 0.000001
 
-	G:HideLines(Minimap)
-
-	zone = BZR[zone] or zone
-
 	local minimap_w = Minimap:GetWidth()
 	local minimap_h = Minimap:GetHeight()
 	local scale_x = minimap_w / (radius*2)
 	local scale_y = minimap_h / (radius*2)
 
-	for route_name, route_data in pairs( db.routes[zone] ) do
+	for route_name, route_data in pairs( db.routes[ self.zoneData[zone][4] ] ) do
 		if type(route_data) == "table" and type(route_data.route) == "table" and #route_data.route > 1 then
 			-- store color/width
 			local width = route_data.width_minimap or defaults.width_minimap
@@ -678,17 +682,17 @@ throttleFrame:SetScript("OnUpdate", function(self, elapsed)
 	self:Hide()
 end)
 
--- Accepts a zone name, coord and node_name (inputs can be english or localized)
+-- Accepts a zone name, coord and node_name
 -- for inserting into relevant routes
+-- Zone name must be localized, node_name can be english or localized
 function Routes:InsertNode(zone, coord, node_name)
-	zone = BZR[zone] or zone
-	for route_name, route_data in pairs( db.routes[zone] ) do
+	for route_name, route_data in pairs( db.routes[ self.zoneData[zone][4] ] ) do
 		-- for every route check if the route is created with this node
 		if route_data.selection then
 			for k, v in pairs(route_data.selection) do
 				if k == node_name or v == node_name then
 					-- Add the node
-					route_data.length = self.TSP:InsertNode(route_data.route, route_data.metadata, BZ[zone], coord, route_data.cluster_dist or 65) -- 65 is the old default
+					route_data.length = self.TSP:InsertNode(route_data.route, route_data.metadata, zone, coord, route_data.cluster_dist or 65) -- 65 is the old default
 					throttleFrame:Show()
 					break
 				end
@@ -697,11 +701,11 @@ function Routes:InsertNode(zone, coord, node_name)
 	end
 end
 
--- Accepts a zone name, coord and node_name (inputs can be english or localized)
+-- Accepts a zone name, coord and node_name
 -- for deleting into relevant routes
+-- Zone name must be localized, node_name can be english or localized
 function Routes:DeleteNode(zone, coord, node_name)
-	zone = BZR[zone] or zone
-	for route_name, route_data in pairs( db.routes[zone] ) do
+	for route_name, route_data in pairs( db.routes[ self.zoneData[zone][4] ] ) do
 		-- for every route check if the route is created with this node
 		if route_data.selection then
 			local flag = false
@@ -727,7 +731,7 @@ function Routes:DeleteNode(zone, coord, node_name)
 										tremove(route_data.metadata, i)
 										tremove(route_data.route, i)
 									end
-									route_data.length = self.TSP:PathLength(route_data.route, BZ[zone])
+									route_data.length = self.TSP:PathLength(route_data.route, zone)
 									throttleFrame:Show()
 									flag = true
 									break
@@ -740,7 +744,7 @@ function Routes:DeleteNode(zone, coord, node_name)
 						for i = 1, #route_data.route do
 							if coord == route_data.route[i] then
 								tremove(route_data.route, i)
-								route_data.length = self.TSP:PathLength(route_data.route, BZ[zone])
+								route_data.length = self.TSP:PathLength(route_data.route, zone)
 								throttleFrame:Show()
 								flag = true
 								break
@@ -754,6 +758,38 @@ function Routes:DeleteNode(zone, coord, node_name)
 	end
 end
 
+-- This function upgrades the Routes old storage format which was dependant
+-- on LibBabble-Zone-3.0 to the new format that doesn't require it. Note that
+-- this upgrade function only works on enUS or enGB clients because the old
+-- format uses English strings, the new format uses mapfile names.
+function Routes:UpgradeStorageFormat1()
+	local t = {}
+	for zone, zone_table in pairs(db.routes) do
+		if self.zoneMapFile[zone] == nil then
+			-- This zone is a string that doesn't correspond to any of the
+			-- mapfile names. So we try to obtain the mapfile name
+			local mapfile = self.zoneData[zone][4]
+			if mapfile == "" then
+				-- invalid zones return "" due to a metatable, delete the
+				-- whole zone
+				db.routes[zone] = nil
+			else
+				-- We found a match, store the zone_table temporarily first
+				-- and delete the whole zone (because we cannot insert new
+				-- keys into db.routes[] while iterating over it)
+				t[mapfile] = zone_table
+				db.routes[zone] = nil
+			end
+		end
+	end
+	for mapfile, zone_table in pairs(t) do
+		-- Now assign the new zone mapfile keys
+		db.routes[mapfile] = zone_table
+		t[mapfile] = nil
+	end
+	t = nil
+end
+
 local function GetZoneDescText(info)
 	local count = 0
 	for route_name, route_table in pairs(db.routes[info.arg]) do
@@ -761,7 +797,7 @@ local function GetZoneDescText(info)
 			count = count + 1
 		end
 	end
-	return L["You have |cFFFFFFFF%d|r route(s) in |cFFFFFFFF%s|r."]:format(count, BZ[info.arg])
+	return L["You have |cFFFFFFFF%d|r route(s) in |cFFFFFFFF%s|r."]:format(count, Routes.zoneMapFile[info.arg])
 end
 
 
@@ -778,13 +814,18 @@ function Routes:OnInitialize()
 	LibStub("AceConfigRegistry-3.0"):RegisterOptionsTable("Routes", options)
 	self:RegisterChatCommand(L["routes"], function() LibStub("AceConfigDialog-3.0"):Open("Routes") end)
 
+	-- Upgrade old storage format (which was dependant on LibBabble-Zone-3.0
+	-- to the new format that doesn't require it
+	self:UpgradeStorageFormat1()
+
 	-- Generate ace options table for each route
 	local opts = options.args.routes_group.args
 	for zone, zone_table in pairs(db.routes) do
-		-- do not show unless we have routes.
-		-- This because lua cant do '#' on hash-tables
-		if next(zone_table) ~= nil then
-			local localizedZoneName = BZ[zone]
+		if next(zone_table) == nil then
+			-- cleanup the empty zone
+			db.routes[zone] = nil
+		else
+			local localizedZoneName = self.zoneMapFile[zone]
 			local zonekey = tostring(self.zoneData[localizedZoneName][3])
 			opts[zonekey] = { -- use a 3 digit string which is alphabetically sorted zone names by continent
 				type = "group",
@@ -1128,10 +1169,11 @@ function ConfigHandler:DeleteRoute(info)
 		return
 	end
 	db.routes[zone][route] = nil
-	local zonekey = tostring(Routes.zoneData[BZ[zone] or zone][3]) -- use a 3 digit string which is alphabetically sorted zone names by continent
+	local zonekey = tostring(Routes.zoneData[ Routes.zoneMapFile[zone] ][3]) -- use a 3 digit string which is alphabetically sorted zone names by continent
 	local routekey = route:gsub("%s", "\255") -- can't have spaces in the key
 	options.args.routes_group.args[zonekey].args[routekey] = nil -- delete route from aceopt
 	if next(db.routes[zone]) == nil then
+		db.routes[zone] = nil
 		options.args.routes_group.args[zonekey] = nil -- delete zone from aceopt if no routes remaining
 	end
 	Routes:DrawWorldmapLines()
@@ -1141,7 +1183,7 @@ end
 function ConfigHandler:ClusterRoute(info)
 	local zone, route = info.arg.zone, info.arg.route
 	local t = db.routes[zone][route]
-	t.route, t.metadata, t.length = Routes.TSP:ClusterRoute(db.routes[zone][route].route, BZ[zone], db.defaults.cluster_dist)
+	t.route, t.metadata, t.length = Routes.TSP:ClusterRoute(db.routes[zone][route].route, Routes.zoneMapFile[zone], db.defaults.cluster_dist)
 	t.cluster_dist = db.defaults.cluster_dist
 	Routes:DrawWorldmapLines()
 	Routes:DrawMinimapLines(true)
@@ -1159,7 +1201,7 @@ function ConfigHandler:UnClusterRoute(info)
 	end
 	t.metadata = nil
 	t.cluster_dist = nil
-	t.length = Routes.TSP:PathLength(t.route, BZ[zone])
+	t.length = Routes.TSP:PathLength(t.route, Routes.zoneMapFile[zone])
 	Routes:DrawWorldmapLines()
 	Routes:DrawMinimapLines(true)
 end
@@ -1249,7 +1291,8 @@ do
 
 		local numNodes = 0
 		local maxt = 0
-		local zoneW, zoneH = Routes.zoneData[BZ[info.arg.zone]][1], Routes.zoneData[BZ[info.arg.zone]][2]
+		local zone = Routes.zoneMapFile[info.arg.zone]
+		local zoneW, zoneH = Routes.zoneData[zone][1], Routes.zoneData[zone][2]
 		for i = 1, #t.metadata do
 			local numData = #t.metadata[i]
 			numNodes = numNodes + numData
@@ -1281,7 +1324,7 @@ end
 
 function ConfigHandler:DoForeground(info)
 	local t = db.routes[info.arg.zone][info.arg.route]
-	local output, meta, length, iter, timetaken = Routes.TSP:SolveTSP(t.route, t.metadata, BZ[info.arg.zone], db.defaults.tsp)
+	local output, meta, length, iter, timetaken = Routes.TSP:SolveTSP(t.route, t.metadata, Routes.zoneMapFile[info.arg.zone], db.defaults.tsp)
 	t.route = output
 	t.length = length
 	t.metadata = meta
@@ -1298,7 +1341,7 @@ end
 
 function ConfigHandler:DoBackground(info)
 	local t = db.routes[info.arg.zone][info.arg.route]
-	local running, errormsg = Routes.TSP:SolveTSPBackground(t.route, t.metadata, BZ[info.arg.zone], db.defaults.tsp)
+	local running, errormsg = Routes.TSP:SolveTSPBackground(t.route, t.metadata, Routes.zoneMapFile[info.arg.zone], db.defaults.tsp)
 	if (running == 1) then
 		Routes:Print(L["Now running TSP in the background..."])
 		Routes.TSP:SetFinishFunction(function(output, meta, length, iter, timetaken)
@@ -1609,16 +1652,7 @@ options.args.routes_group.args.callbacks = {
 -- AceOpt config table for route creation
 do
 	-- Some upvalues used in the aceopts[] table for creating new routes
-	local outland_zones = {
-		"Blade's Edge Mountains",
-		"Hellfire Peninsula",
-		"Nagrand",
-		"Netherstorm",
-		"Shadowmoon Valley",
-		"Shattrath City",
-		"Terokkar Forest",
-		"Zangarmarsh",
-	}
+	local outland_zones = {GetMapZones(3)}
 	local create_name = ""
 	local create_zones = {}
 	local create_zone
@@ -1722,20 +1756,18 @@ do
 				for k in pairs(create_zones) do create_zones[k] = nil end
 				-- setup zones to show
 				for i = 1, #outland_zones do
-					create_zones[ outland_zones[i] ] = BZ[ outland_zones[i] ]
+					create_zones[ outland_zones[i] ] = outland_zones[i]
 				end
 				-- add current player zone
 				local zone = GetRealZoneText()
-				zone = BZR[zone] or zone
-				if zone then
-					create_zones[zone] = BZ[zone]
+				if zone and zone ~= "" then
+					create_zones[zone] = zone
 					if not create_zone then create_zone = zone end
 				end
 				-- add current viewed map zone
 				local zone = Routes.zoneNames[GetCurrentMapContinent()*100 + GetCurrentMapZone()]
-				if BZR[zone] then zone = BZR[zone] end
 				if zone then
-					create_zones[zone] = BZ[zone]
+					create_zones[zone] = zone
 					if not create_zone then create_zone = zone end
 				end
 				return create_zones
@@ -1809,32 +1841,32 @@ do
 				end
 
 				-- Perform a deep copy instead so that db defaults apply
-				db.routes[create_zone][create_name] = nil -- overwrite old route
-				deep_copy_table(db.routes[create_zone][create_name], new_route)
+				local mapfile = Routes.zoneData[create_zone][4]
+				db.routes[mapfile][create_name] = nil -- overwrite old route
+				deep_copy_table(db.routes[mapfile][create_name], new_route)
 
 				-- TODO Check if we can do a one-pass TSP run here as well if the user selected it.
-				db.routes[create_zone][create_name].length = Routes.TSP:PathLength(new_route.route, BZ[create_zone])
+				db.routes[mapfile][create_name].length = Routes.TSP:PathLength(new_route.route, create_zone)
 
 				-- Create the aceopts table entry for our new route
 				local opts = options.args.routes_group.args
-				local localizedZoneName = BZ[create_zone] or create_zone
-				local zonekey = tostring(Routes.zoneData[localizedZoneName][3])
+				local zonekey = tostring(Routes.zoneData[create_zone][3])
 				if not opts[zonekey] then
 					opts[zonekey] = { -- use a 3 digit string which is alphabetically sorted zone names by continent
 						type = "group",
-						name = localizedZoneName,
-						desc = L["Routes in %s"]:format(localizedZoneName),
+						name = create_zone,
+						desc = L["Routes in %s"]:format(create_zone),
 						args = {},
 					}
 					opts[zonekey].args.desc = {
 						type = "description",
 						name = GetZoneDescText,
-						arg = create_zone,
+						arg = mapfile,
 						order = 0,
 					}
 				end
 				local routekey = create_name:gsub("%s", "\255") -- can't have spaces in the key
-				opts[zonekey].args[routekey] = Routes:CreateAceOptRouteTable(create_zone, create_name)
+				opts[zonekey].args[routekey] = Routes:CreateAceOptRouteTable(mapfile, create_name)
 
 				-- Draw it
 				Routes:DrawWorldmapLines()
@@ -1848,7 +1880,7 @@ do
 				return not create_name or strtrim(create_name) == ""
 			end,
 			confirm = function()
-				if #db.routes[create_zone][create_name].route > 0 then
+				if #db.routes[ Routes.zoneData[create_zone][4] ][create_name].route > 0 then
 					return true
 				end
 				return false

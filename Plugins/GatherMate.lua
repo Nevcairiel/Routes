@@ -4,7 +4,6 @@ if not Routes then return end
 local SourceName = "GatherMate"
 local L = LibStub("AceLocale-3.0"):GetLocale("Routes")
 local LN = LibStub("AceLocale-3.0"):GetLocale("GatherMateNodes", true)
-local BZ = LibStub("LibBabble-Zone-3.0"):GetLookupTable()
 
 ------------------------------------------
 -- setup
@@ -36,9 +35,9 @@ local function Summarize(data, zone)
 		-- reuse table
 		for k in pairs(amount_of) do amount_of[k] = nil end
 		-- only look for data for this currentzone
-		if db_data[GatherMate.zoneData[BZ[zone]][3]] then
+		if db_data[ GatherMate.zoneData[zone][3] ] then
 			-- count the unique values (structure is: location => itemID)
-			for _,node in pairs(db_data[GatherMate.zoneData[ BZ[zone] ][3] ]) do
+			for _,node in pairs(db_data[ GatherMate.zoneData[zone][3] ]) do
 				amount_of[node] = (amount_of[node] or 0) + 1
 			end
 			-- XXX Localize these strings
@@ -66,7 +65,7 @@ local function AppendNodes(node_list, zone, db_type, node_type)
 		node_type = tonumber(node_type)
 
 		-- Find all of the notes
-		for loc, t in pairs(GatherMate.gmdbs[db_type][ GatherMate.zoneData[ BZ[zone] ][3] ]) do
+		for loc, t in pairs(GatherMate.gmdbs[db_type][ GatherMate.zoneData[zone][3] ]) do
 			-- And are of a selected type - store
 			if t == node_type then
 				tinsert( node_list, loc )

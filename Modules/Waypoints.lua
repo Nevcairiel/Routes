@@ -1,7 +1,6 @@
 ﻿local Routes = LibStub("AceAddon-3.0"):GetAddon("Routes")
 local Waypoints = Routes:NewModule("Waypoints", "AceEvent-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("Routes")
-local BZR = LibStub("LibBabble-Zone-3.0"):GetReverseLookupTable()
 
 -- Aceopt table, defined later
 local options
@@ -36,13 +35,10 @@ function Waypoints:FindClosestVisibleRoute()
 		return
 	end
 	local zone = GetRealZoneText()
-	if BZR[zone] then
-		zone = BZR[zone]
-	end
 	local closest_zone, closest_route, closest_node
 	local min_distance = 1/0
 	local defaults = db.defaults
-	for route_name, route_data in pairs(db.routes[zone]) do  -- for each route in current zone
+	for route_name, route_data in pairs(db.routes[ Routes.zoneData[zone][4] ]) do  -- for each route in current zone
 		if type(route_data) == "table" and type(route_data.route) == "table" and #route_data.route > 1 then  -- if it is valid
 			if (not route_data.hidden and (route_data.visible or not defaults.use_auto_showhide)) or defaults.show_hidden then  -- if it is visible
 				for i = 1, #route_data.route do  -- for each node
@@ -66,6 +62,7 @@ function Waypoints:QueueFirstNode()
 		Routes:Print(L["Cartographer_Waypoints module is missing or disabled"])
 		return
 	end
+	local BZR = LibStub("LibBabble-Zone-3.0"):GetReverseLookupTable()
 	local a, b, c = self:FindClosestVisibleRoute()
 	if a then
 		if stored_hit_distance then
@@ -74,12 +71,12 @@ function Waypoints:QueueFirstNode()
 		end
 		zone = a
 		route_name = b
-		route_table = db.routes[a][b]
+		route_table = db.routes[ Routes.zoneData[zone][4] ][b]
 		node_num = c
 		-- convert from GMID to CartID
 		local x, y = Routes:getXY(route_table.route[node_num])
 		local cartCoordID = round(x*10000, 0) + round(y*10000, 0)*10001
-		Cartographer_Waypoints:AddRoutesWaypoint(zone, cartCoordID, L["%s - Node %d"]:format(route_name, node_num))
+		Cartographer_Waypoints:AddRoutesWaypoint(BZR[zone], cartCoordID, L["%s - Node %d"]:format(route_name, node_num))
 		self:RegisterMessage("CartographerWaypoints_WaypointHit", "WaypointHit")
 		stored_hit_distance = Cartographer_Waypoints:GetWaypointHitDistance()
 		Cartographer_Waypoints:SetWaypointHitDistance(db.defaults.waypoint_hit_distance)
@@ -88,10 +85,11 @@ end
 
 function Waypoints:WaypointHit(event, waypoint)
 	if stored_hit_distance then
+		local BZR = LibStub("LibBabble-Zone-3.0"):GetReverseLookupTable()
 		-- Try to match the removed waypointID with a node in the route. This
 		-- is necessary because the route could have changed dynamically from node
 		-- insertion/deletion/optimization/etc causing a change to the node numbers
-		local id = tonumber((gsub(waypoint.WaypointID, zone, ""))) -- Extra brackets necessary to reduce to 1 return value
+		local id = tonumber((gsub(waypoint.WaypointID, BZR[zone], ""))) -- Extra brackets necessary to reduce to 1 return value
 		if not id then return end -- Not a waypoint from this zone
 		-- convert from CartID to GMID
 		local x, y = (id % 10001)/10000, floor(id / 10001)/10000
@@ -110,7 +108,8 @@ function Waypoints:WaypointHit(event, waypoint)
 				-- convert from GMID to CartID
 				local x, y = Routes:getXY(route[node_num])
 				local cartCoordID = round(x*10000, 0) + round(y*10000, 0)*10001
-				Cartographer_Waypoints:AddRoutesWaypoint(zone, cartCoordID, L["%s - Node %d"]:format(route_name, node_num))
+				Cartographer_Waypoints:AddRoutesWaypoint(BZR[zone], cartCoordID, L["%s - Node %d"]:format(route_name, node_num))
+				Cartographer_Waypoints:SetWaypointHitDistance(db.defaults.waypoint_hit_distance)
 				break
 			end
 		end
@@ -122,11 +121,12 @@ function Waypoints:RemoveQueuedNode()
 		Routes:Print(L["Cartographer_Waypoints module is missing or disabled"])
 		return
 	end
+	local BZR = LibStub("LibBabble-Zone-3.0"):GetReverseLookupTable()
 	if stored_hit_distance then
 		-- convert from GMID to CartID
 		local x, y = Routes:getXY(route_table.route[node_num])
 		local cartCoordID = round(x*10000, 0) + round(y*10000, 0)*10001
-		Cartographer_Waypoints:CancelWaypoint(cartCoordID..zone)
+		Cartographer_Waypoints:CancelWaypoint(cartCoordID..BZR[zone])
 		Cartographer_Waypoints:SetWaypointHitDistance(stored_hit_distance)
 		stored_hit_distance = nil
 		self:UnregisterMessage("CartographerWaypoints_WaypointHit")

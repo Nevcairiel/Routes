@@ -71,7 +71,7 @@ local zone_data = { -- {width, height, zoneID}
 	Hilsbrad = {3199.802496078764,2133.201664052509,64,},
 }
 -- meta table to return 0 for all unknown zones, instances, and what not
-local emptyZoneTbl = {0,0,0}
+local emptyZoneTbl = {0,0,0,""}
 setmetatable(zone_data, { __index = function(t, k)
 	geterrorhandler()("Routes is missing data for "..k)
 	return emptyZoneTbl
@@ -80,7 +80,7 @@ end })
 
 -- Initialize zone names into a table
 local zoneNames = {}
-local zoneList = {}  -- = setmetatable({}, { __index = function() return emptyZoneTbl end})
+local zoneList = setmetatable({}, { __index = function() return emptyZoneTbl end})
 local zoneMapFile = {}
 local continentList = {GetMapContinents()}
 for cID = 1, #continentList do
@@ -89,7 +89,7 @@ for cID = 1, #continentList do
 		SetMapZoom(cID, zID)
 		local mapfile = GetMapInfo()
 		zoneList[zname] = zone_data[mapfile]
-		zoneList[zname][3] = zID -- overwrite GatherMate ZoneID with our own ZoneID
+		zoneList[zname][3] = cID*100 + zID -- overwrite GatherMate ZoneID with our own ZoneID
 		zoneList[zname][4] = mapfile
 		zoneMapFile[mapfile] = zname
 	end
@@ -111,6 +111,7 @@ then
 	zoneNames[107] == "Dun Morogh"
 	zoneData["Dun Morogh"] == { 4924.664537147015, 3283.109691431343, 107, "DunMorogh" }
 	zoneMapFile["DunMorogh"] == "Dun Morogh"
+	zoneData["Some Invalid Zone"] == { 0, 0, 0, "" }
 
 Note that in all the above, "Dun Morogh" is a localized string
 ]]

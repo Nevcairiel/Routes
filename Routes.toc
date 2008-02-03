@@ -6,7 +6,7 @@
 ## Version: 1.0
 ## DefaultState: enabled
 ## X-Category: Map
-## X-Embeds: Ace3, LibBabble-Zone-3.0
+## X-Embeds: Ace3
 ## X-eMail: cartographer_routes @ grum DOT nl & xinhuan @ gmail DOT com
 ## X-Name: Routes
 

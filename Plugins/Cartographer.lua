@@ -29,6 +29,10 @@ end
 ------------------------------------------
 -- functions
 
+-- Cartographer comes with this library
+local BZ  = LibStub("LibBabble-Zone-3.0"):GetUnstrictLookupTable()
+local BZR = LibStub("LibBabble-Zone-3.0"):GetReverseLookupTable()
+
 -- XXX ugly! :(
 local translate_type = {}
 local function UpdateTranslationTables()
@@ -45,6 +49,7 @@ end
 
 local amount_of = {}
 local function Summarize(data, zone)
+	zone = BZR[zone] or zone
 	UpdateTranslationTables()
 
 	local CN = (Cartographer and Cartographer:HasModule("Notes")) and Cartographer:GetModule("Notes")
@@ -82,6 +87,8 @@ source.Summarize = Summarize
 -- returns the english name, translated name for the node so we can store it was being requested
 -- also returns the type of db for use with auto show/hide route
 local function AppendNodes(node_list, zone, db_type, node_type)
+	zone = BZR[zone] or zone
+
 	local CN = (Cartographer and Cartographer:HasModule("Notes")) and Cartographer:GetModule("Notes")
 	if CN and CN.externalDBs[db_type] then
 		-- Find all of the notes
@@ -106,21 +113,25 @@ source.AppendNodes = AppendNodes
 
 local function RockNoteSetEvent(namespace, event, zone, x, y, node, db_type)
 	local coord = floor(x * 10000 + 0.5) * 10000 + floor(y * 10000 + 0.5)
+	zone = BZ[zone] or zone
 	Routes:InsertNode(zone, coord, node)
 end
 
 local function RockNoteDeleteEvent(namespace, event, zone, x, y, node, db_type)
 	local coord = floor(x * 10000 + 0.5) * 10000 + floor(y * 10000 + 0.5)
+	zone = BZ[zone] or zone
 	Routes:DeleteNode(zone, coord, node)
 end
 
 local function Ace2NoteSetEvent(zone, x, y, node, db_type)
 	local coord = floor(x * 10000 + 0.5) * 10000 + floor(y * 10000 + 0.5)
+	zone = BZ[zone] or zone
 	Routes:InsertNode(zone, coord, node)
 end
 
 local function Ace2NoteDeleteEvent(zone, x, y, node, db_type)
 	local coord = floor(x * 10000 + 0.5) * 10000 + floor(y * 10000 + 0.5)
+	zone = BZ[zone] or zone
 	Routes:DeleteNode(zone, coord, node)
 end
 

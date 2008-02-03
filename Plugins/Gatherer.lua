@@ -30,7 +30,7 @@ end
 
 local amount_of = {}
 local function Summarize(data, zone)
-	local continent = Routes.zoneNamesReverse[zone]
+	local continent = Routes.zoneData[zone][3]
 	continent, zone = floor(continent / 100), continent % 100
 
 	for node, db_type, count in Gatherer.Storage.ZoneGatherNames(continent, zone) do
@@ -56,7 +56,7 @@ local translate_db_type = {
 	["OPEN"] = "Treasure",
 }
 local function AppendNodes(node_list, zone, db_type, node_type)
-	local continent = Routes.zoneNamesReverse[zone]
+	local continent = Routes.zoneData[zone][3]
 	continent, zone = floor(continent / 100), continent % 100
 	node_type = tonumber(node_type)
 

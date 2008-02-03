@@ -72,24 +72,46 @@ local zone_data = { -- {width, height, zoneID}
 }
 -- meta table to return 0 for all unknown zones, instances, and what not
 local emptyZoneTbl = {0,0,0}
-setmetatable(zone_data, { __index = function(t, k) ChatFrame1:AddMessage("Routes is missing data for "..k); return emptyZoneTbl end })
+setmetatable(zone_data, { __index = function(t, k)
+	geterrorhandler()("Routes is missing data for "..k)
+	return emptyZoneTbl
+end })
 
 
--- empty continents include -1 for the universe, and 0 for eastern kingdoms (meta continents so to speak)
-local emptyCont = {}
-local continentList = setmetatable({ GetMapContinents() }, {__index = function() return emptyCont end})
-local zoneList = setmetatable({}, { __index = function() return emptyZoneTbl end})
-for continent in pairs(continentList) do
-	local zones = { GetMapZones(continent) }
-	continentList[continent] = zones
-	for zone, name in pairs(zones) do
-		SetMapZoom(continent, zone)
-		zoneList[name] = zone_data[GetMapInfo()]
+-- Initialize zone names into a table
+local zoneNames = {}
+local zoneList = {}  -- = setmetatable({}, { __index = function() return emptyZoneTbl end})
+local zoneMapFile = {}
+local zoneMapFileReverse = {}
+local continentList = {GetMapContinents()}
+for cID = 1, #continentList do
+	for zID, zname in ipairs({GetMapZones(cID)}) do
+		zoneNames[cID*100 + zID] = zname
+		SetMapZoom(cID, zID)
+		local mapfile = GetMapInfo()
+		zoneList[zname] = zone_data[mapfile]
+		zoneMapFile[zname] = mapfile
+		zoneMapFileReverse[mapfile] = zname
 	end
 end
-
+for zID, zname in pairs(zoneNames) do
+	zoneList[zname][3] = zID -- overwrite GatherMate ZoneID with our own ZoneID
+end
+Routes.zoneNames = zoneNames
 Routes.zoneData = zoneList
-Routes.continentData = continentList
+Routes.zoneMapFile = zoneMapFile
 zone_data = nil
+
+--[[
+Documatation of contents of these tables:
+If you are in the zone "Dun Morogh" then
+
+zoneNames[GetCurrentMapContinent()*100 + GetCurrentMapZone()] == "Dun Morogh"
+zoneData["Dun Morogh"] == { 4924.664537147015, 3283.109691431343, GetCurrentMapContinent()*100 + GetCurrentMapZone() }
+zoneMapFile["Dun Morogh"] == "DunMorogh"
+zoneMapFileReverse["DunMorogh"] == "Dun Morogh"
+
+Note that in all the above, "Dun Morogh" is a localized string
+]]
 
 -- vim: ts=4 noexpandtab

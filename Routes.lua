@@ -136,10 +136,6 @@ local math_cos = math.cos
 local WorldMapButton = WorldMapButton
 local Minimap = Minimap
 
--- other locals we use
-local zoneNames = {} -- cache of localized zone names by continent and zoneID from WoW API
-local zoneNamesReverse = {}
-
 
 ------------------------------------------------------------------------------------------------------
 -- Core Routes functions
@@ -159,7 +155,7 @@ end
 
 function Routes:DrawWorldmapLines()
 	-- setup locals
-	local zone = zoneNames[GetCurrentMapContinent()*100 + GetCurrentMapZone()]
+	local zone = self.zoneNames[GetCurrentMapContinent()*100 + GetCurrentMapZone()]
 	if BZR[zone] then zone = BZR[zone] end
 	local BattlefieldMinimap = BattlefieldMinimap  -- local reference if it exists
 	local fh, fw = WorldMapButton:GetHeight(), WorldMapButton:GetWidth()
@@ -772,21 +768,6 @@ function Routes:OnInitialize()
 	LibStub("AceConfigRegistry-3.0"):RegisterOptionsTable("Routes", options)
 	self:RegisterChatCommand(L["routes"], function() LibStub("AceConfigDialog-3.0"):Open("Routes") end)
 
-	-- Initialize zone names into a table
-	for index, zname in ipairs({GetMapZones(1)}) do
-		zoneNames[100 + index] = zname
-	end
-	for index, zname in ipairs({GetMapZones(2)}) do
-		zoneNames[200 + index] = zname
-	end
-	for index, zname in ipairs({GetMapZones(3)}) do
-		zoneNames[300 + index] = zname
-	end
-	for k, v in pairs(zoneNames) do
-		zoneNamesReverse[v] = k
-	end
-	Routes.zoneNamesReverse = zoneNamesReverse
-
 	local function GetZoneDescText(info)
 		local count = 0
 		for route_name, route_table in pairs(db.routes[info.arg]) do
@@ -804,7 +785,7 @@ function Routes:OnInitialize()
 		-- This because lua cant do '#' on hash-tables
 		if next(zone_table) ~= nil then
 			local localizedZoneName = BZ[zone]
-			local zonekey = tostring(zoneNamesReverse[localizedZoneName])
+			local zonekey = tostring(self.zoneData[localizedZoneName][3])
 			opts[zonekey] = { -- use a 3 digit string which is alphabetically sorted zone names by continent
 				type = "group",
 				name = localizedZoneName,
@@ -1147,7 +1128,7 @@ function ConfigHandler:DeleteRoute(info)
 		return
 	end
 	db.routes[zone][route] = nil
-	local zonekey = tostring(zoneNamesReverse[BZ[zone] or zone]) -- use a 3 digit string which is alphabetically sorted zone names by continent
+	local zonekey = tostring(Routes.zoneData[BZ[zone] or zone][3]) -- use a 3 digit string which is alphabetically sorted zone names by continent
 	local routekey = route:gsub("%s", "\255") -- can't have spaces in the key
 	options.args.routes_group.args[zonekey].args[routekey] = nil -- delete route from aceopt
 	if next(db.routes[zone]) == nil then
@@ -1751,7 +1732,7 @@ do
 					if not create_zone then create_zone = zone end
 				end
 				-- add current viewed map zone
-				local zone = zoneNames[GetCurrentMapContinent()*100 + GetCurrentMapZone()]
+				local zone = Routes.zoneNames[GetCurrentMapContinent()*100 + GetCurrentMapZone()]
 				if BZR[zone] then zone = BZR[zone] end
 				if zone then
 					create_zones[zone] = BZ[zone]
@@ -1837,7 +1818,7 @@ do
 				-- Create the aceopts table entry for our new route
 				local opts = options.args.routes_group.args
 				local localizedZoneName = BZ[create_zone] or create_zone
-				local zonekey = tostring(zoneNamesReverse[localizedZoneName])
+				local zonekey = tostring(Routes.zoneData[localizedZoneName][3])
 				if not opts[zonekey] then
 					opts[zonekey] = { -- use a 3 digit string which is alphabetically sorted zone names by continent
 						type = "group",

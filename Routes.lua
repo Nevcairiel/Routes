@@ -124,9 +124,9 @@ local options
 Routes.plugins = {}
 
 -- localize some globals
-local pairs, ipairs, next = pairs, ipairs, next
+local pairs, next = pairs, next
 local tinsert, tremove = tinsert, tremove
-local floor = floor
+local floor = math.floor
 local format = string.format
 local math_abs = math.abs
 local math_sin = math.sin

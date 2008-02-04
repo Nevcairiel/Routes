@@ -35,7 +35,7 @@ L["Show hidden routes"] = "Zeige versteckte Routen"
 L["Show hidden routes?"] = "Versteckte Routen anzeigen?"
 L["Line gaps"] = "Linien Lücken"
 L["Draw line gaps"] = "Linien Lücken zeichnen"
-L["Shorten the lines drawn on the minimap slightly so that they do not overlap the icons and minimap tracking blips."] = true
+L["Shorten the lines drawn on the minimap slightly so that they do not overlap the icons and minimap tracking blips."] = "Verkürze die Linien auf der Minimap so, dass sie keine Symbole überdecken."
 L["Skip clustered node points"] = "Angehäufte Knotenpunkte überspringen"
 L["Do not draw gaps for clustered node points in routes."] = "Keine Lücken für angehäufte Knotenpunkte in den Routen zeichnen"
 
@@ -108,7 +108,7 @@ L["Treasure"] = "Schätze"
 L["ExtractGas"] = "Gas"
 
 -- Route Config
-L["When the following data sources add or delete node data, update my routes automatically by inserting or removing the same node in the relevant routes."] = true
+L["When the following data sources add or delete node data, update my routes automatically by inserting or removing the same node in the relevant routes."] = "Wenn die folgenden Datenquellen Knotenpunkte hinzufügen oder entfernen, aktualisiere meine Routen indem diese Knotenpunkte in den relevanten Routen hinzugefügt oder entfernt werden"
 L[" Gatherer currently does not support callbacks, so this is impossible for Gatherer."] = " Gatherer unterstützt momentan keine Callbacks, also ist dies unmöglich für Gatherer" 
 L["You have |cFFFFFFFF%d|r route(s) in |cFFFFFFFF%s|r."] = "Sie haben |cFFFFFFFF%d|r Route(n) in |cFFFFFFFF%s|r."
 L["Information"] = true

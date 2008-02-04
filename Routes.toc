@@ -6,11 +6,11 @@
 ## Version: 1.0
 ## DefaultState: enabled
 ## X-Category: Map
-## X-Embeds: Ace3
 ## X-eMail: cartographer_routes @ grum DOT nl & xinhuan @ gmail DOT com
 ## X-Name: Routes
 
-## OptionalDeps: Ace3, LibBabble-Zone-3.0, Cartographer, Cartographer_Notes, GatherMate
+## OptionalDeps: Ace3, Cartographer, Cartographer_Notes, GatherMate
+## X-Embeds: Ace3
 ## SavedVariables: RoutesDB
 
 # Library files

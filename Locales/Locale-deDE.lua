@@ -33,11 +33,11 @@ L["Hidden route"] = "Versteckte Route"
 L["Change default hidden route color"] = "Ändere die Standardfarbe einer versteckten Route"
 L["Show hidden routes"] = "Zeige versteckte Routen"
 L["Show hidden routes?"] = "Versteckte Routen anzeigen?"
-L["Line gaps"] = true
-L["Draw line gaps"] = true
+L["Line gaps"] = "Linien Lücken"
+L["Draw line gaps"] = "Linien Lücken zeichnen"
 L["Shorten the lines drawn on the minimap slightly so that they do not overlap the icons and minimap tracking blips."] = true
-L["Skip clustered node points"] = true
-L["Do not draw gaps for clustered node points in routes."] = true
+L["Skip clustered node points"] = "Angehäufte Knotenpunkte überspringen"
+L["Do not draw gaps for clustered node points in routes."] = "Keine Lücken für angehäufte Knotenpunkte in den Routen zeichnen"
 
 -- Auto show/hide
 L["Auto show/hide"] = "Auto. Anzeigen/Verstecken"
@@ -59,7 +59,7 @@ L["Never show"] = "Niemals anzeigen"
 L["Waypoints (Carto)"] = "Wegpunkte (Carto)"
 L["Integrated support options for Cartographer_Waypoints"] = "Integrierte Optionen für Cartographer_Waypoints"
 L["This section implements Cartographer_Waypoints support for Routes. Click Start to find the nearest node in a visible route in the current zone.\n"] = "Dieser Bereich implementiert Cartographer_Waypoints Unterstützung in Routes. Klicken Sie Start um den nächsten Knotenpunkt einer sichtbaren Route in der momentanen Zone zu finden"
-L["Waypoint hit distance"] = true
+L["Waypoint hit distance"] = "Distanz nach der der Wegpunkt als erreicht gilt."
 L["This is the distance in yards away from a waypoint to consider as having reached it so that the next node in the route can be added as the waypoint"] = "Das ist die Distanz in Yards die einen Wegpunkt als erreicht vermeldet um den nächsten Knotenpunkt als Wegpunkt hinzuzufügen."
 L["Change direction"] = "Richtung ändern"
 L["Change the direction of the nodes in the route being added as the next waypoint"] = "Ändert die Richtung der Knotenpunkte der Route die als nächster Wegpunkt hinzugefügt werden"
@@ -109,17 +109,17 @@ L["ExtractGas"] = "Gas"
 
 -- Route Config
 L["When the following data sources add or delete node data, update my routes automatically by inserting or removing the same node in the relevant routes."] = true
-L[" Gatherer currently does not support callbacks, so this is impossible for Gatherer."] = true
-L["You have |cFFFFFFFF%d|r route(s) in |cFFFFFFFF%s|r."] = true
+L[" Gatherer currently does not support callbacks, so this is impossible for Gatherer."] = " Gatherer unterstützt momentan keine Callbacks, also ist dies unmöglich für Gatherer" 
+L["You have |cFFFFFFFF%d|r route(s) in |cFFFFFFFF%s|r."] = "Sie haben |cFFFFFFFF%d|r Route(n) in |cFFFFFFFF%s|r."
 L["Information"] = true
 L["This route has |cFFFFFFFF%d|r nodes and is |cFFFFFFFF%d|r yards long."] = "Diese Route hat |cFFFFFFFF%d|r Knotenpunkte und ist |cFFFFFFFF%d|r yards lang."
 L["This route has nodes that belong to the following categories:"] = "Diese Route enthält Knotenpunkte folgender Kategorien:"
 L["This route contains the following nodes:"] = "Diese Route enthält folgende Knotenpunkte:"
-L["This route is not a clustered route."] = true
-L["This route is a clustered route, down from the original |cFFFFFFFF%d|r nodes."] = true
-L["|cFFFFFFFF     %d|r node(s) are between |cFFFFFFFF%d|r-|cFFFFFFFF%d|r yards of a cluster point"] = true
-L["|cFFFFFFFF     %d|r node(s) are at |cFFFFFFFF0|r yards of a cluster point"] = true
-L["The cluster radius of this route is |cFFFFFFFF%d|r yards."] = true
+L["This route is not a clustered route."] = "Diese Route enthält keine Anhäufungen"
+L["This route is a clustered route, down from the original |cFFFFFFFF%d|r nodes."] = "Diese Route enthält Anhäufungen aus den originalen |cFFFFFFFF%d|r Knotenpunkten."
+L["|cFFFFFFFF     %d|r node(s) are between |cFFFFFFFF%d|r-|cFFFFFFFF%d|r yards of a cluster point"] = "|cFFFFFFFF     %d|r Knotenpunkt(e) sind zwischen |cFFFFFFFF%d|r-|cFFFFFFFF%d|r Yards des Anhäufungspunkts"
+L["|cFFFFFFFF     %d|r node(s) are at |cFFFFFFFF0|r yards of a cluster point"] = "|cFFFFFFFF     %d|r Knotenpunkt(e) sind bei |cFFFFFFFF0|r Yards des Anhäufungspunkts"
+L["The cluster radius of this route is |cFFFFFFFF%d|r yards."] = "Der Anhäufungsradius dieser Route ist |cFFFFFFFF%d|r Yards."
 
 L["Line settings"] = "Linieneinstellungen"
 L["These settings control the visibility and look of the drawn route."] = "Diese Einstellungen kontrollieren die Sichtbarkeit und das Aussehen der gezeichneten Route"
@@ -141,7 +141,7 @@ L["Reset"] = "Zurücksetzen"
 L["Reset the line settings to defaults"] = "Setzt die Linieneinstellungen auf ihre Ursprungswerte zurück"
 
 L["Optimize route"] = "Route optimieren"
-L["Route Optimizing"] = true
+L["Route Optimizing"] = "Routen Optimierung"
 L["Extra optimization"] = "Extra Optimierung"
 L["ExtraOptDesc"] = "Wenn Sie diese Option aktivieren, dauert das Optimieren der Route ungefähr 40% länger, aber es wird eine -leicht- bessere Route generiert. Empfohlene Einstellung ist AUS."
 L["Foreground"] = "Vordergrund"
@@ -153,14 +153,14 @@ L["Now running TSP in the background..."] = "Führt TSP jetzt im Hintergrund aus
 L["There is already a TSP running in background. Wait for it to complete first."] = "Es läuft schon eine TSP im Hintergrund. Bitte warten Sie, bis die erste abgeschlossen ist."
 L["The following error occured in the background path generation coroutine, please report to Grum or Xinhuan:"] = "Der folgende Fehler trat bei der Berechnung des Pfades auf, bitte melden Sie ihn bei Grum oder Xinhuan:"
 
-L["Route Clustering"] = true
-L["CLUSTER_DESC"] = "Clustering a route makes Routes take all the nodes that are near each other and combine then into a single node as a travel point. This process takes a while, but is reasonably fast."
-L["Cluster Radius"] = true
-L["CLUSTER_RADIUS_DESC"] = "The maximum distance a node will be away from its cluster node point. The default is 60 yards because the detection radius of tracking skills is 80 yards."
-L["Cluster"] = true
-L["Cluster this route"] = true
-L["Uncluster"] = true
-L["Uncluster this route"] = true
+L["Route Clustering"] = "Routen Komprimierung"
+L["CLUSTER_DESC"] = "Bei der Routenkomprimierung nimmt Routes alle Knotenpunkte die nahe beieinander sind und kombiniert sie zu einem einzigen Knotenpunkt als Reiseziel. Dieser Prozess dauert eine Weile aber ists halbwegs schnell."
+L["Cluster Radius"] = "Anhäufungs Radius"
+L["CLUSTER_RADIUS_DESC"] = "Die maximale Entfernung eines Knotenpunktes die er von einem Anhäufungspunkt haben kann. Die Standardeinstellung ist 60 Yards weil der Erkennungsradius der Berufe 80 Yards ist."
+L["Cluster"] = "Anhäufung"
+L["Cluster this route"] = "Diese Route komprimieren"
+L["Uncluster"] = "Dekomprimieren"
+L["Uncluster this route"] = "Diese Route dekomprimieren"
 
 -- Profession Names in the skills tab in the character frame
 -- Doing these 4 localizations specifically to avoid using Babble-Spell

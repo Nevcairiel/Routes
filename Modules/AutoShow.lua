@@ -63,7 +63,7 @@ function AutoShow:ApplyVisibility()
 						--elseif status == "Never" then
 						--	visible = false
 						end
-						if not visible == not route_data.visible then
+						if visible == not route_data.visible then
 							modified = true
 						end
 						route_data.visible = visible

@@ -890,7 +890,9 @@ function Routes:OnEnable()
 		timerFrame:Show()
 		self:RegisterEvent("MINIMAP_ZONE_CHANGED", "DrawMinimapLines", true)
 		minimap_rotate = GetCVar("rotateMinimap") == "1"
-		self:MINIMAP_UPDATE_ZOOM()  -- This has a DrawMinimapLines(true) call in it, and sets an "indoors" variable
+		indoors = "indoor"
+		-- Notes: Do not call self:MINIMAP_UPDATE_ZOOM() here because the CVARs aren't applied yet.
+		-- MINIMAP_UPDATE_ZOOM gets fired automatically by wow when it applies the CVARs.
 	end
 	self:SetupSourcesOptTables()
 	for addon, plugin_table in pairs(Routes.plugins) do

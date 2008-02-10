@@ -43,7 +43,7 @@ local function Summarize(data, zone)
 			-- XXX Localize these strings
 			-- store combinations with all information we have
 			for node,count in pairs(amount_of) do
-				local translatednode = GatherMate.reverseNodeIDs[node]
+				local translatednode = GatherMate.reverseNodeIDs[db_type][node]
 				data[ ("%s;%s;%s;%s"):format(SourceName, db_type, node, count) ] = ("%s - %s - %d"):format(L[SourceName..db_type], translatednode, count)
 			end
 		end
@@ -73,7 +73,7 @@ local function AppendNodes(node_list, zone, db_type, node_type)
 		end
 
 		-- return the node_type for auto-adding
-		local translatednode = GatherMate.reverseNodeIDs[node_type]
+		local translatednode = GatherMate.reverseNodeIDs[db_type][node_type]
 		for k, v in pairs(LN) do
 			if v == translatednode then -- get the english name
 				return k, v, translate_db_type[db_type]

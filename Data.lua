@@ -69,6 +69,7 @@ local zone_data = { -- {width, height, zoneID}
 	--Expansion01 = {17463.5328406368,11642.3552270912,62,},
 	Feralas = {6949.760203962193,4633.173469308129,63,},
 	Hilsbrad = {3199.802496078764,2133.201664052509,64,},
+	Sunwell = {3327.0830078125,2218.7490234375,65,},
 }
 -- meta table to return 0 for all unknown zones, instances, and what not
 local emptyZoneTbl = {0,0,0,""}

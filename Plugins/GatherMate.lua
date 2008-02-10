@@ -59,6 +59,7 @@ local translate_db_type = {
 	["Mining"] = "Mining",
 	["Fishing"] = "Fishing",
 	["Extract Gas"] = "ExtractGas",
+	["Treasure"] = "Treasure",
 }
 local function AppendNodes(node_list, zone, db_type, node_type)
 	if type(GatherMate.gmdbs[db_type]) == "table" then

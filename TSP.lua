@@ -129,6 +129,26 @@ local function clearTable(t)
 end
 
 -----------------------------------------------------
+-- Function to get the intersection point of 2 lines (x1,y1)-(x2,y2) and (sx,sy)-(ex,ey)
+function TSP:GetIntersection(x1, y1, x2, y2, sx, sy, ex, ey)
+	local dx = x2-x1
+	local dy = y2-y1
+	local numer = dx*(sy-y1) - dy*(sx-x1)
+	local demon = dx*(sy-ey) + dy*(ex-sx)
+	if demon == 0 or dx == 0 then
+		return false
+	else
+		local u = numer / demon
+		local t = (sx + (ex-sx)*u - x1)/dx
+		if u >= 0 and u <= 1 and t >= 0 and t <= 1 then
+			--return sx + (ex-sx)*u, sy + (ey-sy)*u
+			return true
+		end
+	end
+end
+
+
+-----------------------------------------------------
 -- Coroutine code to allow background pathing
 
 local TSPUpdateFrame = CreateFrame("Frame");
@@ -163,13 +183,13 @@ function TSP:IsTSPRunning()
 end
 
 -- Same arguments as TSP:SolveTSP(), without the "nonblocking" argument
-function TSP:SolveTSPBackground(nodes, metadata, zonename, parameters, path)
+function TSP:SolveTSPBackground(nodes, metadata, taboos, zonename, parameters, path)
 	if (not TSPUpdateFrame.running) then
 		TSPUpdateFrame.co = coroutine.create(TSP.SolveTSP);
 		TSPUpdateFrame:SetScript("OnUpdate", TSPUpdateFrame.OnUpdate);
 		TSPUpdateFrame.running = true;
 		TSPUpdateFrame.nodes = nodes;
-		local status = coroutine.resume(TSPUpdateFrame.co, TSP, nodes, metadata, zonename, parameters, path, true);
+		local status = coroutine.resume(TSPUpdateFrame.co, TSP, nodes, metadata, taboos, zonename, parameters, path, true);
 		if (status) then
 			-- Do nothing, path isn't complete because at least 1 yield() is called.
 			return 1;
@@ -198,6 +218,7 @@ end
 --                 This list should only contain nodes on the same map. This
 --                 table should be indexed numerically from nodes[1] to nodes[n].
 --   metadata    - The table containing the cluster metadata, if available
+--   taboos      - A table containing a table of taboo regions to use.
 --   zonename    - The localized zone name of the map that the route to be
 --                 generated is on.
 --   parameters  - The table containing the ACO parameters to use.
@@ -213,11 +234,12 @@ end
 --   timeTaken   - Number of seconds used.
 -- Notes: A new nodes[] and metadata[] table is returned. The original tables
 --        sent in are unmodified.
-function TSP:SolveTSP(nodes, metadata, zonename, parameters, path, nonblocking)
+function TSP:SolveTSP(nodes, metadata, taboos, zonename, parameters, path, nonblocking)
 	-- Notes: Some of these code might look convoluted, with seemingly unnecessary use of too many locals
 	-- and make the code look longer. But they are for speed optimization.
 	assert(type(nodes) == "table", "SolveTSP() expected table in 1st argument, got "..type(nodes).." instead.");
-	assert(type(parameters) == "table", "SolveTSP() expected table in 3rd argument, got "..type(parameters).." instead.");
+	assert(type(taboos) == "table", "SolveTSP() expected table in 3rd argument, got "..type(taboos).." instead.");
+	assert(type(parameters) == "table", "SolveTSP() expected table in 5th argument, got "..type(parameters).." instead.");
 	if (type(path) == "table") then
 		clearTable(path);
 	else
@@ -278,6 +300,7 @@ function TSP:SolveTSP(nodes, metadata, zonename, parameters, path, nonblocking)
 	-- If BETA = 0, only pheromone amplifications is at work.
 	-- The number of ants will directly determine the speed of the algorithm proportionally. More ants will get more optimal results, but don't use more ants than the number of nodes.
 	-- You need more ants when there are more nodes to have more chances to find a good path quickly. The usual default is numAnts = numNodes, but this takes too long in WoW.
+	local PRUNEDIST         = zoneW * 0.15                           -- Another constant for our own pruning
 
 	local shortestPathLength = 1e100;	-- Some large value
 	local shortestPath = newTable();
@@ -291,21 +314,52 @@ function TSP:SolveTSP(nodes, metadata, zonename, parameters, path, nonblocking)
 		prune[i] = newTable();
 	end
 	for i = 1, numNodes do
-		local x, y = floor(nodes[i] / 10000) / 10000, (nodes[i] % 10000) / 10000;
+		local x1, y1 = floor(nodes[i] / 10000) / 10000, (nodes[i] % 10000) / 10000;
 		local u = i*numNodes-i;
 		weight[u] = 0;
 		phero[u] = INITIAL_PHEROMONE;
 		for j = i+1, numNodes do
 			local x2, y2 = floor(nodes[j] / 10000) / 10000, (nodes[j] % 10000) / 10000;
 			local u, v = i*numNodes-j, j*numNodes-i;
-			weight[u] = (((x2 - x)*zoneW)^2 + ((y2 - y)*zoneH)^2)^0.5;	-- Calc distance between each node pair
+			weight[u] = (((x2 - x1)*zoneW)^2 + ((y2 - y1)*zoneH)^2)^0.5;	-- Calc distance between each node pair
 			weight[v] = weight[u];
 			phero[u] = INITIAL_PHEROMONE;	-- All pheromone trails start
 			phero[v] = INITIAL_PHEROMONE;	-- with a initial small value
 			-- Table containing data for 2-opt pruning operations. This is just a list of nodes that are near each node.
-			if (weight[u] < zoneW * 0.15) then
+			if (weight[u] < PRUNEDIST) then
 				tinsert(prune[i], j);
 				tinsert(prune[j], i);
+			end
+			-- For taboo regions
+			local flag = false
+			for m = 1, #taboos do -- loop over every taboo
+				local taboo_data = taboos[m].route
+				local last_point = taboo_data[ #taboo_data ]
+				local sx, sy = floor(last_point / 10000) / 10000, (last_point % 10000) / 10000
+				for n = 1, #taboo_data do
+					local point = taboo_data[n]
+					local ex, ey = floor(point / 10000) / 10000, (point % 10000) / 10000
+					-- inlined the intersection check so that it is faster
+					local dx = x2-x1
+					local dy = y2-y1
+					local numer = dx*(sy-y1) - dy*(sx-x1)
+					local demon = dx*(sy-ey) + dy*(ex-sx)
+					if demon ~= 0 and dx ~= 0 then
+						local u = numer / demon
+						local t = (sx + (ex-sx)*u - x1)/dx
+						if u >= 0 and u <= 1 and t >= 0 and t <= 1 then
+							flag = true
+							break
+						end
+					end
+					sx, sy = ex, ey
+					last_point = point
+				end
+				if flag then break end
+			end
+			if flag then -- we increase/bias the weight of this edge by the zone width, since it passes thru a taboo region
+				weight[u] = weight[u] + zoneW
+				weight[v] = weight[u]
 			end
 		end
 	end
@@ -461,6 +515,9 @@ function TSP:SolveTSP(nodes, metadata, zonename, parameters, path, nonblocking)
 	delTable(prune);
 	delTable(nodes2);
 	lastpath = nil;
+
+	-- This step is necessary because our pathlength above is calculated from biased data from taboos
+	shortestPathLength = TSP:PathLength(path, zonename)
 
 	startTime = GetTime() - startTime;
 	return path, metadata, shortestPathLength, count, startTime;

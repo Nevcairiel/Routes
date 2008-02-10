@@ -174,6 +174,37 @@ L["Cartographer_Waypoints module is missing or disabled"] = true
 L["%s - Node %d"] = true
 L["Direction changed"] = true
 
+-- Taboo stuff
+L["Routes Node Menu"] = true
+L["Delete node"] = true
+L["Add node before (red)"] = true
+L["Add node after (green)"] = true
+L["You may not delete a taboo that is being edited."] = true
+L["TABOO_EDIT_DESC"] = "To edit a taboo region, click on the |cFFFFFFFFEdit|r button. The taboo region will be drawn on the World Map. Drag the vertexes to position them. Right click on the vertexes to add or delete vertexes. After editing, you may click the |cFFFFFFFFSave|r button to save your changes, or the |cFFFFFFFFCancel|r button to discard your changes."
+L["Edit taboo region"] = true
+L["Edit this taboo region on the world map"] = true
+L["Save taboo edit"] = true
+L["Stop editing this taboo region on the world map and save the edits"] = true
+L["Cancel taboo edit"] = true
+L["Stop editing this taboo region on the world map and abandon changes made"] = true
+L["Delete Taboo"] = true
+L["Delete this taboo region permanently. This will also remove it from all routes that use it."] = true
+L["Are you sure you want to delete this taboo? This action will also remove the taboo from all routes that use it."] = true
+L["TABOO_DESC"] = "Taboo regions are areas which you can define to exclude nodes. Once you have created a taboo region, you can attach the taboo region to an existing route, and all nodes inside this region will be removed and no new ones will be added to it."
+L["Name of Taboo"] = true
+L["Name of taboo region to add"] = true
+L["No name given for new taboo region"] = true
+L["Zone to create taboo in"] = true
+L["Create Taboo"] = true
+L["Taboos in %s"] = true
+L["A taboo with that name already exists. Overwrite?"] = true
+L["This route has the following taboo regions:"] = true
+L["This route has no taboo regions."] = true
+L["This route contains |cFFFFFFFF%d|r nodes that have been tabooed."] = true
+L["TABOO_DESC2"] = "Taboo regions are areas you specify for a route to ignore. Nodes in these taboo regions are ignored and not included in a route. Additionally when optimizing a route, the generated route will attempt to avoid crossing any taboo regions if possible."
+L["Taboos"] = true
+L["Select taboo regions to apply:"] = true
+
 -- FAQ
 L["FAQ"] = true
 L["Frequently Asked Questions"] = true
@@ -184,6 +215,12 @@ When I try to create a route, it says no data is found. What am I doing wrong?
 It means exactly that: No data is found, mostly because the addon is not loaded or in standby mode. If you are using any of the |cffffff78Cartographer_<Profession>|r modules, then these modules must be loaded and active for data to be available.
 
 Note that |cffffff78Cartographer_<Profession>|r modules are all Load on Demand addons and require |cffffff78Cartographer_Professions|r to be enabled as it is the loading stub.
+|cFFFFFFFF
+I made a route with Rich Adamantite Ore in it. When I find normal Adamantite Ore in the same place, GatherMate/Cartographer deletes the rich node and replaces it with a normal node. This removes the node from my route since it is contructed out of only rich nodes. What can I do?
+|r
+1. You can make a route with both rich and normal Adamantite Ore in it.
+
+2. You can tell Routes not to automatically insert/delete nodes. This option is found in the root options of the Routes tree in the config screen.
 |cFFFFFFFF
 Can you make a progress indicator on how long a background route optimization would take?
 |r
@@ -204,6 +241,16 @@ ACO algorithms have been used to produce near-optimal solutions to the |cffffff7
 What does the "Extra Optimization" option do?
 |r
 By default, we only used ACO along with the standard |cffffff782-opt algorithm|r to optimize routes. Turning on "extra optimization" tells Routes to also use 2.5-opt, which is a specific subset of 3-opt. 2-opt is the process where pairs of edges are exchanged (A-B and C-D becomes A-C and B-D) in order to produce shorter routes.
+|cFFFFFFFF
+What algorithm does node clustering use?
+|r
+We employ a Hierarchical Agglomerative Clustering algorithm using a greedy approach, so the output is deterministic.
+|cFFFFFFFF
+I created a taboo region, attached it to a route, and optimized it. My route still flies through the taboo region. Why?
+|r
+It is not possible to always find a route that does not fly through a taboo region or sometimes highly unfeasible to do so.
+
+The user could potentially create taboo regions that split the map into impassable sections and regions, so the algorithm is simply biased not to pass through them if it is possible.
 |cFFFFFFFF
 I've found a bug! Where do I report it?
 |r

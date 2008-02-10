@@ -73,6 +73,17 @@ local defaults = {
 					db_type         = {
 						['**'] = false  -- db_types used for use with auto show/hide
 					},
+					taboos          = {
+						['**'] = false  -- taboo regions in effect
+					},
+					taboolist       = {} -- point, point, point
+				},
+			},
+		},
+		taboo = {
+			['*'] = { -- zone name, stored as the MapFile string constant
+				['*'] = { -- route name
+					route           = {},    -- point, point, point
 				},
 			},
 		},
@@ -233,7 +244,7 @@ local MinimapShapes = {
 
 local minimap_radius
 local minimap_rotate
-local indoors = 'outdoor'
+local indoors = "indoor"
 
 local MinimapSize = { -- radius of minimap
 	indoor = {
@@ -314,8 +325,8 @@ function Routes:DrawMinimapLines(forceUpdate)
 
 	local zone = GetRealZoneText()
 
-	-- instance/indoor .. no routes
-	if not zone or not self.zoneData[zone] or indoors == "indoor" then
+	-- if we are indoors, or the zone we are in is not defined in our tables ... no routes
+	if not zone or self.zoneData[zone][4] == "" or indoors == "indoor" then
 		G:HideLines(Minimap)
 		return
 	end
@@ -692,8 +703,19 @@ function Routes:InsertNode(zone, coord, node_name)
 			for k, v in pairs(route_data.selection) do
 				if k == node_name or v == node_name then
 					-- Add the node
-					route_data.length = self.TSP:InsertNode(route_data.route, route_data.metadata, zone, coord, route_data.cluster_dist or 65) -- 65 is the old default
-					throttleFrame:Show()
+					local x, y = self:getXY(coord)
+					local flag = false
+					for tabooname, used in pairs(route_data.taboos) do
+						if used and self:IsNodeInTaboo(x, y, db.taboo[zone][tabooname]) then
+							flag = true
+						end
+					end
+					if flag then
+						tinsert(route_data.taboolist, coord)
+					else
+						route_data.length = self.TSP:InsertNode(route_data.route, route_data.metadata, zone, coord, route_data.cluster_dist or 65) -- 65 is the old default
+						throttleFrame:Show()
+					end
 					break
 				end
 			end
@@ -751,6 +773,16 @@ function Routes:DeleteNode(zone, coord, node_name)
 							end
 						end
 					end
+					if not flag then
+						-- node not found yet, so search the taboolist
+						for i = 1, #route_data.taboolist do
+							if route_data.taboolist[i] == coord then
+								tremove(route_data.taboolist, i)
+								flag = true
+								break
+							end
+						end
+					end
 				end
 				if flag then break end
 			end
@@ -799,6 +831,15 @@ local function GetZoneDescText(info)
 	end
 	return L["You have |cFFFFFFFF%d|r route(s) in |cFFFFFFFF%s|r."]:format(count, Routes.zoneMapFile[info.arg])
 end
+local function GetZoneTabooDescText(info)
+	local count = 0
+	for taboo_name, taboo_table in pairs(db.taboo[info.arg]) do
+		if #taboo_table.route > 0 then
+			count = count + 1
+		end
+	end
+	return ("You have |cFFFFFFFF%d|r taboo region(s) in |cFFFFFFFF%s|r."):format(count, Routes.zoneMapFile[info.arg])
+end
 
 
 ------------------------------------------------------------------------------------------------------
@@ -839,6 +880,33 @@ function Routes:OnInitialize()
 			opts[zone].args.desc = {
 				type = "description",
 				name = GetZoneDescText,
+				arg = zone,
+				order = 0,
+			}
+		end
+	end
+
+	-- Generate ace options table for each taboo region
+	local opts = options.args.taboo_group.args
+	for zone, zone_table in pairs(db.taboo) do
+		if next(zone_table) == nil then
+			-- cleanup the empty zone
+			db.taboo[zone] = nil
+		else
+			local localizedZoneName = self.zoneMapFile[zone]
+			opts[zone] = {
+				type = "group",
+				name = localizedZoneName,
+				desc = ("Taboos in %s"):format(localizedZoneName),
+				args = {},
+			}
+			for taboo in pairs(zone_table) do
+				local tabookey = taboo:gsub("%s", "\255") -- can't have spaces in the key
+				opts[zone].args[tabookey] = self:CreateAceOptTabooTable(zone, taboo)
+			end
+			opts[zone].args.desc = {
+				type = "description",
+				name = GetZoneTabooDescText,
 				arg = zone,
 				order = 0,
 			}
@@ -890,7 +958,6 @@ function Routes:OnEnable()
 		timerFrame:Show()
 		self:RegisterEvent("MINIMAP_ZONE_CHANGED", "DrawMinimapLines", true)
 		minimap_rotate = GetCVar("rotateMinimap") == "1"
-		indoors = "indoor"
 		-- Notes: Do not call self:MINIMAP_UPDATE_ZOOM() here because the CVARs aren't applied yet.
 		-- MINIMAP_UPDATE_ZOOM gets fired automatically by wow when it applies the CVARs.
 	end
@@ -941,6 +1008,13 @@ options = {
 			name = L["Routes"],
 			desc = L["Routes"],
 			order = 200,
+			args = {},
+		},
+		taboo_group = {
+			type = "group",
+			name = "Taboos",
+			desc = "Taboos",
+			order = 250,
 			args = {},
 		},
 		faq_group = {
@@ -1313,6 +1387,27 @@ do
 		str[3] = L["|cFFFFFFFF     %d|r node(s) are at |cFFFFFFFF0|r yards of a cluster point"]:format(data[-1] or 0)
 		return table.concat(str, "\n")
 	end
+
+	function ConfigHandler.GetTabooDesc(info)
+		for k in pairs(str) do str[k] = nil end
+		local t = db.routes[info.arg.zone][info.arg.route]
+		local num = 1
+		str[num] = L["This route has the following taboo regions:"]
+		for k, v in pairs(t.taboos) do
+			if v then
+				num = num + 1
+				str[num] = "|cFFFFFFFF     "..k.."|r"
+			else
+				t.taboos[k] = nil -- set the false value to nil, so we don't pairs() over it in the future
+			end
+		end
+		if num == 1 then
+			str[num] = L["This route has no taboo regions."]
+		end
+		num = num + 1
+		str[num] = L["This route contains |cFFFFFFFF%d|r nodes that have been tabooed."]:format(#t.taboolist)
+		return table.concat(str, "\n")
+	end
 end
 
 function ConfigHandler:GetTwoPointFiveOpt()
@@ -1324,7 +1419,13 @@ end
 
 function ConfigHandler:DoForeground(info)
 	local t = db.routes[info.arg.zone][info.arg.route]
-	local output, meta, length, iter, timetaken = Routes.TSP:SolveTSP(t.route, t.metadata, Routes.zoneMapFile[info.arg.zone], db.defaults.tsp)
+	local taboos = {}
+	for tabooname, used in pairs(t.taboos) do
+		if used then
+			tinsert(taboos, db.taboo[info.arg.zone][tabooname])
+		end
+	end
+	local output, meta, length, iter, timetaken = Routes.TSP:SolveTSP(t.route, t.metadata, taboos, Routes.zoneMapFile[info.arg.zone], db.defaults.tsp)
 	t.route = output
 	t.length = length
 	t.metadata = meta
@@ -1341,7 +1442,13 @@ end
 
 function ConfigHandler:DoBackground(info)
 	local t = db.routes[info.arg.zone][info.arg.route]
-	local running, errormsg = Routes.TSP:SolveTSPBackground(t.route, t.metadata, Routes.zoneMapFile[info.arg.zone], db.defaults.tsp)
+	local taboos = {}
+	for tabooname, used in pairs(t.taboos) do
+		if used then
+			tinsert(taboos, db.taboo[info.arg.zone][tabooname])
+		end
+	end
+	local running, errormsg = Routes.TSP:SolveTSPBackground(t.route, t.metadata, taboos, Routes.zoneMapFile[info.arg.zone], db.defaults.tsp)
 	if (running == 1) then
 		Routes:Print(L["Now running TSP in the background..."])
 		Routes.TSP:SetFinishFunction(function(output, meta, length, iter, timetaken)
@@ -1363,6 +1470,35 @@ function ConfigHandler:DoBackground(info)
 		-- This should never happen, but is here as a fallback
 		Routes:Print(L["The following error occured in the background path generation coroutine, please report to Grum or Xinhuan:"]);
 		Routes:Print(errormsg);
+	end
+end
+
+do
+	local t = {}
+	function ConfigHandler:GetTabooRegions(info)
+		for k, v in pairs(t) do t[k] = nil end
+		for k, v in pairs(db.taboo[info.arg.zone]) do
+			t[k] = k
+		end
+		return t
+	end
+end
+function ConfigHandler:GetTabooRegionStatus(info, k)
+	return db.routes[info.arg.zone][info.arg.route].taboos[k]
+end
+function ConfigHandler:SetTabooRegionStatus(info, k, v)
+	if v == false then v = nil end
+	local zone = info.arg.zone
+	local route_data = db.routes[zone][info.arg.route]
+	local taboo_data = db.taboo[zone][k]
+	if route_data.taboos[k] ~= v then
+		-- toggle it
+		route_data.taboos[k] = v
+		if v then
+			Routes:ApplyTabooToRoute(zone, taboo_data, route_data)
+		else
+			Routes:UnTabooRoute(zone, route_data)
+		end
 	end
 end
 
@@ -1414,6 +1550,11 @@ local optimize_header_table = {
 	name = L["Route Optimizing"],
 	order = 100,
 }
+local taboo_desc_table = {
+	type  = "description",
+	name  = L["TABOO_DESC2"],
+	order = 0,
+}
 
 function Routes:CreateAceOptRouteTable(zone, route)
 	local zone_route_table = {zone = zone, route = route}
@@ -1449,6 +1590,12 @@ function Routes:CreateAceOptRouteTable(zone, route)
 						name = ConfigHandler.GetClusterDesc,
 						arg = zone_route_table,
 						order = 20,
+					},
+					desc4 = {
+						type = "description",
+						name = ConfigHandler.GetTabooDesc,
+						arg = zone_route_table,
+						order = 30,
 					},
 					delete = {
 						name = L["Delete"], type = "execute",
@@ -1613,6 +1760,23 @@ function Routes:CreateAceOptRouteTable(zone, route)
 					},
 				},
 			},
+			taboo_group = {
+				type = "group",
+				order = 200,
+				name = L["Taboos"],
+				args = {
+					desc = taboo_desc_table,
+					taboos = {
+						name = L["Select taboo regions to apply:"],
+						type = "multiselect",
+						order = 100,
+						values = "GetTabooRegions",
+						get = "GetTabooRegionStatus",
+						set = "SetTabooRegionStatus",
+						arg = zone_route_table,
+					},
+				},
+			},
 		},
 	}
 end
@@ -1760,7 +1924,7 @@ do
 				end
 				-- add current player zone
 				local zone = GetRealZoneText()
-				if zone and zone ~= "" then
+				if zone and zone ~= "" and Routes.zoneData[zone][4] ~= "" then
 					create_zones[zone] = zone
 					if not create_zone then create_zone = zone end
 				end
@@ -1887,6 +2051,741 @@ do
 			confirmText = L["A route with that name already exists. Overwrite?"],
 		},
 	}
+end
+
+------------------------------------------------------------------------------------------------------
+-- Taboo code
+
+do
+	-- Give ourselves a new frame to draw on (so we don't have opening/closing the map wiping stuff out)
+	local RoutesTabooFrame = CreateFrame("Frame", "RoutesTabooFrame", WorldMapButton)
+	RoutesTabooFrame:SetAllPoints(WorldMapButton)
+	RoutesTabooFrame:EnableMouse(false)
+
+	local intersection = {}
+	local pool = setmetatable({}, {__mode="kv"})
+	local function SortIntersection(a, b)
+		return a.x < b.x
+	end
+	
+	-- This function takes a taboo (a route basically), and draws it on screen and shades the inside
+	function Routes:DrawTaboo(route_data, width, color)
+		local fh, fw = WorldMapButton:GetHeight(), WorldMapButton:GetWidth()
+		width = width or db.defaults.width
+		color = color or db.defaults.color
+
+		-- This part just draws the taboo outline, its the same code as the one that draws routes
+		do
+			local last_point
+			local sx, sy
+			last_point = route_data.route[ #route_data.route ]
+			sx, sy = floor(last_point / 10000) / 10000, (last_point % 10000) / 10000
+			sy = (1 - sy)
+			for i = 1, #route_data.route do
+				local point = route_data.route[i]
+				local ex, ey = floor(point / 10000) / 10000, (point % 10000) / 10000
+				ey = (1 - ey)
+				G:DrawLine(RoutesTabooFrame, sx*fw, sy*fh, ex*fw, ey*fh, width, color , "OVERLAY")
+				sx, sy = ex, ey
+				last_point = point
+			end
+		end
+
+		-- The shade-lines get half-alpha and 66% width
+		color[4] = color[4] / 2
+		width = 2/3 * width
+		for z = 0, 1 do -- loop twice, once for upper half, once for lower half
+			for k = 0, 1, 0.01 do
+				for i = 1, #intersection do
+					pool[tremove(intersection)] = true
+				end
+				local last_point
+				local sx, sy
+				last_point = route_data.route[ #route_data.route ]
+				sx, sy = floor(last_point / 10000) / 10000, (last_point % 10000) / 10000
+				for i = 1, #route_data.route do
+					local point = route_data.route[i]
+					local ex, ey = floor(point / 10000) / 10000, (point % 10000) / 10000
+					if sx + sy == z + k then -- check for endpoint 1
+						local vector = next(pool) or {}
+						pool[vector] = nil
+						vector.x, vector.y = sx, sy
+						tinsert(intersection, vector)
+					elseif ex + ey == z + k then -- check for endpoint 2
+						--[[local vector = next(pool) or {}
+						pool[vector] = nil
+						vector.x, vector.y = ex, ey
+						tinsert(intersection, vector)]]
+					elseif ex+ey-sx-sy ~= 0 then -- 0 indicates a parallel line
+						local u, t
+						if z == 0 and k ~= 0 then
+							u = (k - sx - sy)/(ex+ey-sx-sy)
+							t = (sx + (ex-sx)*u)/k
+						elseif z == 1 and k ~= 1 then
+							u = (1 - sx - sy + k)/(ex+ey-sx-sy)
+							t = (sx + (ex-sx)*u - k)/(1-k)
+						else
+							u, t = -1, -1 -- invalid
+						end
+						if t >= 0 and t <= 1 and u >= 0 and u <= 1 then
+							local vector = next(pool) or {}
+							pool[vector] = nil
+							vector.x, vector.y = sx + (ex-sx)*u, sy + (ey-sy)*u
+							tinsert(intersection, vector)
+						end
+					end
+					sx, sy = ex, ey
+					last_point = point
+				end
+				table.sort(intersection, SortIntersection)
+				--[[for j = #intersection, 2, -1 do -- this loop removes identical intersection points
+					if intersection[j].x == intersection[j-1].x then
+						pool[tremove(intersection, j)] = true
+					end
+				end]]
+				for j = 1, #intersection - (#intersection % 2), 2 do -- this loop draws the pairs of intersections
+					G:DrawLine(RoutesTabooFrame, intersection[j].x*fw, (1-intersection[j].y)*fh, intersection[j+1].x*fw, (1-intersection[j+1].y)*fh, width, color , "OVERLAY")
+				end
+			end
+		end
+
+		-- restore default alpha
+		color[4] = color[4] * 2
+	end
+
+	local taboo_edit_list = {}
+	function Routes:DrawTaboos()
+		G:HideLines(RoutesTabooFrame)
+		for taboo_orig, taboo_copy in pairs(taboo_edit_list) do
+			Routes:DrawTaboo(taboo_copy)
+		end
+	end
+
+	-- Upvalues used for our taboo node functions
+	local taboo_nodes = {}
+	local taboo_cache = {}
+	local taboo_node_clicked
+
+	local taboo_node_count = 0
+	local taboo_node_texture = "Interface\\WorldMap\\WorldMapPartyIcon"
+
+	local TEXTURE, DATA, COORD, BEFORE, AFTER, X, Y = 1, 2, 3, 4, 5, 6, 7
+
+	-- Define our functions for a node pin
+	local NodeHelper = {}
+	function NodeHelper:StartMoving()
+		self:StartMoving()
+		self:SetScript("OnUpdate", NodeHelper.OnUpdate)
+		self.elapsed = 0
+	end
+	function NodeHelper:OnDragStop()
+		self:StopMovingOrSizing()
+		self:SetScript("OnUpdate", nil)
+		self.elapsed = nil
+		self:SetParent(RoutesTabooFrame)
+		self:ClearAllPoints()
+		self:SetPoint("CENTER", RoutesTabooFrame, "TOPLEFT", self[X]*RoutesTabooFrame:GetWidth(), -self[Y]*RoutesTabooFrame:GetHeight())
+	end
+	function NodeHelper:OnUpdate(elapsed)
+		self.elapsed = self.elapsed + elapsed
+		if self.elapsed < 0.05 then return end
+
+		-- get current location
+		local id = self[COORD]
+		local x, y = self:GetCenter()
+		local parent = self:GetParent()
+		local pw, ph = parent:GetWidth(), parent:GetHeight()
+		x = (x - parent:GetLeft()) / pw
+		y = (parent:GetTop() - y) / ph
+
+		-- Only within our frame
+		if x < 0.0001 then x = 0.0001 end -- don't allow 0 values, because our intersection function doesn't like it.
+		if x > 0.999 then x = 0.999 end -- don't use 0.9999 because we want some slack space of 10 nodes in case user drags multiple nodes on top of each other
+		if y < 0.0001 then y = 0.0001 end
+		if y > 0.999 then y = 0.999 end -- we can't have y == 1 because of coord storage format
+
+		local new_id = Routes:getID(x,y)
+		if id == new_id then return end -- position didn't change, no updates
+
+		-- force the new position to be different position from an existing one
+		while taboo_nodes[new_id] do new_id = new_id + 1 end
+		x, y = Routes:getXY(new_id)
+
+		-- edit the route
+		local route = self[DATA].route
+		for i = 1, #route do
+			if route[i] == id then
+				route[i] = new_id
+				break
+			end
+		end
+
+		-- update before & after
+		taboo_nodes[ self[BEFORE] ][AFTER] = new_id
+		taboo_nodes[ self[AFTER] ][BEFORE] = new_id
+
+		-- update route
+		taboo_nodes[ id ] = nil
+		self[COORD] = new_id
+		self[X] = x
+		self[Y] = y
+		taboo_nodes[ new_id ] = self
+
+		-- redraw
+		Routes:DrawTaboos()
+	end
+	function NodeHelper:OnClick(button)
+		taboo_node_clicked = self
+		ToggleDropDownMenu(1, nil, Routes_GenericDropDownMenu, self:GetName(), 0, 0)
+	end
+	function NodeHelper:OnEnter()
+		taboo_nodes[ this[BEFORE] ][TEXTURE]:SetVertexColor( 1, 0, 0, 1 )
+		taboo_nodes[ this[AFTER ] ][TEXTURE]:SetVertexColor( 0, 1, 0, 1 )
+	end
+	function NodeHelper:OnLeave()
+		taboo_nodes[ this[BEFORE] ][TEXTURE]:SetVertexColor( 1, 1, 1, 1 )
+		taboo_nodes[ this[AFTER ] ][TEXTURE]:SetVertexColor( 1, 1, 1, 1 )
+	end
+
+	local function GetOrCreateTabooNode( route_data, coord )
+		local node = taboo_nodes[coord]
+		if node then return node end
+		
+		node = next( taboo_cache )
+		if node then
+			taboo_cache[ node ] = nil
+		else
+			-- Create new node
+			taboo_node_count = taboo_node_count + 1
+			node = CreateFrame( "Button", "RoutesTabooNodePin"..taboo_node_count, RoutesTabooFrame )
+			node:SetFrameLevel( 6 ) -- we need to be above others (GatherMate nodes are @ 5)
+
+			-- set it up
+			local texture = node:CreateTexture( nil, "OVERLAY" )
+			texture:SetTexture( taboo_node_texture )
+			texture:SetAllPoints(node)
+			node[TEXTURE] = texture
+
+			node:EnableMouse(true)
+			node:SetMovable(true)
+			node:SetWidth(16)
+			node:SetHeight(16)
+		end
+
+		-- store data
+		node[X], node[Y] = Routes:getXY( coord )
+		node[COORD] = coord
+		node[DATA] = route_data
+
+		node:RegisterForDrag("LeftButton")
+		node:RegisterForClicks("RightButtonUp")
+		node:SetScript("OnDragStart", NodeHelper.StartMoving)
+		node:SetScript("OnClick", NodeHelper.OnClick)
+		node:SetScript("OnDragStop", NodeHelper.OnDragStop)
+		node:SetScript("OnEnter", NodeHelper.OnEnter)
+		node:SetScript("OnLeave", NodeHelper.OnLeave)
+
+		taboo_nodes[coord] = node
+		node:Show()
+
+		return node
+	end
+
+	local function TabooInsertNode(before, after)
+		local new_id = Routes:getID( (before[X]+after[X])/2, (before[Y]+after[Y])/2 )
+
+		-- force the creation of a new node
+		while taboo_nodes[new_id] do new_id = new_id + 1 end
+		local node = GetOrCreateTabooNode( before[DATA], new_id )
+
+		-- force the position
+		local w, h = RoutesTabooFrame:GetWidth(), RoutesTabooFrame:GetHeight()
+		local x, y = Routes:getXY( new_id )
+		node:SetPoint("CENTER", RoutesTabooFrame, "TOPLEFT", x*w, -y*h)
+
+		-- fix the chain
+		node[ BEFORE ]  = before[COORD]
+		node[ AFTER  ]  = after[COORD]
+		before[ AFTER ] = new_id
+		after[ BEFORE ] = new_id
+
+		local route = node[DATA].route
+		for i = 1, #route do
+			if route[i] == after[COORD] then
+				local tmp = i - 1
+				if tmp < 1 then tmp = #route end
+				if route[tmp] == before[COORD] then
+					tinsert( route, i, node[COORD] )
+					break
+				end
+			end
+		end
+
+		Routes:DrawTaboos()
+	end
+
+	local function TabooDeleteNode(node)
+		local route = node[DATA].route
+		for i = 1, #route do
+			if route[i] == node[COORD] then
+				tremove(route, i)
+				break
+			end
+		end
+
+		taboo_nodes[ node[COORD] ] = nil
+		taboo_nodes[ node[BEFORE] ][AFTER ] = node[AFTER]
+		taboo_nodes[ node[AFTER ] ][BEFORE] = node[BEFORE]
+
+		node:Hide()
+		taboo_cache[node] = true
+
+		Routes:DrawTaboos()
+	end
+
+	local info = {}
+	local function taboo_dropdown(level)
+		if (not level) then return end
+		for k in pairs(info) do info[k] = nil end
+		if (level == 1) then
+			-- Create the title of the menu
+			info.isTitle      = true
+			info.text         = L["Routes Node Menu"]
+			info.notCheckable = true
+			UIDropDownMenu_AddButton(info, level)
+
+			-- Generate a menu item for each pin the mouse is on
+			info.isTitle      = nil
+			info.notCheckable = nil
+
+			-- Delete option
+			info.text         = L["Delete node"]
+			info.func         = TabooDeleteNode
+			info.arg1         = taboo_node_clicked
+			if #taboo_node_clicked[DATA].route <= 3 then
+				info.disabled = true
+			else
+				info.disabled = nil
+			end
+			UIDropDownMenu_AddButton(info, level)
+			info.disabled     = nil
+
+			-- Before
+			info.text         = L["Add node before (red)"]
+			info.func         = TabooInsertNode
+			info.arg1         = taboo_nodes[ taboo_node_clicked[BEFORE] ]
+			info.arg2         = taboo_node_clicked
+			UIDropDownMenu_AddButton(info, level)
+
+			-- After
+			info.text         = L["Add node after (green)"]
+			info.func         = TabooInsertNode
+			info.arg1         = taboo_node_clicked
+			info.arg2         = taboo_nodes[ taboo_node_clicked[AFTER] ]
+			UIDropDownMenu_AddButton(info, level)
+
+			-- Close menu item
+			info.text         = CLOSE
+			info.func         = CloseDropDownMenus
+			info.arg1         = nil
+			info.arg2         = nil
+			info.notCheckable = 1
+			UIDropDownMenu_AddButton(info, level)
+		end
+	end
+	local Routes_GenericDropDownMenu = CreateFrame("Frame", "Routes_GenericDropDownMenu")
+	Routes_GenericDropDownMenu.displayMode = "MENU"
+	Routes_GenericDropDownMenu.initialize = taboo_dropdown
+
+	local TabooHandler = {}
+	function TabooHandler:EditTaboo(info)
+		local zone, taboo = info.arg.zone, info.arg.taboo
+		
+		-- make a copy of the taboo for editing
+		local taboo_data = db.taboo[zone][taboo]
+		local copy_of_taboo_data = {route = {}}
+		for i = 1, #taboo_data.route do
+			copy_of_taboo_data.route[i] = taboo_data.route[i]
+		end
+		taboo_edit_list[taboo_data] = copy_of_taboo_data
+
+		local fh, fw = RoutesTabooFrame:GetHeight(), RoutesTabooFrame:GetWidth()
+
+		local route = copy_of_taboo_data.route
+		local before, after
+		for i=1, #route do
+			local node = GetOrCreateTabooNode(copy_of_taboo_data, route[i])
+
+			-- place it
+			local x, y = node[X], node[Y]
+			node:SetPoint("CENTER", RoutesTabooFrame, "TOPLEFT", x*fw, -y*fh)
+
+			-- setup before and after
+			if i == 1 then before = route[#route] else before = route[i-1] end
+			if i == #route then after = route[1]  else after  = route[i+1] end
+			node[BEFORE] = before
+			node[AFTER ] = after
+		end
+		Routes:DrawTaboos()
+	end
+	function TabooHandler:SaveEditTaboo(info)
+		local zone, taboo = info.arg.zone, info.arg.taboo
+		local taboo_data = db.taboo[zone][taboo]
+		local copy_of_taboo = self:CancelEditTaboo(info)
+		taboo_data.route = copy_of_taboo.route
+		-- Update all routes with this taboo
+		for route_name, route_data in pairs(db.routes[zone]) do
+			if route_data.taboos[taboo] then
+				Routes:ApplyTabooToRoute(zone, taboo_data, route_data)
+				Routes:UnTabooRoute(zone, route_data)
+			else
+				-- Set the false value (acedb generated default) to nil, so we don't pairs() over it
+				route_data.taboos[taboo] = nil
+			end
+		end
+	end
+	function TabooHandler:CancelEditTaboo(info)
+		local taboo = db.taboo[info.arg.zone][info.arg.taboo]
+		local copy_of_taboo = taboo_edit_list[taboo]
+		taboo_edit_list[taboo] = nil
+		for i = 1, #copy_of_taboo.route do
+			local point = copy_of_taboo.route[i]
+			local node = taboo_nodes[point]
+			node:Hide()
+			taboo_nodes[point] = nil
+			taboo_cache[node] = true
+		end
+		Routes:DrawTaboos()
+		return copy_of_taboo -- return the edited table
+	end
+	function TabooHandler:DeleteTaboo(info)
+		if self:IsBeingEdited(info) then
+			Routes:Print(L["You may not delete a taboo that is being edited."])
+			return
+		end
+		local zone, taboo = info.arg.zone, info.arg.taboo
+		db.taboo[zone][taboo] = nil
+		local tabookey = taboo:gsub("%s", "\255") -- can't have spaces in the key
+		options.args.taboo_group.args[zone].args[tabookey] = nil -- delete taboo from aceopt
+		if next(db.taboo[zone]) == nil then
+			db.taboo[zone] = nil
+			options.args.taboo_group.args[zone] = nil -- delete zone from aceopt if no routes remaining
+		end
+		-- Now delete the taboo region from all routes in the zone that had it
+		for route_name, route_data in pairs(db.routes[zone]) do
+			if route_data.taboos[taboo] then
+				route_data.taboos[taboo] = nil
+				Routes:UnTabooRoute(zone, route_data)
+			else
+				-- Set the false value (acedb generated default) to nil, so we don't pairs() over it
+				route_data.taboos[taboo] = nil
+			end
+		end
+	end
+	function TabooHandler:IsBeingEdited(info)
+		local taboo = db.taboo[info.arg.zone][info.arg.taboo]
+		if taboo_edit_list[taboo] then return true end
+		return false
+	end
+	function TabooHandler:IsNotBeingEdited(info)
+		return not self:IsBeingEdited(info)
+	end
+
+	local taboo_desc_table = {
+		type = "description",
+		order = 0,
+		name = L["TABOO_EDIT_DESC"],
+	}
+	function Routes:CreateAceOptTabooTable(zone, taboo)
+		local zone_taboo_table = {zone = zone, taboo = taboo}
+
+		return {
+			type = "group",
+			name = taboo,
+			desc = taboo,
+			handler = TabooHandler,
+			args = {
+				desc = taboo_desc_table,
+				edit_taboo = {
+					type = "execute",
+					name = L["Edit taboo region"],
+					desc = L["Edit this taboo region on the world map"],
+					arg = zone_taboo_table,
+					order = 1,
+					func = "EditTaboo",
+					disabled = "IsBeingEdited",
+				},
+				save_edit_taboo = {
+					type = "execute",
+					name = L["Save taboo edit"],
+					desc = L["Stop editing this taboo region on the world map and save the edits"],
+					arg = zone_taboo_table,
+					order = 2,
+					func = "SaveEditTaboo",
+					disabled = "IsNotBeingEdited",
+				},
+				cancel_edit_taboo = {
+					type = "execute",
+					name = L["Cancel taboo edit"],
+					desc = L["Stop editing this taboo region on the world map and abandon changes made"],
+					arg = zone_taboo_table,
+					order = 3,
+					func = "CancelEditTaboo",
+					disabled = "IsNotBeingEdited",
+				},
+				delete_taboo = {
+					type = "execute",
+					name = L["Delete Taboo"],
+					desc = L["Delete this taboo region permanently. This will also remove it from all routes that use it."],
+					arg = zone_taboo_table,
+					order = 4,
+					func = "DeleteTaboo",
+					disabled = "IsBeingEdited",
+					confirm = true,
+					confirmText = L["Are you sure you want to delete this taboo? This action will also remove the taboo from all routes that use it."],
+				},
+			},
+		}
+	end
+
+	local taboo_name = ""
+	local create_zone
+	local outland_zones = {GetMapZones(3)}
+	local create_zones = {}
+	options.args.taboo_group.args = {
+		desc = {
+			name = L["TABOO_DESC"],
+			type = "description",
+			order = 0,
+		},
+		taboo_name = {
+			type = "input",
+			name = L["Name of Taboo"],
+			desc = L["Name of taboo region to add"],
+			validate = function(info, name)
+				if name == "" or strtrim(name) == "" then
+					return L["No name given for new taboo region"]
+				end
+				return true
+			end,
+			get = function() return taboo_name end,
+			set = function(info, v) taboo_name = strtrim(v) end,
+			order = 100,
+		},
+		zone_choice = {
+			name = L["Select Zone"], type = "select",
+			desc = L["Zone to create taboo in"],
+			order = 200,
+			values = function()
+				-- reuse table
+				for k in pairs(create_zones) do create_zones[k] = nil end
+				-- setup zones to show
+				for i = 1, #outland_zones do
+					create_zones[ outland_zones[i] ] = outland_zones[i]
+				end
+				-- add current player zone
+				local zone = GetRealZoneText()
+				if zone and zone ~= "" and Routes.zoneData[zone][4] ~= "" then
+					create_zones[zone] = zone
+					if not create_zone then create_zone = zone end
+				end
+				-- add current viewed map zone
+				local zone = Routes.zoneNames[GetCurrentMapContinent()*100 + GetCurrentMapZone()]
+				if zone then
+					create_zones[zone] = zone
+					if not create_zone then create_zone = zone end
+				end
+				return create_zones
+			end,
+			get = function()
+				return create_zone
+			end,
+			set = function(info, key) create_zone = key end,
+			style = "radio",
+		},
+		add_taboo = {
+			name = L["Create Taboo"], type = "execute",
+			desc = L["Create Taboo"],
+			order = 300,
+			func = function()
+				taboo_name = strtrim(taboo_name)
+				if not taboo_name or taboo_name == "" then
+					Routes:Print(L["No name given for new taboo region"])
+					return
+				end
+
+				local mapfile = Routes.zoneData[create_zone][4]
+				db.taboo[mapfile][taboo_name].route[1] = 71117111
+				db.taboo[mapfile][taboo_name].route[2] = 12357823
+				db.taboo[mapfile][taboo_name].route[3] = 11171123
+
+				-- Create the aceopts table entry for our new route
+				local opts = options.args.taboo_group.args
+				if not opts[mapfile] then
+					opts[mapfile] = {
+						type = "group",
+						name = create_zone,
+						desc = L["Taboos in %s"]:format(create_zone),
+						args = {},
+					}
+					opts[mapfile].args.desc = {
+						type = "description",
+						name = GetZoneTabooDescText,
+						arg = mapfile,
+						order = 0,
+					}
+				end
+				local tabookey = taboo_name:gsub("%s", "\255") -- can't have spaces in the key
+				opts[mapfile].args[tabookey] = Routes:CreateAceOptTabooTable(mapfile, taboo_name)
+
+				-- clear stored name
+				taboo_name = ""
+				create_zone = nil
+			end,
+			disabled = function()
+				return not taboo_name or strtrim(taboo_name) == ""
+			end,
+			confirm = function()
+				if #db.taboo[ Routes.zoneData[create_zone][4] ][taboo_name].route > 0 then
+					return true
+				end
+				return false
+			end,
+			confirmText = L["A taboo with that name already exists. Overwrite?"],
+		},
+	}
+
+	--/run Routes:TestFunc()
+	--/run Routes:ClearTestFunc()
+	--[[function Routes:TestFunc(taboo)
+		taboo = taboo or Routes.db.global.taboo[ Routes.zoneData["Shattrath City"][4] ]["abc"]
+		local fw, fh = RoutesTabooFrame:GetWidth(), RoutesTabooFrame:GetHeight()
+
+		for i = 0, 1, 0.02 do
+			for j = 0, 0.99, 0.02 do
+				local point = self:getID(i, j)
+				local node = GetOrCreateTabooNode(taboo, point)
+				local x, y = node[X], node[Y]
+				node:SetPoint("CENTER", RoutesTabooFrame, "TOPLEFT", x*fw, -y*fh)
+				if self:IsNodeInTaboo(x, y, taboo) then
+					node[TEXTURE]:SetVertexColor( 1, 0, 0, 1 )
+				else
+					node[TEXTURE]:SetVertexColor( 0, 1, 0, 1 )
+				end
+				node[BEFORE] = point
+				node[AFTER] = point
+				node:SetAlpha(0.5)
+			end
+		end
+	end
+	function Routes:ClearTestFunc()
+		for i = 0, 1, 0.02 do
+			for j = 0, 0.99, 0.02 do
+				local point = self:getID(i, j)
+				local node = GetOrCreateTabooNode(taboo, point)
+				node:Hide()
+				taboo_nodes[point] = nil
+				taboo_cache[node] = true
+			end
+		end
+	end]]
+end
+
+
+do
+	-- This function tests if the node at location (x,y) is in a taboo region
+	-- It does this by drawing a line from (0,0) to (x,y) and seeing how many times
+	-- this line intersects the taboo polygon edges. If its even, its outside. If
+	-- its odd its inside.
+	function Routes:IsNodeInTaboo(x, y, taboo)
+		-- our taboo regions have x and y between 0.0001 and 0.9999
+		if x <= 0 or y <= 0 or x >= 1 or y >= 1 then return false end
+		local count = 0
+
+		local last_point = taboo.route[ #taboo.route ]
+		local sx, sy = floor(last_point / 10000) / 10000, (last_point % 10000) / 10000
+		for i = 1, #taboo.route do
+			local point = taboo.route[i]
+			local ex, ey = floor(point / 10000) / 10000, (point % 10000) / 10000
+			-- check if (0,0)-(x,y) intersects with (sx,sy)-(ex,ey)
+			if sx >= 0 and sx <= x and sx/sy == x/y then -- check for endpoint 1
+				count = count + 1 -- (sx,sy) lies on the line
+			elseif ex >= 0 and ex <= x and ex/ey == x/y then -- check for endpoint 2
+				-- (ex,ey) lies on the line, do nothing
+			else
+				local d = (x*ey - x*sy - y*ex + y*sx)
+				if d ~= 0 then
+					local u = (sx*y - sy*x)/d
+					local t = (sx + (ex-sx)*u)/x
+					if t >= 0 and t <= 1 and u >= 0 and u <= 1 then
+						count = count + 1
+					end
+				end
+			end
+			sx, sy = ex, ey
+			last_point = point
+		end
+		return count % 2 == 1
+	end
+
+	function Routes:ApplyTabooToRoute(zone, taboo_data, route_data)
+		if route_data.metadata then
+			-- this is a clustered route
+			for i = #route_data.route, 1, -1 do
+				for j = #route_data.metadata[i], 1, -1 do
+					local coord = route_data.metadata[i][j]
+					local x, y = Routes:getXY(coord)
+					if Routes:IsNodeInTaboo(x, y, taboo_data) then -- remove node
+						-- recalcuate centroid
+						local cx, cy = Routes:getXY(route_data.route[i])
+						local num_data = #route_data.metadata[i]
+						if num_data > 1 then
+							-- more than 1 node in this cluster
+							cx, cy = (cx * num_data - x) / (num_data-1), (cy * num_data - y) / (num_data-1)
+							tremove(route_data.metadata[i], j)
+							route_data.route[i] = Routes:getID(cx, cy)
+						else
+							-- only 1 node in this cluster, just remove it
+							tremove(route_data.metadata, i)
+							tremove(route_data.route, i)
+						end
+						tinsert(route_data.taboolist, coord)
+						route_data.length = Routes.TSP:PathLength(route_data.route, Routes.zoneMapFile[zone])
+						throttleFrame:Show()
+					end
+				end
+			end
+		else
+			-- this is not a clustered route
+			for i = #route_data.route, 1, -1 do
+				local coord = route_data.route[i]
+				local x, y = Routes:getXY(coord)
+				if Routes:IsNodeInTaboo(x, y, taboo_data) then -- remove node
+					tremove(route_data.route, i)
+					tinsert(route_data.taboolist, coord)
+					route_data.length = self.TSP:PathLength(route_data.route, Routes.zoneMapFile[zone])
+					throttleFrame:Show()
+				end
+			end
+		end
+	end
+	function Routes:UnTabooRoute(zone, route_data)
+		for i = #route_data.taboolist, 1, -1 do
+			local coord = route_data.taboolist[i]
+			local x, y = Routes:getXY(coord)
+			local flag = false
+			for tabooname, used in pairs(route_data.taboos) do
+				if used and Routes:IsNodeInTaboo(x, y, db.taboo[zone][tabooname]) then
+					flag = true
+				end
+			end
+			if flag == false then
+				route_data.length = Routes.TSP:InsertNode(route_data.route, route_data.metadata, Routes.zoneMapFile[zone], coord, route_data.cluster_dist or 65) -- 65 is the old default
+				tremove(route_data.taboolist, i)
+				throttleFrame:Show()
+			end
+		end
+	end
 end
 
 

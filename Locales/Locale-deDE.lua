@@ -185,6 +185,12 @@ Es bedeutet genau das: Es wurden keine Daten gefunden, meistens weil das Addon n
 
 Bitte beachten Sie, dass alle |cffffff78Cartographer_<Beruf>|r Module nur bei Bedarf geladen werden und |cffffff78Cartographer_Professions|r vorraussetzen um aktiviert zu werden.
 |cFFFFFFFF
+I made a route with Rich Adamantite Ore in it. When I find normal Adamantite Ore in the same place, GatherMate/Cartographer deletes the rich node and replaces it with a normal node. This removes the node from my route since it is contructed out of only rich nodes. What can I do?
+|r
+1. You can make a route with both rich and normal Adamantite Ore in it.
+
+2. You can tell Routes not to automatically insert/delete nodes. This option is found in the root options of the Routes tree in the config screen.
+|cFFFFFFFF
 Könnt ihr einen Fortschrittsbalken einfügen, der anzeigt wie lange die Hintergrundoptimierung einer Route noch dauert?
 |r
 Nein, das ist leider nicht möglich, da der Optimierungsprozess ein nicht-linearer Algorithmus ist. Er funktioniert auf einer mehrflutigen Basis dessen Optimierungen immer auf der Vorrangegangenen aufbaut, bis er einen Punkt erreicht hat an dem die Verbesserungen zu gering wären.
@@ -204,6 +210,16 @@ ACO Algorithmen wurden dazu benutzt um fast optimale Lösungen für das |cffffff
 Was macht die "Extra Optimierung" Option?
 |r
 Standardmäßig benutzen wir ACO nur mit dem Standard |cffffff782-opt Algorithmus|r um Routen zu optimieren. Wenn Sie "Extra Optimierung" anschalten, wird Routes auch 2.5-opt verwenden, der eine spezielle Untermenge von 3-opt ist. 2-opt ist der Prozess bei dem paarweise angeordnete Ecken ausgetauscht werden (A-B und C-D werden zu A-C und B-D) um kürzere Routen zu produzieren.
+|cFFFFFFFF
+What algorithm does node clustering use?
+|r
+We employ a Hierarchical Agglomerative Clustering algorithm using a greedy approach, so the output is deterministic.
+|cFFFFFFFF
+I created a taboo region, attached it to a route, and optimized it. My route still flies through the taboo region. Why?
+|r
+It is not possible to always find a route that does not fly through a taboo region or sometimes highly unfeasible to do so.
+
+The user could potentially create taboo regions that split the map into impassable sections and regions, so the algorithm is simply biased not to pass through them if it is possible.
 |cFFFFFFFF
 Ich habe einen Fehler gefunden! Wo kann ich ihn melden?
 |r

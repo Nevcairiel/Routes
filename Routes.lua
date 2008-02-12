@@ -706,7 +706,7 @@ function Routes:InsertNode(zone, coord, node_name)
 					local x, y = self:getXY(coord)
 					local flag = false
 					for tabooname, used in pairs(route_data.taboos) do
-						if used and self:IsNodeInTaboo(x, y, db.taboo[zone][tabooname]) then
+						if used and self:IsNodeInTaboo(x, y, db.taboo[ self.zoneData[zone][4] ][tabooname]) then
 							flag = true
 						end
 					end

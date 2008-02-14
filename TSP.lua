@@ -357,8 +357,8 @@ function TSP:SolveTSP(nodes, metadata, taboos, zonename, parameters, path, nonbl
 				end
 				if flag then break end
 			end
-			if flag then -- we increase/bias the weight of this edge by the zone width, since it passes thru a taboo region
-				weight[u] = weight[u] + zoneW
+			if flag then -- we increase/bias the weight by a constant factor and by the zone width, since it passes thru a taboo region
+				weight[u] = weight[u] * 2 + zoneW
 				weight[v] = weight[u]
 			end
 		end

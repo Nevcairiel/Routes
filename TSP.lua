@@ -631,10 +631,10 @@ local function tryInsert(nodes, metadata, insertPoint, nodeID, radius, zoneW, zo
 	local x, y = floor(nodeID / 10000) / 10000, (nodeID % 10000) / 10000
 	local x2, y2 = floor(nodes[insertPoint] / 10000) / 10000, (nodes[insertPoint] % 10000) / 10000
 	-- See if the node is within radius
-	local t = (((x2 - x)*zoneW)^2 + ((y2 - y)*zoneH)^2)^0.5
-	if t > radius then
-		return false
-	end
+	--local t = (((x2 - x)*zoneW)^2 + ((y2 - y)*zoneH)^2)^0.5
+	--if t > radius then
+	--	return false
+	--end
 	-- Calculate the new centroid and coord
 	local num = #metadata[insertPoint]
 	x2, y2 = (x2*num+x)/(num+1), (y2*num+y)/(num+1)

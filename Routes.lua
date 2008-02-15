@@ -2254,13 +2254,13 @@ do
 	end
 	function NodeHelper:OnLeave()
 		if DropDownList1:IsVisible() then
-			self:SetScript("OnUpdate", NodeHelper.OnLeave)
+			self:SetScript("OnUpdate", NodeHelper.OnUpdate2)
 			Routes_GenericDropDownMenu.showing = true
 		else
-			NodeHelper.OnUpdate(self)
+			NodeHelper.OnUpdate2(self)
 		end
 	end
-	function NodeHelper:OnUpdate()
+	function NodeHelper:OnUpdate2()
 		if not DropDownList1:IsVisible() then
 			taboo_nodes[ self[BEFORE] ][TEXTURE]:SetVertexColor( 1, 1, 1, 1 )
 			taboo_nodes[ self[AFTER ] ][TEXTURE]:SetVertexColor( 1, 1, 1, 1 )

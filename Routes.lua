@@ -1020,8 +1020,8 @@ options = {
 		},
 		taboo_group = {
 			type = "group",
-			name = "Taboos",
-			desc = "Taboos",
+			name = L["Taboos"],
+			desc = L["Taboos"],
 			order = 250,
 			args = {},
 		},

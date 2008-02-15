@@ -2247,12 +2247,26 @@ do
 		ToggleDropDownMenu(1, nil, Routes_GenericDropDownMenu, self:GetName(), 0, 0)
 	end
 	function NodeHelper:OnEnter()
-		taboo_nodes[ this[BEFORE] ][TEXTURE]:SetVertexColor( 1, 0, 0, 1 )
-		taboo_nodes[ this[AFTER ] ][TEXTURE]:SetVertexColor( 0, 1, 0, 1 )
+		if not Routes_GenericDropDownMenu.showing then
+			taboo_nodes[ self[BEFORE] ][TEXTURE]:SetVertexColor( 1, 0, 0, 1 )
+			taboo_nodes[ self[AFTER ] ][TEXTURE]:SetVertexColor( 0, 1, 0, 1 )
+		end
 	end
 	function NodeHelper:OnLeave()
-		taboo_nodes[ this[BEFORE] ][TEXTURE]:SetVertexColor( 1, 1, 1, 1 )
-		taboo_nodes[ this[AFTER ] ][TEXTURE]:SetVertexColor( 1, 1, 1, 1 )
+		if DropDownList1:IsVisible() then
+			self:SetScript("OnUpdate", NodeHelper.OnLeave)
+			Routes_GenericDropDownMenu.showing = true
+		else
+			NodeHelper.OnUpdate(self)
+		end
+	end
+	function NodeHelper:OnUpdate()
+		if not DropDownList1:IsVisible() then
+			taboo_nodes[ self[BEFORE] ][TEXTURE]:SetVertexColor( 1, 1, 1, 1 )
+			taboo_nodes[ self[AFTER ] ][TEXTURE]:SetVertexColor( 1, 1, 1, 1 )
+			self:SetScript("OnUpdate", nil)
+			Routes_GenericDropDownMenu.showing = false
+		end
 	end
 
 	local function GetOrCreateTabooNode( route_data, coord )

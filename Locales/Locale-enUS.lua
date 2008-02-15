@@ -205,6 +205,7 @@ L["This route contains |cFFFFFFFF%d|r nodes that have been tabooed."] = true
 L["TABOO_DESC2"] = "Taboo regions are areas you specify for a route to ignore. Nodes in these taboo regions are ignored and not included in a route. Additionally when optimizing a route, the generated route will attempt to avoid crossing any taboo regions if possible."
 L["Taboos"] = true
 L["Select taboo regions to apply:"] = true
+L["You have |cFFFFFFFF%d|r taboo region(s) in |cFFFFFFFF%s|r."] = true
 
 -- FAQ
 L["FAQ"] = true

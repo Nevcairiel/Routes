@@ -820,6 +820,13 @@ function Routes:UpgradeStorageFormat1()
 		t[mapfile] = nil
 	end
 	t = nil
+
+	-- Delete invalid zones from the taboo table
+	for zone, zone_table in pairs(db.taboo) do
+		if self.zoneMapFile[zone] == nil then
+			db.taboo[zone] = nil
+		end
+	end
 end
 
 local function GetZoneDescText(info)
@@ -838,7 +845,7 @@ local function GetZoneTabooDescText(info)
 			count = count + 1
 		end
 	end
-	return ("You have |cFFFFFFFF%d|r taboo region(s) in |cFFFFFFFF%s|r."):format(count, Routes.zoneMapFile[info.arg])
+	return L["You have |cFFFFFFFF%d|r taboo region(s) in |cFFFFFFFF%s|r."]:format(count, Routes.zoneMapFile[info.arg])
 end
 
 
@@ -857,6 +864,7 @@ function Routes:OnInitialize()
 
 	-- Upgrade old storage format (which was dependant on LibBabble-Zone-3.0
 	-- to the new format that doesn't require it
+	-- Also delete any invalid zones
 	self:UpgradeStorageFormat1()
 
 	-- Generate ace options table for each route
@@ -897,7 +905,7 @@ function Routes:OnInitialize()
 			opts[zone] = {
 				type = "group",
 				name = localizedZoneName,
-				desc = ("Taboos in %s"):format(localizedZoneName),
+				desc = L["Taboos in %s"]:format(localizedZoneName),
 				args = {},
 			}
 			for taboo in pairs(zone_table) do

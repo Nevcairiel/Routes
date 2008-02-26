@@ -9,7 +9,7 @@
 ## X-eMail: cartographer_routes @ grum DOT nl & xinhuan @ gmail DOT com
 ## X-Name: Routes
 
-## OptionalDeps: Ace3, Cartographer, Cartographer_Notes, GatherMate
+## OptionalDeps: Ace3, Cartographer, Cartographer_Notes, GatherMate, Gatherer
 ## X-Embeds: Ace3
 ## SavedVariables: RoutesDB
 

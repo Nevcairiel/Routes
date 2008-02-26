@@ -181,31 +181,31 @@ L["Delete node"] = "Supprimer le nœud"
 L["Add node before (red)"] = "Ajouter un nœud avant (rouge)"
 L["Add node after (green)"] = "Ajouter un nœud après (vert)"
 L["You may not delete a taboo that is being edited."] = "Vous ne pouvez pas supprimer un tabou en cours d'édition."
-L["TABOO_EDIT_DESC"] = "Pour éditer une région tabou, cliquez sur le bouton |cFFFFFFFFÉditer|r. La région tabou sera dessinée sur la carte du monde. Saisissez les sommets pour les positionner. Clic-droit sur les sommets pour en ajouter ou en supprimer. Après l'édition, il suffit de cliquer sur le bouton |cFFFFFFFFSauver|r pour sauvegarder vos changements, ou le bouton |cFFFFFFFFAnnuler|r pour annuler vos changements."
-L["Edit taboo region"] = "Éditer la région tabou"
-L["Edit this taboo region on the world map"] = "Édite cette région tabou sur la carte du monde."
+L["TABOO_EDIT_DESC"] = "Pour éditer une région taboue, cliquez sur le bouton |cFFFFFFFFÉditer|r. La région taboue sera dessinée sur la carte du monde. Saisissez les sommets pour les positionner. Clic-droit sur les sommets pour en ajouter ou en supprimer. Après l'édition, il suffit de cliquer sur le bouton |cFFFFFFFFSauver|r pour sauvegarder vos changements, ou le bouton |cFFFFFFFFAnnuler|r pour annuler vos changements."
+L["Edit taboo region"] = "Éditer la région taboue"
+L["Edit this taboo region on the world map"] = "Édite cette région taboue sur la carte du monde."
 L["Save taboo edit"] = "Sauver l'édition du tabou"
-L["Stop editing this taboo region on the world map and save the edits"] = "Arrête l'édition de cette région tabou sur la carte du monde et enregistres les modifications."
-L["Cancel taboo edit"] = "Annuler l'édition du tabou"
-L["Stop editing this taboo region on the world map and abandon changes made"] = "Arrête l'édition de cette région tabou sur la carte du monde et abandonne les changements effectués."
-L["Delete Taboo"] = "Supprimer le tabou"
-L["Delete this taboo region permanently. This will also remove it from all routes that use it."] = "Supprime définitivement cette région tabou. Cela l'enlevera également de toutes les routes qui l'utilisent."
+L["Stop editing this taboo region on the world map and save the edits"] = "Arrête l'édition de cette région taboue sur la carte du monde et enregistres les modifications."
+L["Cancel taboo edit"] = "Annuler l'édition du taboue"
+L["Stop editing this taboo region on the world map and abandon changes made"] = "Arrête l'édition de cette région taboue sur la carte du monde et abandonne les changements effectués."
+L["Delete Taboo"] = "Supprimer le taboue"
+L["Delete this taboo region permanently. This will also remove it from all routes that use it."] = "Supprime définitivement cette région taboue. Cela l'enlevera également de toutes les routes qui l'utilisent."
 L["Are you sure you want to delete this taboo? This action will also remove the taboo from all routes that use it."] = "Êtes-vous sûr de vouloir supprimer ce tabou ? Cette action enlèvera également le tabou de toutes les routes qui l'utilisent."
-L["TABOO_DESC"] = "Les régions tabous sont des zones que vous pouvez définir pour exclure des nœuds. Une fois que vous avez créer une région tabou, vous pouvez attacher la région tabou à une route existante, et tous les nœuds contenus dans cette région seront enlevés et aucun nouveau nœud n'y sera ajouté."
+L["TABOO_DESC"] = "Les régions taboues sont des zones que vous pouvez définir pour exclure des nœuds. Une fois que vous avez créer une région taboue, vous pouvez attacher la région taboue à une route existante, et tous les nœuds contenus dans cette région seront enlevés et aucun nouveau nœud n'y sera ajouté."
 L["Name of Taboo"] = "Nom du tabou"
-L["Name of taboo region to add"] = "Nom de la région tabou à ajouter"
-L["No name given for new taboo region"] = "Aucun nom n'a été donnée pour la nouvelle région tabou"
+L["Name of taboo region to add"] = "Nom de la région taboue à ajouter."
+L["No name given for new taboo region"] = "Aucun nom n'a été donnée pour la nouvelle région taboue"
 L["Zone to create taboo in"] = "Zone où créer le tabou"
 L["Create Taboo"] = "Créer un tabou"
 L["Taboos in %s"] = "Tabous dans %s"
 L["A taboo with that name already exists. Overwrite?"] = "Un taboo de ce nom existe déjà. L'écraser ?"
-L["This route has the following taboo regions:"] = "Cette route contient les régions tabous suivantes :"
-L["This route has no taboo regions."] = "Cette route n'a pas de région tabou."
-L["This route contains |cFFFFFFFF%d|r nodes that have been tabooed."] = "Cette route contient |cFFFFFFFF%d|r nœuds qui sont tabous."
-L["TABOO_DESC2"] = "Les régions tabous sont des zones que vous spécifiez qu'une route doit ignorer. Les nœuds de ces régions tabous sont ignorés et ne sont pas intégrés dans une route. De plus, lors de l'optimisation d'une route, la route générée tentera d'éviter de traverser n'importe quelle région tabou si cela possible."
+L["This route has the following taboo regions:"] = "Cette route contient les régions taboues suivantes :"
+L["This route has no taboo regions."] = "Cette route n'a pas de région taboue."
+L["This route contains |cFFFFFFFF%d|r nodes that have been tabooed."] = "Cette route contient |cFFFFFFFF%d|r nœuds qui sont taboues."
+L["TABOO_DESC2"] = "Les régions taboues sont des zones que vous spécifiez qu'une route doit ignorer. Les nœuds de ces régions taboues sont ignorés et ne sont pas intégrés dans une route. De plus, lors de l'optimisation d'une route, la route générée tentera d'éviter de traverser n'importe quelle région taboue si cela possible."
 L["Taboos"] = "Tabous"
-L["Select taboo regions to apply:"] = "Sélectionnez les régions tabous à appliquer :"
-L["You have |cFFFFFFFF%d|r taboo region(s) in |cFFFFFFFF%s|r."] = "Vous avez |cFFFFFFFF%d|r région(s) tabou(s) dans |cFFFFFFFF%s|r."
+L["Select taboo regions to apply:"] = "Sélectionnez les régions taboues à appliquer :"
+L["You have |cFFFFFFFF%d|r taboo region(s) in |cFFFFFFFF%s|r."] = "Vous avez |cFFFFFFFF%d|r région(s) taboue(s) dans |cFFFFFFFF%s|r."
 
 -- FAQ
 L["FAQ"] = "FAQ"
@@ -218,47 +218,39 @@ Cela signifie ce que cela dit : aucune donnée n'a été trouvée, sûrement par
 
 Notez que les modules |cffffff78Cartographer_<Métier>|r sont tous des addons chargeables à la demande et nécessitent |cffffff78Cartographer_Professions|r pour être chargés.
 |cFFFFFFFF
-I made a route with Rich Adamantite Ore in it. When I find normal Adamantite Ore in the same place, GatherMate/Cartographer deletes the rich node and replaces it with a normal node. This removes the node from my route since it is contructed out of only rich nodes. What can I do?
+J'ai créé une route contenant des riches gisements d'adamantite. Quand je trouve un gisement d'adamantite normal au même endroit qu'un riche, GatherMate/Cartographer supprime le nœud riche et le remplace par un nœud normal. Cela a pour effet d'enlever le nœud de ma route puisque cette dernière est construite à partir des noeuds riches. Que puis-je faire ?
 |r
-1. You can make a route with both rich and normal Adamantite Ore in it.
+1. Faites une route contenant les deux types de gisement d'adamantite.
 
-2. You can tell Routes not to automatically insert/delete nodes. This option is found in the root options of the Routes tree in the config screen.
+2. Demandez à Routes ne pas ajouter/supprimer automatiquement les nœuds. Cette option se trouve dans les options racine de l'arborescence dans la fenêtre de configuration.
 |cFFFFFFFF
 Pouvez-vous ajouter un indicateur de progression afin de connaître la durée de l'optimisation de la route en arrière-plan ?
 |r
-Une barre de progression n'est pas possible pour le processus d'optimisation étant donné qu'il s'agit d'un algorithme non-linéaire. Il fonctionne selon le principe des "passes multiples", chaque passe améliore la passe précédente jusqu'au point où les améliorations sont tellement infimes qu'il est inutile de continuer.
-
-C'est un peu comme l'utilitaire de |cffffff78défragmentation de disque de Windows XP|r où la barre de progression est inutile car elle n'affiche que le pourcentage de chaque passe, pas le nombre de passes qui seront effectuées. Il peut y avoir 3 passes comme 10 passes : l'utilitaire ne stoppe que quand il pense qu'il a fait assez. C'est pour cela que sur la version de |cffffff78Vista|r, il n'y a plus du tout de barre de progression.
-|cFFFFFFFF
-Comptez-vous ajouter le support de Gatherer ou peut-être celui des addons de quêtes ?
-|r
-C'est presque certain pour |cffffff78Gatherer|r, et peut-être pour les quêtes.
+Cela n'est pas possible étant donné qu'il s'agit d'un algorithme non-linéaire. Il fonctionne selon le principe des "passes multiples", chaque passe améliore la passe précédente jusqu'au point où les améliorations sont tellement infimes qu'il est inutile de continuer.
 |cFFFFFFFF
 Comment Routes effectue-t-il ses optimisations des routes ?
 |r
-Routes utilise un algorithme appelé |cffffff78Algorithme de colonies de fourmis|r ("Ant Colony Optimization" en anglais ou "ACO"), qui est une méthode heuristique/probabiliste de calcul des graphes optimaux basé sur le comportement observé de ces insectes dans la vie réelle.
+Routes utilise un algorithme appelé |cffffff78Algorithme de colonies de fourmis|r, une méthode heuristique/probabiliste de calcul des graphes optimaux basé sur le comportement observé de ces insectes dans la vie réelle.
 
-Les algorithmes ACO ont été utilisés pour produire des solutions quasi-optimales au |cffffff78problème du voyageur de commerce|r ("Traveling Salesman Problem" en anglais ou "TSP"). Pour plus d'informations, consultez Google ou Wikipedia.
+Les algorithmes ACO ont été utilisés pour produire des solutions quasi-optimales au |cffffff78problème du voyageur de commerce|r. Pour plus d'informations, consultez Google ou Wikipedia.
 |cFFFFFFFF
 Quel est l'effet de l'option "Extra optimisation" ?
 |r
 Par défaut, nous utilisons seulement l'ACO couplé à |cffffff78l'algorithme 2-opt|r standard pour optimiser les routes. Activer "Extra optimisation" permet de demander à Routes d'utiliser également 2.5-opt, qui est un sous-ensemble de 3-opt. 2-opt est le processus où les couples des extrémités sont échangés (A-B et C-D deviennent A-C et B-D) afin de produire des routes plus courtes.
 |cFFFFFFFF
-What algorithm does node clustering use?
+Quel type d'algorithme est utilisé pour l'agrégation des nœuds ?
 |r
-We employ a Hierarchical Agglomerative Clustering algorithm using a greedy approach, so the output is deterministic.
+Nous employons un algorithme HAC (Hierarchical Agglomerative Clustering) en utilisant une approche greedy, la sortie est donc déterministe.
 |cFFFFFFFF
-I created a taboo region, attached it to a route, and optimized it. My route still flies through the taboo region. Why?
+J'ai créée une région taboue que j'ai attachée à une route, et j'ai optimisé cette dernière. Pourtant, ma route traverse la région taboue. Pourquoi ?
 |r
-It is not possible to always find a route that does not fly through a taboo region or sometimes highly unfeasible to do so.
+Il n'est pas possible ou extrêmement difficile de trouver à chaque fois une route qui ne traverse pas une région taboue.
 
-The user could potentially create taboo regions that split the map into impassable sections and regions, so the algorithm is simply biased not to pass through them if it is possible.
+L'utilisateur peut s'il le souhaite créer des régions taboues qui coupent la carte en des sections infranchissables, ainsi l'algorithme est tout simplement obligé de ne pas les traverser si cela est possible.
 |cFFFFFFFF
 J'ai trouvé un bogue ! Où puis-je le signaler ?
 |r
-Vous pouvez signaler des bogues ou faire des suggestions sur |cffffff78http://www.wowace.com/forums/index.php?topic=10992.0|r
-
-Vous pouvez également nous trouver sur |cffffff78irc://irc.freenode.org/wowace|r
+Sur |cffffff78http://www.wowace.com/forums/index.php?topic=10992.0|r ou sur |cffffff78irc://irc.freenode.org/wowace|r
 
 Quand vous voulez signaler un bogue, essayez de fournir les |cffffff78étapes à suivre pour reproduire ce bogue|r, indiquez les |cffffff78messages d'erreur|r que vous avez vus, donnez le |cffffff78numéro de révision|r de Routes où le problème a été découvert et précisez également la |cffffff78langue de votre jeu|r.
 |cFFFFFFFF

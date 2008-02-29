@@ -971,7 +971,7 @@ function Routes:OnEnable()
 	end
 	self:SetupSourcesOptTables()
 	for addon, plugin_table in pairs(Routes.plugins) do
-		if db.defaults.callbacks[k] and plugin_table.IsActive() then
+		if db.defaults.callbacks[addon] and plugin_table.IsActive() then
 			plugin_table.AddCallbacks()
 		end
 	end	
@@ -980,7 +980,7 @@ end
 function Routes:OnDisable()
 	-- Ace3 unregisters all events and hooks for us on disable
 	for addon, plugin_table in pairs(Routes.plugins) do
-		if db.defaults.callbacks[k] and plugin_table.IsActive() then
+		if db.defaults.callbacks[addon] and plugin_table.IsActive() then
 			plugin_table.RemoveCallbacks()
 		end
 	end	

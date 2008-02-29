@@ -1248,7 +1248,7 @@ function ConfigHandler:DeleteRoute(info)
 	local zone, route = info.arg.zone, info.arg.route
 	local is_running, route_table = Routes.TSP:IsTSPRunning()
 	if is_running and route_table == db.routes[zone][route].route then
-		self:Print(L["You may not delete a route that is being optimized in the background."])
+		Routes:Print(L["You may not delete a route that is being optimized in the background."])
 		return
 	end
 	db.routes[zone][route] = nil

@@ -258,8 +258,18 @@ function TSP:SolveTSP(nodes, metadata, taboos, zonename, parameters, path, nonbl
 		for i = 1, numNodes do
 			path[i] = nodes[i];
 		end
-		-- TO DO: Calculate tour length here instead of returning 0
-		return path, TSP:PathLength(path, zonename), 0, 0;
+		-- Create a copy of the metadata[] table too, if there is one
+		local metadata2
+		if metadata then
+			metadata2 = newTable()
+			for i = 1, numNodes do
+				metadata2[i] = newTable()
+				for j = 1, #metadata[i] do
+					metadata2[i][j] = metadata[i][j]
+				end
+			end
+		end
+		return path, metadata2, TSP:PathLength(path, zonename), 0, 0;
 	end
 
 	-- Create a copy of the nodes[] table and use this instead of the original because data could get changed

@@ -26,13 +26,13 @@ function AutoShow:SKILL_LINES_CHANGED()
 	for i = 1, GetNumSkillLines() do
 		skillname, isHeader = GetSkillLineInfo(i)
 		if not isHeader and skillname then
-			if strfind(skillname, L["Skill-Fishing"]) then
+			if strfind(skillname, GetSpellInfo(7620), 1, true) then
 				have_prof.Fishing = true
-			elseif strfind(skillname, L["Skill-Herbalism"]) then
+			elseif strfind(skillname, GetSpellInfo(9134), 1, true) then
 				have_prof.Herbalism = true
-			elseif strfind(skillname, L["Skill-Mining"]) then
+			elseif strfind(skillname, GetSpellInfo(2575), 1, true) then
 				have_prof.Mining = true
-			elseif strfind(skillname, L["Skill-Engineering"]) then
+			elseif strfind(skillname, GetSpellInfo(4036), 1, true) then
 				have_prof.ExtractGas = true
 			end
 		end

@@ -101,7 +101,7 @@ local defaults = {
 			draw_worldmap   = 1,
 			draw_battlemap  = 1,
 			tsp = {
-				initial_pheromone  = 0,     -- Initial pheromone trail value
+				initial_pheromone  = 0.1,   -- Initial pheromone trail value
 				alpha              = 1,     -- Likelihood of ants to follow pheromone trails (larger value == more likely)
 				beta               = 6,     -- Likelihood of ants to choose closer nodes (larger value == more likely)
 				local_decay        = 0.2,   -- Governs local trail decay rate [0, 1]
@@ -922,20 +922,29 @@ function Routes:OnInitialize()
 	end
 end
 
+local timerFrame = CreateFrame("Frame")
+timerFrame:Hide()
+timerFrame.elapsed = 0
+timerFrame:SetScript("OnUpdate", function(self, elapsed)
+	self.elapsed = self.elapsed + elapsed
+	if self.elapsed > 0.025 or self.force then -- throttle to a max of 40 redraws per sec
+		self.elapsed = 0                       -- kinda unnecessary since at default 1 yard refresh, its limited to 36 redraws/sec
+		Routes:DrawMinimapLines(self.force)    -- only need 25 redraws/sec to perceive smooth motion anyway
+		self.force = nil
+	end
+end)
+
 local function SetZoomHook()
-	Routes:DrawMinimapLines(true)
+	timerFrame.force = true
 end
 
 function Routes:MINIMAP_UPDATE_ZOOM()
-	self:Unhook(Minimap, "SetZoom")
 	local zoom = Minimap:GetZoom()
 	if GetCVar("minimapZoom") == GetCVar("minimapInsideZoom") then
 		Minimap:SetZoom(zoom < 2 and zoom + 1 or zoom - 1)
 	end
 	indoors = GetCVar("minimapZoom")+0 == Minimap:GetZoom() and "outdoor" or "indoor"
 	Minimap:SetZoom(zoom)
-	self:DrawMinimapLines(true)
-	self:SecureHook(Minimap, "SetZoom", SetZoomHook)
 end
 
 function Routes:CVAR_UPDATE(event, cvar, value)
@@ -943,17 +952,6 @@ function Routes:CVAR_UPDATE(event, cvar, value)
 		minimap_rotate = value == "1"
 	end
 end
-
-local timerFrame = CreateFrame("Frame")
-timerFrame:Hide()
-timerFrame.elapsed = 0
-timerFrame:SetScript("OnUpdate", function(self, elapsed)
-	self.elapsed = self.elapsed + elapsed
-	if self.elapsed > 0.025 then -- throttle to a max of 40 redraws per sec
-		self.elapsed = 0         -- kinda unnecessary since at default 1 yard refresh, its limited to 36 redraws/sec
-		Routes:DrawMinimapLines()
-	end
-end)
 
 function Routes:OnEnable()
 	-- World Map line drawing

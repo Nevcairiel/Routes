@@ -295,7 +295,7 @@ function TSP:SolveTSP(nodes, metadata, taboos, zonename, parameters, path, nonbl
 	local startTime		= GetTime();
 	local zoneW, zoneH	= Routes.zoneData[zonename][1], Routes.zoneData[zonename][2]
 
-	local INITIAL_PHEROMONE = parameters.initial_pheromone or 0;     -- Parameter: Initial pheromone trail value
+	local INITIAL_PHEROMONE = parameters.initial_pheromone or 0.1;   -- Parameter: Initial pheromone trail value
 	local ALPHA             = parameters.alpha or 1;                 -- Parameter: Likelihood of ants to follow pheromone trails (larger value == more likely)
 	local BETA              = parameters.beta or 6;                  -- Parameter: Likelihood of ants to choose closer nodes (larger value == more likely)
 	local LOCALDECAY        = parameters.local_decay or 0.2;         -- Parameter: Governs local trail decay rate [0, 1]

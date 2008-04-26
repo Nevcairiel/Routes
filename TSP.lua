@@ -320,6 +320,7 @@ function TSP:SolveTSP(nodes, metadata, taboos, zonename, parameters, path, nonbl
 	local phero = newTable();
 	local ants = newTable();
 	local prune = newTable();
+	local antprob = newTable()
 	for i = 1, numNodes do
 		prune[i] = newTable();
 	end
@@ -371,14 +372,15 @@ function TSP:SolveTSP(nodes, metadata, taboos, zonename, parameters, path, nonbl
 				weight[u] = weight[u] * 2 + zoneW
 				weight[v] = weight[u]
 			end
+
+			-- Initialize the probability table of travelling from city i to j
+			antprob[u] = phero[u] ^ ALPHA / weight[u] ^ BETA
+			antprob[v] = antprob[u]
 		end
 	end
 	for k = 1, numAnts do
 		ants[k] = newTable();
-		local ant = ants[k];
-		ant.path = newTable();	-- This table will stores both the partially constructed path (from 1 to j) and the remainder unvisited nodes (from j+1 to N)
-		ant.prob = newTable();	-- This stores the probability to visit each node
-		local antpath = ant.path;
+		local antpath = ants[k];  -- This table will stores both the partially constructed path (from 1 to j) and the remainder unvisited nodes (from j+1 to N)
 		for j = 1, numNodes do
 			antpath[j] = j;
 		end
@@ -397,7 +399,7 @@ function TSP:SolveTSP(nodes, metadata, taboos, zonename, parameters, path, nonbl
 		
 		-- Step 3	- Each ant k starts at a randomly selected node
 		for k = 1, numAnts do
-			local antpath = ants[k].path;
+			local antpath = ants[k];
 			local p = random(numNodes);
 			antpath[1], antpath[p] = antpath[p], antpath[1];
 		end
@@ -407,25 +409,23 @@ function TSP:SolveTSP(nodes, metadata, taboos, zonename, parameters, path, nonbl
 			-- Step 5	- ...for each ant k
 			for k = 1, numAnts do
 				-- Step 6	- Calculate the probability of visiting each remainder node, and the total probability
-				local antpath = ants[k].path;
-				local antprob = ants[k].prob;
+				local antpath = ants[k];
 				local curnode = antpath[j];	-- j is the "current node" index in the path
 				local totalprob = 0;
 				for i = j+1, numNodes do
 					local u = curnode*numNodes-antpath[i];
-					antprob[i] = phero[u] ^ ALPHA / weight[u] ^ BETA;
-					totalprob = totalprob + antprob[i];
+					totalprob = totalprob + antprob[u];
 				end
 				-- Step 7	- Now randomly choose one of these nodes to go to based on the calculated probabilities
 				local p = totalprob * random();
 				totalprob = 0;
 				for i = j+1, numNodes do
-					totalprob = totalprob + antprob[i];
+					local u = curnode*numNodes-antpath[i];
+					totalprob = totalprob + antprob[u];
 					if (p <= totalprob) then
-						local nextnode = antpath[i];
-						antpath[j+1], antpath[i] = nextnode, antpath[j+1];
-						local u = curnode*numNodes-nextnode;
+						antpath[j+1], antpath[i] = antpath[i], antpath[j+1];
 						phero[u] = (1 - LOCALDECAY) * phero[u] + LOCALDECAYUPDATE;	-- Perform local pheromone update
+						antprob[u] = phero[u] ^ ALPHA / weight[u] ^ BETA -- Update the probability
 						break;
 					end
 				end
@@ -437,11 +437,12 @@ function TSP:SolveTSP(nodes, metadata, taboos, zonename, parameters, path, nonbl
 
 		for k = 1, numAnts do
 			-- Step 8	-- Perform local pheromone update on the path from the last node to the first node for each ant k
-			local antpath = ants[k].path;
+			local antpath = ants[k];
 			local curnode = antpath[numNodes];
 			local nextnode = antpath[1];
 			local u = curnode*numNodes-nextnode;
 			phero[u] = (1 - LOCALDECAY) * phero[u] + LOCALDECAYUPDATE;
+			antprob[u] = phero[u] ^ ALPHA / weight[u] ^ BETA
 
 			-- Step 9	-- Perform 2-opt on the path to improve it
 			--[[for i = 1, TWOOPTPASSES do
@@ -484,6 +485,7 @@ function TSP:SolveTSP(nodes, metadata, taboos, zonename, parameters, path, nonbl
 			local nextnode = shortestPath[i];
 			local u = curnode*numNodes-nextnode;
 			phero[u] = (1 - GLOBALDECAY) * phero[u] + tempConstant;
+			antprob[u] = phero[u] ^ ALPHA / weight[u] ^ BETA -- Update the probability
 			curnode = nextnode;
 		end
 	end
@@ -524,6 +526,7 @@ function TSP:SolveTSP(nodes, metadata, taboos, zonename, parameters, path, nonbl
 	delTable(shortestPath);
 	delTable(prune);
 	delTable(nodes2);
+	delTable(antprob)
 	lastpath = nil;
 
 	-- This step is necessary because our pathlength above is calculated from biased data from taboos

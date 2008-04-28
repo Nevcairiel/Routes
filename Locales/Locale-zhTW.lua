@@ -111,16 +111,16 @@ L["ExtractGas"] = "氣雲"
 -- Route Config
 L["When the following data sources add or delete node data, update my routes automatically by inserting or removing the same node in the relevant routes."] = "當下列的資料新增或刪除資源點時自動更新我的路線, 在相近的路線插入新的或刪除重覆的資源點."
 L[" Gatherer currently does not support callbacks, so this is impossible for Gatherer."] = "Gatherer不支援資料恢復"
-L["You have |cFFFFFFFF%d|r route(s) in |cFFFFFFFF%s|r."] = "你有 |cFFFFFFFF%d|r 路線在 |cFFFFFFFF%s|r."
+L["You have |cffffd200%d|r route(s) in |cffffd200%s|r."] = "你有 |cffffd200%d|r 路線在 |cffffd200%s|r."
 L["Information"] = "資訊"
-L["This route has |cFFFFFFFF%d|r nodes and is |cFFFFFFFF%d|r yards long."] = "這路線有 |cFFFFFFFF%d|r 個資源點和總長 |cFFFFFFFF%d|r 碼."
+L["This route has |cffffd200%d|r nodes and is |cffffd200%d|r yards long."] = "這路線有 |cffffd200%d|r 個資源點和總長 |cffffd200%d|r 碼."
 L["This route has nodes that belong to the following categories:"] = "這路線包含以下資源點的種類"
 L["This route contains the following nodes:"] = "這路線包含以下的資源點"
 L["This route is not a clustered route."] = "這不是一條群集資源點的路線"
-L["This route is a clustered route, down from the original |cFFFFFFFF%d|r nodes."] = "這是一條群集資源點的路線, 從本來的 |cFFFFFFFF%d|r 個資源點作精簡處理."
-L["|cFFFFFFFF     %d|r node(s) are between |cFFFFFFFF%d|r-|cFFFFFFFF%d|r yards of a cluster point"] = "資源點群有|cFFFFFFFF     %d|r 個資源點相隔 |cFFFFFFFF%d|r-|cFFFFFFFF%d|r 碼"
-L["|cFFFFFFFF     %d|r node(s) are at |cFFFFFFFF0|r yards of a cluster point"] = "資源點群內有 |cFFFFFFFF     %d|r 個資源點相距 |cFFFFFFFF0|r 碼"
-L["The cluster radius of this route is |cFFFFFFFF%d|r yards."] = "群集資源點的半徑是 |cFFFFFFFF%d|r 碼."
+L["This route is a clustered route, down from the original |cffffd200%d|r nodes."] = "這是一條群集資源點的路線, 從本來的 |cffffd200%d|r 個資源點作精簡處理."
+L["|cffffd200     %d|r node(s) are between |cffffd200%d|r-|cffffd200%d|r yards of a cluster point"] = "資源點群有|cffffd200     %d|r 個資源點相隔 |cffffd200%d|r-|cffffd200%d|r 碼"
+L["|cffffd200     %d|r node(s) are at |cffffd2000|r yards of a cluster point"] = "資源點群內有 |cffffd200     %d|r 個資源點相距 |cffffd2000|r 碼"
+L["The cluster radius of this route is |cffffd200%d|r yards."] = "群集資源點的半徑是 |cffffd200%d|r 碼."
 
 L["Line settings"] = "劃線設定"
 L["These settings control the visibility and look of the drawn route."] = "這設定路線的外觀"
@@ -181,7 +181,7 @@ L["Delete node"] = "刪除資源點"
 L["Add node before (red)"] = "以前新增的資源點 (紅色)"
 L["Add node after (green)"] = "以後新增的資源點 (綠色)"
 L["You may not delete a taboo that is being edited."] = "你不能刪除一個正在編輯中的封鎖區"
-L["TABOO_EDIT_DESC"] = "如要編輯封鎖區, 點擊 |cFFFFFFFFEdit|r 按鈕. 封鎖區會繪畫在世界地圖上. 用拖曳點來定位. 在拖曳點上右擊會新增/刪除拖曳點. 完成編輯後點擊|cFFFFFFFFSave|r 按鈕儲存, 或 |cFFFFFFFFCancel|r按鈕放棄."
+L["TABOO_EDIT_DESC"] = "如要編輯封鎖區, 點擊 |cffffd200Edit|r 按鈕. 封鎖區會繪畫在世界地圖上. 用拖曳點來定位. 在拖曳點上右擊會新增/刪除拖曳點. 完成編輯後點擊|cffffd200Save|r 按鈕儲存, 或 |cffffd200Cancel|r按鈕放棄."
 L["Edit taboo region"] = "編輯封鎖區"
 L["Edit this taboo region on the world map"] = "在世界地圖上編輯這封鎖區"
 L["Save taboo edit"] = "儲存封鎖區的編輯"
@@ -201,59 +201,67 @@ L["Taboos in %s"] = "封鎖區位於%s"
 L["A taboo with that name already exists. Overwrite?"] = "已有同名的封鎖區, 要覆寫嗎?"
 L["This route has the following taboo regions:"] = "這路線含有下列封鎖區"
 L["This route has no taboo regions."] = "這路線沒有封鎖區"
-L["This route contains |cFFFFFFFF%d|r nodes that have been tabooed."] = "這路線含有 |cFFFFFFFF%d|r 被禁寫的資源點."
+L["This route contains |cffffd200%d|r nodes that have been tabooed."] = "這路線含有 |cffffd200%d|r 被禁寫的資源點."
 L["TABOO_DESC2"] = "封鎖區可令路線忽略區內的資源點. 當優化路線時, 優化程序會盡量避免把路線穿越封鎖區."
 L["Taboos"] = "封鎖區"
 L["Select taboo regions to apply:"] = "選擇要套用的封鎖區"
-L["You have |cFFFFFFFF%d|r taboo region(s) in |cFFFFFFFF%s|r."] = "你有 |cFFFFFFFF%d|r 個封鎖區在 |cFFFFFFFF%s|r."
+L["You have |cffffd200%d|r taboo region(s) in |cffffd200%s|r."] = "你有 |cffffd200%d|r 個封鎖區在 |cffffd200%s|r."
 
 -- FAQ
 L["FAQ"] = true
 L["Frequently Asked Questions"] = "常見問題"
 L["FAQ_TEXT"] = [[
-|cFFFFFFFF
+|cffffd200
 當我試圖創建路線，它說沒發現數據。我有什麼做得不對呢？
 |r
 它的意思是：真的沒發現數據，多數原因是因為數據插件沒有載入或在待機模式。如果你使用的任何一項 |cffffff78Cartographer_<Profession>|r 組件，這些組件必須啟動，並使它進入運行模式。
 
 注意 |cffffff78Cartographer_Professions|r 組件都是依需求載入的插件，並且要把 |cffffff78Cartographer_<Profession>|r 設定在啟動狀態。
-|cFFFFFFFF
+
+|cffffd200
 我創建了一條豐沃的堅鋼礦脈路線. 但當我在同一地點發現普通的堅鋼礦脈, GatherMate/Cartographer 會刪除豐沃的堅鋼礦脈資源點而替換成為普通的堅鋼礦脈. 這會令該資源點從我的豐沃的堅鋼礦脈路線上被移除. 可有什麼解決方法?
 |r
 1. 你可以創建了一條包含豐沃的和普通的堅鋼礦脈路線.
 
 2. 你可以將GatherMate程式設定為不自動插入/刪除資源點. 這選項可在GatherMate程式的基本選項裡找到. Cartographer應有近像的選項, 請自行找找.
-|cFFFFFFFF
+
+|cffffd200
 請問可否加入如進度條來顯示優化路線時所需的時間?
 |r
 優化路線進程是不可能用進度條來顯示的, 因為這不是採用線性演算法. 進程是使用"多次操作"原理，經多次操作後改善路線，直至改善可能性太過微不足道才會停止演算.
 
 這有點像 |cffffff78視窗 XP 磁盤重組|r 工具, 其進度條是無意義的, 因為它只顯示每一次操作的進度百份比, 但不能確定顯示所需要進行的操作次數, 可能是 3 次, 也可能是 10 次, 它只會在它認為足夠才會停下來. 所以在 |cffffff78Vista|r 版本裡, 進度條不再存在了.
-|cFFFFFFFF
+
+|cffffd200
 請問會否加入對Gatherer的支援或任務插件的地點支援呢?
 |r
 對 |cffffff78Gatherer|r 的支援是極有可能, 關於任務的也在考慮當中.
-|cFFFFFFFF
+
+|cffffd200
 Routes 是怎樣將路線的優化的?
 |r
 Routes 使用一種稱為 |cffffff78蟻群算法|r (ACO) 的計算方法, 這是一種基於從觀察現實生活中螞蟻的行為而開發出來的計算方法, 用以計算出最佳方案 .
 
 ACO 蟻群算法是 |cffffff78旅行推銷員|r (TSP) 的最近似完美的解決方案. 如欲了解更多，請查詢 Google 或 Wikipedia.
-|cFFFFFFFF
+
+|cffffd200
 "加強優化"這個選項實際是會做什麼的?
 |r
 在預設中, 我們只用 ACO 加上基本 |cffffff782-opt algorithm|r 來優化路線. 當啟用"加強優化"時, Routes 會同時使用 2.5-opt, 這是 3-opt 的專用子集. 2-opt 在過程中作出邊緣交換 (A-B 和 C-D 變成 A-C 和 B-D) 來產生更短的路線.
-|cFFFFFFFF
+
+|cffffd200
 結集資源點是用什麼計算方法的?
 |r
 我們採用 多層次 集聚聚類算法 並用更進取的方法，來增強演算結果的確定性.
-|cFFFFFFFF
+
+|cffffd200
 我建立了一個封鎖區, 套用在路線裡並將它優化. 為何我的路線仍是會穿越封鎖區?
 |r
 這是因為不一定可找到不穿越封鎖區的路線, 或有時根本不可能做得到.
 
 用戶可以創造多個封鎖區來區分地圖上的不可逾越的路段和地區 令算法可傾向簡單地避免穿越他們.
-|cFFFFFFFF
+
+|cffffd200
 我發現有臭蟲! 在那裡可以舉報?
 |r
 你可以在 |cffffff78http://www.wowace.com/forums/index.php?topic=10992.0|r 裡貼文關於臭蟲或建議(不過要用英文).
@@ -261,7 +269,8 @@ ACO 蟻群算法是 |cffffff78旅行推銷員|r (TSP) 的最近似完美的解�
 另外, 你可以 |cffffff78irc://irc.freenode.org/wowace|r 找到我們(也是要用英文).
 
 當舉報臭蟲時, 請詳細說明 |cffffff78引至錯誤的動作|r, 盡可能提供 |cffffff78error messages|r 有關的線索, 使用 |cffffff78板本|r 和你在在使用什麼語言系統 |cffffff78英文或其它語言|r.
-|cFFFFFFFF
+
+|cffffd200
 誰人製作這超酷的插件?
 |r
 |cffffff78Xaros|r on EU Doomhammer Alliance & |cffffff78Xinhuan|r on US Blackrock Alliance 一同製作.

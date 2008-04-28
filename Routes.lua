@@ -836,7 +836,7 @@ local function GetZoneDescText(info)
 			count = count + 1
 		end
 	end
-	return L["You have |cFFFFFFFF%d|r route(s) in |cFFFFFFFF%s|r."]:format(count, Routes.zoneMapFile[info.arg])
+	return L["You have |cffffd200%d|r route(s) in |cffffd200%s|r."]:format(count, Routes.zoneMapFile[info.arg])
 end
 local function GetZoneTabooDescText(info)
 	local count = 0
@@ -845,7 +845,7 @@ local function GetZoneTabooDescText(info)
 			count = count + 1
 		end
 	end
-	return L["You have |cFFFFFFFF%d|r taboo region(s) in |cFFFFFFFF%s|r."]:format(count, Routes.zoneMapFile[info.arg])
+	return L["You have |cffffd200%d|r taboo region(s) in |cffffd200%s|r."]:format(count, Routes.zoneMapFile[info.arg])
 end
 
 
@@ -1317,7 +1317,7 @@ end
 
 function ConfigHandler.GetRouteDesc(info)
 	local t = db.routes[info.arg.zone][info.arg.route]
-	return L["This route has |cFFFFFFFF%d|r nodes and is |cFFFFFFFF%d|r yards long."]:format(#t.route, t.length)
+	return L["This route has |cffffd200%d|r nodes and is |cffffd200%d|r yards long."]:format(#t.route, t.length)
 end
 
 function ConfigHandler.GetShortClusterDesc(info)
@@ -1329,13 +1329,13 @@ function ConfigHandler.GetShortClusterDesc(info)
 	for i = 1, #t.metadata do
 		numNodes = numNodes + #t.metadata[i]
 	end
-	return L["This route is a clustered route, down from the original |cFFFFFFFF%d|r nodes."]:format(numNodes)
+	return L["This route is a clustered route, down from the original |cffffd200%d|r nodes."]:format(numNodes)
 end
 
 function ConfigHandler.GetRouteClusterRadiusDesc(info)
 	local t = db.routes[info.arg.zone][info.arg.route]
 	if t.metadata then
-		return L["The cluster radius of this route is |cFFFFFFFF%d|r yards."]:format(t.cluster_dist or 65) -- 65 was an old default
+		return L["The cluster radius of this route is |cffffd200%d|r yards."]:format(t.cluster_dist or 65) -- 65 was an old default
 	end
 end
 
@@ -1348,14 +1348,14 @@ do
 		str[num] = L["This route has nodes that belong to the following categories:"]
 		for k in pairs(t.db_type) do
 			num = num + 1
-			str[num] = "|cFFFFFFFF     "..L[k].."|r"
+			str[num] = "|cffffd200     "..L[k].."|r"
 		end
 		num = num + 1
 		str[num] = L["This route contains the following nodes:"]
 		for k, v in pairs(t.selection) do
 			num = num + 1
 			if v == true then v = k end
-			str[num] = "|cFFFFFFFF     "..v.."|r"
+			str[num] = "|cffffd200     "..v.."|r"
 		end
 		return table.concat(str, "\n")
 	end
@@ -1386,11 +1386,11 @@ do
 			end
 		end
 		for i = 0, maxt do
-			str[i+4] = L["|cFFFFFFFF     %d|r node(s) are between |cFFFFFFFF%d|r-|cFFFFFFFF%d|r yards of a cluster point"]:format(data[i] or 0, i*10+1, i*10+10)
+			str[i+4] = L["|cffffd200     %d|r node(s) are between |cffffd200%d|r-|cffffd200%d|r yards of a cluster point"]:format(data[i] or 0, i*10+1, i*10+10)
 		end
-		str[1] = L["This route is a clustered route, down from the original |cFFFFFFFF%d|r nodes."]:format(numNodes)
-		str[2] = L["The cluster radius of this route is |cFFFFFFFF%d|r yards."]:format(t.cluster_dist or 65) -- 65 was an old default
-		str[3] = L["|cFFFFFFFF     %d|r node(s) are at |cFFFFFFFF0|r yards of a cluster point"]:format(data[-1] or 0)
+		str[1] = L["This route is a clustered route, down from the original |cffffd200%d|r nodes."]:format(numNodes)
+		str[2] = L["The cluster radius of this route is |cffffd200%d|r yards."]:format(t.cluster_dist or 65) -- 65 was an old default
+		str[3] = L["|cffffd200     %d|r node(s) are at |cffffd2000|r yards of a cluster point"]:format(data[-1] or 0)
 		return table.concat(str, "\n")
 	end
 
@@ -1402,7 +1402,7 @@ do
 		for k, v in pairs(t.taboos) do
 			if v then
 				num = num + 1
-				str[num] = "|cFFFFFFFF     "..k.."|r"
+				str[num] = "|cffffd200     "..k.."|r"
 			else
 				t.taboos[k] = nil -- set the false value to nil, so we don't pairs() over it in the future
 			end
@@ -1411,7 +1411,7 @@ do
 			str[num] = L["This route has no taboo regions."]
 		end
 		num = num + 1
-		str[num] = L["This route contains |cFFFFFFFF%d|r nodes that have been tabooed."]:format(#t.taboolist)
+		str[num] = L["This route contains |cffffd200%d|r nodes that have been tabooed."]:format(#t.taboolist)
 		return table.concat(str, "\n")
 	end
 end

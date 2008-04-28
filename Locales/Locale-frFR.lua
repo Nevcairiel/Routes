@@ -111,16 +111,16 @@ L["ExtractGas"] = "Gaz"
 -- Route Config
 L["When the following data sources add or delete node data, update my routes automatically by inserting or removing the same node in the relevant routes."] = "Quand les sources de données suivantes ajoutent ou suppriment des données d'un nœud, mettre à jour automatiquement mes routes en insérant ou en enlevant ce même nœud des routes appropriées."
 L[" Gatherer currently does not support callbacks, so this is impossible for Gatherer."] = " Gatherer ne supporte pas actuellement les callbacks, c'est donc impossible avec cet addon."
-L["You have |cFFFFFFFF%d|r route(s) in |cFFFFFFFF%s|r."] = "Vous avez |cFFFFFFFF%d|r route(s) dans |cFFFFFFFF%s|r."
+L["You have |cffffd200%d|r route(s) in |cffffd200%s|r."] = "Vous avez |cffffd200%d|r route(s) dans |cffffd200%s|r."
 L["Information"] = "Informations"
-L["This route has |cFFFFFFFF%d|r nodes and is |cFFFFFFFF%d|r yards long."] = "Cette route contient |cFFFFFFFF%d|r nœuds et est longue de |cFFFFFFFF%d|r mètres."
+L["This route has |cffffd200%d|r nodes and is |cffffd200%d|r yards long."] = "Cette route contient |cffffd200%d|r nœuds et est longue de |cffffd200%d|r mètres."
 L["This route has nodes that belong to the following categories:"] = "Cette route contient des nœuds des catégories suivantes :"
 L["This route contains the following nodes:"] ="Cette route contient les nœuds suivants :"
 L["This route is not a clustered route."] = "Cette route n'est pas une route d'agrégation."
-L["This route is a clustered route, down from the original |cFFFFFFFF%d|r nodes."] = "Cette route est une route d'agrégation (|cFFFFFFFF%d|r nœuds à l'origine)."
-L["|cFFFFFFFF     %d|r node(s) are between |cFFFFFFFF%d|r-|cFFFFFFFF%d|r yards of a cluster point"] = "|cFFFFFFFF     %d|r nœud(s) sont entre |cFFFFFFFF%d|r et |cFFFFFFFF%d|r mètres d'un point d'agrégation."
-L["|cFFFFFFFF     %d|r node(s) are at |cFFFFFFFF0|r yards of a cluster point"] = "|cFFFFFFFF     %d|r nœud(s) sont à |cFFFFFFFF0|r mètres d'un point d'agrégation."
-L["The cluster radius of this route is |cFFFFFFFF%d|r yards."] = "Le rayon d'agrégation de cette route est de |cFFFFFFFF%d|r mètres."
+L["This route is a clustered route, down from the original |cffffd200%d|r nodes."] = "Cette route est une route d'agrégation (|cffffd200%d|r nœuds à l'origine)."
+L["|cffffd200     %d|r node(s) are between |cffffd200%d|r-|cffffd200%d|r yards of a cluster point"] = "|cffffd200     %d|r nœud(s) sont entre |cffffd200%d|r et |cffffd200%d|r mètres d'un point d'agrégation."
+L["|cffffd200     %d|r node(s) are at |cffffd2000|r yards of a cluster point"] = "|cffffd200     %d|r nœud(s) sont à |cffffd2000|r mètres d'un point d'agrégation."
+L["The cluster radius of this route is |cffffd200%d|r yards."] = "Le rayon d'agrégation de cette route est de |cffffd200%d|r mètres."
 
 L["Line settings"] = "Paramètres des lignes"
 L["These settings control the visibility and look of the drawn route."] = "Ces paramètres contrôlent la visibilité et le look des routes dessinées."
@@ -181,7 +181,7 @@ L["Delete node"] = "Supprimer le nœud"
 L["Add node before (red)"] = "Ajouter un nœud avant (rouge)"
 L["Add node after (green)"] = "Ajouter un nœud après (vert)"
 L["You may not delete a taboo that is being edited."] = "Vous ne pouvez pas supprimer un tabou en cours d'édition."
-L["TABOO_EDIT_DESC"] = "Pour éditer une région taboue, cliquez sur le bouton |cFFFFFFFFÉditer|r. La région taboue sera dessinée sur la carte du monde. Saisissez les sommets pour les positionner. Clic-droit sur les sommets pour en ajouter ou en supprimer. Après l'édition, il suffit de cliquer sur le bouton |cFFFFFFFFSauver|r pour sauvegarder vos changements, ou le bouton |cFFFFFFFFAnnuler|r pour annuler vos changements."
+L["TABOO_EDIT_DESC"] = "Pour éditer une région taboue, cliquez sur le bouton |cffffd200Éditer|r. La région taboue sera dessinée sur la carte du monde. Saisissez les sommets pour les positionner. Clic-droit sur les sommets pour en ajouter ou en supprimer. Après l'édition, il suffit de cliquer sur le bouton |cffffd200Sauver|r pour sauvegarder vos changements, ou le bouton |cffffd200Annuler|r pour annuler vos changements."
 L["Edit taboo region"] = "Éditer la région taboue"
 L["Edit this taboo region on the world map"] = "Édite cette région taboue sur la carte du monde."
 L["Save taboo edit"] = "Sauver l'édition du tabou"
@@ -201,59 +201,67 @@ L["Taboos in %s"] = "Tabous dans %s"
 L["A taboo with that name already exists. Overwrite?"] = "Un taboo de ce nom existe déjà. L'écraser ?"
 L["This route has the following taboo regions:"] = "Cette route contient les régions taboues suivantes :"
 L["This route has no taboo regions."] = "Cette route n'a pas de région taboue."
-L["This route contains |cFFFFFFFF%d|r nodes that have been tabooed."] = "Cette route contient |cFFFFFFFF%d|r nœuds qui sont taboues."
+L["This route contains |cffffd200%d|r nodes that have been tabooed."] = "Cette route contient |cffffd200%d|r nœuds qui sont taboues."
 L["TABOO_DESC2"] = "Les régions taboues sont des zones que vous spécifiez qu'une route doit ignorer. Les nœuds de ces régions taboues sont ignorés et ne sont pas intégrés dans une route. De plus, lors de l'optimisation d'une route, la route générée tentera d'éviter de traverser n'importe quelle région taboue si cela possible."
 L["Taboos"] = "Tabous"
 L["Select taboo regions to apply:"] = "Sélectionnez les régions taboues à appliquer :"
-L["You have |cFFFFFFFF%d|r taboo region(s) in |cFFFFFFFF%s|r."] = "Vous avez |cFFFFFFFF%d|r région(s) taboue(s) dans |cFFFFFFFF%s|r."
+L["You have |cffffd200%d|r taboo region(s) in |cffffd200%s|r."] = "Vous avez |cffffd200%d|r région(s) taboue(s) dans |cffffd200%s|r."
 
 -- FAQ
 L["FAQ"] = "FAQ"
 L["Frequently Asked Questions"] = "Foire aux questions"
 L["FAQ_TEXT"] = [[
-|cFFFFFFFF
+|cffffd200
 Quand je tente de créer une route, l'addon m'indique qu'aucune donnée n'a été trouvée. Où me suis-je trompé ?
 |r
 Cela signifie ce que cela dit : aucune donnée n'a été trouvée, sûrement parce que l'addon n'est pas chargé ou en mode veille. Si vous utilisez un des modules |cffffff78Cartographer_<Métier>|r, il faut alors que ces modules soient chargés et actifs pour que les données soient disponibles.
 
 Notez que les modules |cffffff78Cartographer_<Métier>|r sont tous des addons chargeables à la demande et nécessitent |cffffff78Cartographer_Professions|r pour être chargés.
-|cFFFFFFFF
+
+|cffffd200
 J'ai créé une route contenant des riches gisements d'adamantite. Quand je trouve un gisement d'adamantite normal au même endroit qu'un riche, GatherMate/Cartographer supprime le nœud riche et le remplace par un nœud normal. Cela a pour effet d'enlever le nœud de ma route puisque cette dernière est construite à partir des noeuds riches. Que puis-je faire ?
 |r
 1. Faites une route contenant les deux types de gisement d'adamantite.
 
 2. Demandez à Routes ne pas ajouter/supprimer automatiquement les nœuds. Cette option se trouve dans les options racine de l'arborescence dans la fenêtre de configuration.
-|cFFFFFFFF
+
+|cffffd200
 Pouvez-vous ajouter un indicateur de progression afin de connaître la durée de l'optimisation de la route en arrière-plan ?
 |r
 Cela n'est pas possible étant donné qu'il s'agit d'un algorithme non-linéaire. Il fonctionne selon le principe des "passes multiples", chaque passe améliore la passe précédente jusqu'au point où les améliorations sont tellement infimes qu'il est inutile de continuer.
-|cFFFFFFFF
+
+|cffffd200
 Comment Routes effectue-t-il ses optimisations des routes ?
 |r
 Routes utilise un algorithme appelé |cffffff78Algorithme de colonies de fourmis|r, une méthode heuristique/probabiliste de calcul des graphes optimaux basé sur le comportement observé de ces insectes dans la vie réelle.
 
 Les algorithmes ACO ont été utilisés pour produire des solutions quasi-optimales au |cffffff78problème du voyageur de commerce|r. Pour plus d'informations, consultez Google ou Wikipedia.
-|cFFFFFFFF
+
+|cffffd200
 Quel est l'effet de l'option "Extra optimisation" ?
 |r
 Par défaut, nous utilisons seulement l'ACO couplé à |cffffff78l'algorithme 2-opt|r standard pour optimiser les routes. Activer "Extra optimisation" permet de demander à Routes d'utiliser également 2.5-opt, qui est un sous-ensemble de 3-opt. 2-opt est le processus où les couples des extrémités sont échangés (A-B et C-D deviennent A-C et B-D) afin de produire des routes plus courtes.
-|cFFFFFFFF
+
+|cffffd200
 Quel type d'algorithme est utilisé pour l'agrégation des nœuds ?
 |r
 Nous employons un algorithme HAC (Hierarchical Agglomerative Clustering) en utilisant une approche greedy, la sortie est donc déterministe.
-|cFFFFFFFF
+
+|cffffd200
 J'ai créée une région taboue que j'ai attachée à une route, et j'ai optimisé cette dernière. Pourtant, ma route traverse la région taboue. Pourquoi ?
 |r
 Il n'est pas possible ou extrêmement difficile de trouver à chaque fois une route qui ne traverse pas une région taboue.
 
 L'utilisateur peut s'il le souhaite créer des régions taboues qui coupent la carte en des sections infranchissables, ainsi l'algorithme est tout simplement obligé de ne pas les traverser si cela est possible.
-|cFFFFFFFF
+
+|cffffd200
 J'ai trouvé un bogue ! Où puis-je le signaler ?
 |r
 Sur |cffffff78http://www.wowace.com/forums/index.php?topic=10992.0|r ou sur |cffffff78irc://irc.freenode.org/wowace|r
 
 Quand vous voulez signaler un bogue, essayez de fournir les |cffffff78étapes à suivre pour reproduire ce bogue|r, indiquez les |cffffff78messages d'erreur|r que vous avez vus, donnez le |cffffff78numéro de révision|r de Routes où le problème a été découvert et précisez également la |cffffff78langue de votre jeu|r.
-|cFFFFFFFF
+
+|cffffd200
 Qui a écrit cet addon qui déchire ?
 |r
 |cffffff78Xaros|r (Alliance - EU Doomhammer) & |cffffff78Xinhuan|r (Alliance - US Blackrock) en sont les auteurs.

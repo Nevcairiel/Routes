@@ -111,16 +111,16 @@ L["ExtractGas"] = "Gas"
 -- Route Config
 L["When the following data sources add or delete node data, update my routes automatically by inserting or removing the same node in the relevant routes."] = "Wenn die folgenden Datenquellen Knotenpunkte hinzufügen oder entfernen, aktualisiere meine Routen indem diese Knotenpunkte in den relevanten Routen hinzugefügt oder entfernt werden"
 L[" Gatherer currently does not support callbacks, so this is impossible for Gatherer."] = " Gatherer unterstützt momentan keine Callbacks, also ist dies unmöglich für Gatherer" 
-L["You have |cFFFFFFFF%d|r route(s) in |cFFFFFFFF%s|r."] = "Sie haben |cFFFFFFFF%d|r Route(n) in |cFFFFFFFF%s|r."
+L["You have |cffffd200%d|r route(s) in |cffffd200%s|r."] = "Sie haben |cffffd200%d|r Route(n) in |cffffd200%s|r."
 L["Information"] = true
-L["This route has |cFFFFFFFF%d|r nodes and is |cFFFFFFFF%d|r yards long."] = "Diese Route hat |cFFFFFFFF%d|r Knotenpunkte und ist |cFFFFFFFF%d|r yards lang."
+L["This route has |cffffd200%d|r nodes and is |cffffd200%d|r yards long."] = "Diese Route hat |cffffd200%d|r Knotenpunkte und ist |cffffd200%d|r yards lang."
 L["This route has nodes that belong to the following categories:"] = "Diese Route enthält Knotenpunkte folgender Kategorien:"
 L["This route contains the following nodes:"] = "Diese Route enthält folgende Knotenpunkte:"
 L["This route is not a clustered route."] = "Diese Route enthält keine Anhäufungen"
-L["This route is a clustered route, down from the original |cFFFFFFFF%d|r nodes."] = "Diese Route enthält Anhäufungen aus den originalen |cFFFFFFFF%d|r Knotenpunkten."
-L["|cFFFFFFFF     %d|r node(s) are between |cFFFFFFFF%d|r-|cFFFFFFFF%d|r yards of a cluster point"] = "|cFFFFFFFF     %d|r Knotenpunkt(e) sind zwischen |cFFFFFFFF%d|r-|cFFFFFFFF%d|r Yards des Anhäufungspunkts"
-L["|cFFFFFFFF     %d|r node(s) are at |cFFFFFFFF0|r yards of a cluster point"] = "|cFFFFFFFF     %d|r Knotenpunkt(e) sind bei |cFFFFFFFF0|r Yards des Anhäufungspunkts"
-L["The cluster radius of this route is |cFFFFFFFF%d|r yards."] = "Der Anhäufungsradius dieser Route ist |cFFFFFFFF%d|r Yards."
+L["This route is a clustered route, down from the original |cffffd200%d|r nodes."] = "Diese Route enthält Anhäufungen aus den originalen |cffffd200%d|r Knotenpunkten."
+L["|cffffd200     %d|r node(s) are between |cffffd200%d|r-|cffffd200%d|r yards of a cluster point"] = "|cffffd200     %d|r Knotenpunkt(e) sind zwischen |cffffd200%d|r-|cffffd200%d|r Yards des Anhäufungspunkts"
+L["|cffffd200     %d|r node(s) are at |cffffd2000|r yards of a cluster point"] = "|cffffd200     %d|r Knotenpunkt(e) sind bei |cffffd2000|r Yards des Anhäufungspunkts"
+L["The cluster radius of this route is |cffffd200%d|r yards."] = "Der Anhäufungsradius dieser Route ist |cffffd200%d|r Yards."
 
 L["Line settings"] = "Linieneinstellungen"
 L["These settings control the visibility and look of the drawn route."] = "Diese Einstellungen kontrollieren die Sichtbarkeit und das Aussehen der gezeichneten Route"
@@ -179,49 +179,57 @@ L["Direction changed"] = "Richtung geändert"
 L["FAQ"] = true
 L["Frequently Asked Questions"] = true
 L["FAQ_TEXT"] = [[
-|cFFFFFFFF
+|cffffd200
 Wenn ich versuche eine Route zu erstellen bekomme ich die Meldung, dass keine Daten gefunden wurden. Was mache ich falsch?
 |r
 Es bedeutet genau das: Es wurden keine Daten gefunden, meistens weil das Addon nicht geladen oder im Standby Modus ist. Wenn Sie eines der |cffffff78Cartographer_<Beruf>|r Module benutzen, müssen diese Module geladen und aktiviert sein um Daten verfügbar zu machen.
 
 Bitte beachten Sie, dass alle |cffffff78Cartographer_<Beruf>|r Module nur bei Bedarf geladen werden und |cffffff78Cartographer_Professions|r vorraussetzen um aktiviert zu werden.
-|cFFFFFFFF
+
+|cffffd200
 I made a route with Rich Adamantite Ore in it. When I find normal Adamantite Ore in the same place, GatherMate/Cartographer deletes the rich node and replaces it with a normal node. This removes the node from my route since it is contructed out of only rich nodes. What can I do?
 |r
 1. You can make a route with both rich and normal Adamantite Ore in it.
 
 2. You can tell Routes not to automatically insert/delete nodes. This option is found in the root options of the Routes tree in the config screen.
-|cFFFFFFFF
+
+|cffffd200
 Könnt ihr einen Fortschrittsbalken einfügen, der anzeigt wie lange die Hintergrundoptimierung einer Route noch dauert?
 |r
 Nein, das ist leider nicht möglich, da der Optimierungsprozess ein nicht-linearer Algorithmus ist. Er funktioniert auf einer mehrflutigen Basis dessen Optimierungen immer auf der Vorrangegangenen aufbaut, bis er einen Punkt erreicht hat an dem die Verbesserungen zu gering wären.
 
 Das ist ein bisschen so wie das |cffffff78Windows XP Festplatten Defragmentierungs|r Programm und dessen Fortschrittsbalken, der auch sinnlos ist, da er nur die % jedes Durchgangs anzeigt, aber nicht weiß wieviele Durchgänge es benötigt. Es könnten 3 Durchgänge oder auch 10 sein. Er hört auf wenn er denkt, dass er genug getan hat. Aus diesem Grund gibt es in der |cffffff78Vista|r Version keinen Fortschrittsbalken mehr.
-|cFFFFFFFF
+
+|cffffd200
 Plant ihr auch Gatherer oder Addons mit Questnotizen zu unterstützen?
 |r
 Im Falle von |cffffff78Gatherer|r gibt es ein klares Ja und ein Vielleicht fürs Questen.
-|cFFFFFFFF
+
+|cffffd200
 Wie führt Routes die Routenoptimierung aus?
 |r
 Routes benutzt einen |cffffff78Ant Colony Optimization|r (ACO) genannten Algorithmus, der eine Methode zur heuristischen/wahrscheinlichkeitstheoretischen Berechnung für optimale Graphen, basierend auf den Beobachtungen des Verhaltens von Ameisen aus dem echten Leben, darstellt.
 
 ACO Algorithmen wurden dazu benutzt um fast optimale Lösungen für das |cffffff78Traveling Salesman Problem|r (TSP) zu finden. Für weitere Informationen, befragen Sie bitte Google oder Wikipedia.
-|cFFFFFFFF
+
+|cffffd200
 Was macht die "Extra Optimierung" Option?
 |r
 Standardmäßig benutzen wir ACO nur mit dem Standard |cffffff782-opt Algorithmus|r um Routen zu optimieren. Wenn Sie "Extra Optimierung" anschalten, wird Routes auch 2.5-opt verwenden, der eine spezielle Untermenge von 3-opt ist. 2-opt ist der Prozess bei dem paarweise angeordnete Ecken ausgetauscht werden (A-B und C-D werden zu A-C und B-D) um kürzere Routen zu produzieren.
-|cFFFFFFFF
+
+|cffffd200
 What algorithm does node clustering use?
 |r
 We employ a Hierarchical Agglomerative Clustering algorithm using a greedy approach, so the output is deterministic.
-|cFFFFFFFF
+
+|cffffd200
 I created a taboo region, attached it to a route, and optimized it. My route still flies through the taboo region. Why?
 |r
 It is not possible to always find a route that does not fly through a taboo region or sometimes highly unfeasible to do so.
 
 The user could potentially create taboo regions that split the map into impassable sections and regions, so the algorithm is simply biased not to pass through them if it is possible.
-|cFFFFFFFF
+
+|cffffd200
 Ich habe einen Fehler gefunden! Wo kann ich ihn melden?
 |r
 Hier können Sie Fehler melden oder Vorschläge abgeben: |cffffff78http://www.wowace.com/forums/index.php?topic=10992.0|r
@@ -229,7 +237,8 @@ Hier können Sie Fehler melden oder Vorschläge abgeben: |cffffff78http://www.wo
 Alternativ finden Sie uns auch auf |cffffff78irc://irc.freenode.org/wowace|r
 
 Wenn Sie einen Fehler melden, fügen Sie bitte die |cffffff78nötigen Schritte an, die dazu nötig sind den Fehler zu reproduzieren|r. Geben Sie wenn möglich alle|cffffff78Fehlermeldungen|r mit Stapelspeicherverfolgungen, die |cffffff78Revisions Nummer|r von Routes, in der das Problem auftrat, sowie die |cffffff78Sprachversion ihres WoW-Spiels|r an.
-|cFFFFFFFF
+
+|cffffd200
 Wer hat dieses coole Addon geschrieben?
 |r
 |cffffff78Xaros|r von EU Doomhammer Allianz & |cffffff78Xinhuan|r von US Blackrock Allianz waren es.

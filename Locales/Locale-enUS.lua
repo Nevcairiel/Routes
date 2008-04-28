@@ -111,16 +111,16 @@ L["ExtractGas"] = "Gas"
 -- Route Config
 L["When the following data sources add or delete node data, update my routes automatically by inserting or removing the same node in the relevant routes."] = true
 L[" Gatherer currently does not support callbacks, so this is impossible for Gatherer."] = true
-L["You have |cFFFFFFFF%d|r route(s) in |cFFFFFFFF%s|r."] = true
+L["You have |cffffd200%d|r route(s) in |cffffd200%s|r."] = true
 L["Information"] = true
-L["This route has |cFFFFFFFF%d|r nodes and is |cFFFFFFFF%d|r yards long."] = true
+L["This route has |cffffd200%d|r nodes and is |cffffd200%d|r yards long."] = true
 L["This route has nodes that belong to the following categories:"] = true
 L["This route contains the following nodes:"] = true
 L["This route is not a clustered route."] = true
-L["This route is a clustered route, down from the original |cFFFFFFFF%d|r nodes."] = true
-L["|cFFFFFFFF     %d|r node(s) are between |cFFFFFFFF%d|r-|cFFFFFFFF%d|r yards of a cluster point"] = true
-L["|cFFFFFFFF     %d|r node(s) are at |cFFFFFFFF0|r yards of a cluster point"] = true
-L["The cluster radius of this route is |cFFFFFFFF%d|r yards."] = true
+L["This route is a clustered route, down from the original |cffffd200%d|r nodes."] = true
+L["|cffffd200     %d|r node(s) are between |cffffd200%d|r-|cffffd200%d|r yards of a cluster point"] = true
+L["|cffffd200     %d|r node(s) are at |cffffd2000|r yards of a cluster point"] = true
+L["The cluster radius of this route is |cffffd200%d|r yards."] = true
 
 L["Line settings"] = true
 L["These settings control the visibility and look of the drawn route."] = true
@@ -181,7 +181,7 @@ L["Delete node"] = true
 L["Add node before (red)"] = true
 L["Add node after (green)"] = true
 L["You may not delete a taboo that is being edited."] = true
-L["TABOO_EDIT_DESC"] = "To edit a taboo region, click on the |cFFFFFFFFEdit|r button. The taboo region will be drawn on the World Map. Drag the vertexes to position them. Right click on the vertexes to add or delete vertexes. After editing, you may click the |cFFFFFFFFSave|r button to save your changes, or the |cFFFFFFFFCancel|r button to discard your changes."
+L["TABOO_EDIT_DESC"] = "To edit a taboo region, click on the |cffffd200Edit|r button. The taboo region will be drawn on the World Map. Drag the vertexes to position them. Right click on the vertexes to add or delete vertexes. After editing, you may click the |cffffd200Save|r button to save your changes, or the |cffffd200Cancel|r button to discard your changes."
 L["Edit taboo region"] = true
 L["Edit this taboo region on the world map"] = true
 L["Save taboo edit"] = true
@@ -201,59 +201,67 @@ L["Taboos in %s"] = true
 L["A taboo with that name already exists. Overwrite?"] = true
 L["This route has the following taboo regions:"] = true
 L["This route has no taboo regions."] = true
-L["This route contains |cFFFFFFFF%d|r nodes that have been tabooed."] = true
+L["This route contains |cffffd200%d|r nodes that have been tabooed."] = true
 L["TABOO_DESC2"] = "Taboo regions are areas you specify for a route to ignore. Nodes in these taboo regions are ignored and not included in a route. Additionally when optimizing a route, the generated route will attempt to avoid crossing any taboo regions if possible."
 L["Taboos"] = true
 L["Select taboo regions to apply:"] = true
-L["You have |cFFFFFFFF%d|r taboo region(s) in |cFFFFFFFF%s|r."] = true
+L["You have |cffffd200%d|r taboo region(s) in |cffffd200%s|r."] = true
 
 -- FAQ
 L["FAQ"] = true
 L["Frequently Asked Questions"] = true
 L["FAQ_TEXT"] = [[
-|cFFFFFFFF
+|cffffd200
 When I try to create a route, it says no data is found. What am I doing wrong?
 |r
 It means exactly that: No data is found, mostly because the addon is not loaded or in standby mode. If you are using any of the |cffffff78Cartographer_<Profession>|r modules, then these modules must be loaded and active for data to be available.
 
 Note that |cffffff78Cartographer_<Profession>|r modules are all Load on Demand addons and require |cffffff78Cartographer_Professions|r to be enabled as it is the loading stub.
-|cFFFFFFFF
+
+|cffffd200
 I made a route with Rich Adamantite Ore in it. When I find normal Adamantite Ore in the same place, GatherMate/Cartographer deletes the rich node and replaces it with a normal node. This removes the node from my route since it is contructed out of only rich nodes. What can I do?
 |r
 1. You can make a route with both rich and normal Adamantite Ore in it.
 
 2. You can tell Routes not to automatically insert/delete nodes. This option is found in the root options of the Routes tree in the config screen.
-|cFFFFFFFF
+
+|cffffd200
 Can you make a progress indicator on how long a background route optimization would take?
 |r
 A progress bar is not possible for the optimization process as it is a non-linear algorithm. It works on a "multiple pass" basis, each pass improving on the previous pass until it reaches a point where the improvement made is too minimal and then it will stop.
 
 This is somewhat like the |cffffff78Windows XP Disk Defragmentation|r utility, and its progress bar is worthless because its only showing you the % of each pass, but it doesn't know how many passes it will take, it could be 3 passes, it could be 10 passes, it stops only when it thinks it has done enough. This is why in the |cffffff78Vista|r version, it no longer shows you a progress bar at all.
-|cFFFFFFFF
+
+|cffffd200
 Do you plan on adding Gatherer support or perhaps questing addons node support?
 |r
 This is most likely a yes for |cffffff78Gatherer|r, and a maybe for questing.
-|cFFFFFFFF
+
+|cffffd200
 How does Routes perform its route optimization?
 |r
 Routes uses an algorithm called |cffffff78Ant Colony Optimization|r (ACO) which is a heuristic/probabilistic method of calculating optimal graphs based on observed real life ant behavior.
 
 ACO algorithms have been used to produce near-optimal solutions to the |cffffff78Traveling Salesman Problem|r (TSP). For more information, consult Google or Wikipedia.
-|cFFFFFFFF
+
+|cffffd200
 What does the "Extra Optimization" option do?
 |r
 By default, we only used ACO along with the standard |cffffff782-opt algorithm|r to optimize routes. Turning on "extra optimization" tells Routes to also use 2.5-opt, which is a specific subset of 3-opt. 2-opt is the process where pairs of edges are exchanged (A-B and C-D becomes A-C and B-D) in order to produce shorter routes.
-|cFFFFFFFF
+
+|cffffd200
 What algorithm does node clustering use?
 |r
 We employ a Hierarchical Agglomerative Clustering algorithm using a greedy approach, so the output is deterministic.
-|cFFFFFFFF
+
+|cffffd200
 I created a taboo region, attached it to a route, and optimized it. My route still flies through the taboo region. Why?
 |r
 It is not possible to always find a route that does not fly through a taboo region or sometimes highly unfeasible to do so.
 
 The user could potentially create taboo regions that split the map into impassable sections and regions, so the algorithm is simply biased not to pass through them if it is possible.
-|cFFFFFFFF
+
+|cffffd200
 I've found a bug! Where do I report it?
 |r
 You can report bugs or give suggestions at |cffffff78http://www.wowace.com/forums/index.php?topic=10992.0|r
@@ -261,7 +269,8 @@ You can report bugs or give suggestions at |cffffff78http://www.wowace.com/forum
 Alternatively, you can also find us on |cffffff78irc://irc.freenode.org/wowace|r
 
 When reporting a bug, make sure you include the |cffffff78steps on how to reproduce the bug|r, supply any |cffffff78error messages|r with stack traces if possible, give the |cffffff78revision number|r of Routes the problem occured in and state whether you are using an |cffffff78English client or otherwise|r.
-|cFFFFFFFF
+
+|cffffd200
 Who wrote this cool addon?
 |r
 |cffffff78Xaros|r on EU Doomhammer Alliance & |cffffff78Xinhuan|r on US Blackrock Alliance did.

@@ -1,5 +1,5 @@
 ﻿-- Routes
--- zhCN Localization file
+-- zhCN Localization file,by Onlyfly
 
 local L = LibStub("AceLocale-3.0"):NewLocale("Routes", "zhCN")
 if not L then return end
@@ -111,16 +111,16 @@ L["ExtractGas"] = "气体云"
 -- Route Config
 L["When the following data sources add or delete node data, update my routes automatically by inserting or removing the same node in the relevant routes."] = "当下列数据源添加或删除结点数据时，自动更新我的相关路线,插入或删除相同的结点."
 L[" Gatherer currently does not support callbacks, so this is impossible for Gatherer."] = "Gatherer当前不支持数据回收,所以本操作无法作用于Gatherer."
-L["You have |cFFFFFFFF%d|r route(s) in |cFFFFFFFF%s|r."] = "你已有 |cFFFFFFFF%d|r 路线于 |cFFFFFFFF%s|r."
+L["You have |cffffd200%d|r route(s) in |cffffd200%s|r."] = "你已有 |cffffd200%d|r 路线于 |cffffd200%s|r."
 L["Information"] = "信息"
-L["This route has |cFFFFFFFF%d|r nodes and is |cFFFFFFFF%d|r yards long."] = "本路线包括 |cFFFFFFFF%d|r 结点和总长 |cFFFFFFFF%d|r 码距离."
+L["This route has |cffffd200%d|r nodes and is |cffffd200%d|r yards long."] = "本路线包括 |cffffd200%d|r 结点和总长 |cffffd200%d|r 码距离."
 L["This route has nodes that belong to the following categories:"] = "本路线包含结点属于以下类型:"
 L["This route contains the following nodes:"] = "本路线包含下列结点:"
 L["This route is not a clustered route."] = "本路线不是聚合路线"    
-L["This route is a clustered route, down from the original |cFFFFFFFF%d|r nodes."] = "这个路线是聚合路线, 源自原始路线的 |cFFFFFFFF%d|r 结点."
-L["|cFFFFFFFF     %d|r node(s) are between |cFFFFFFFF%d|r-|cFFFFFFFF%d|r yards of a cluster point"] = "|cFFFFFFFF     %d|r 结点距离航线点在 |cFFFFFFFF%d|r-|cFFFFFFFF%d|r 码之间"
-L["|cFFFFFFFF     %d|r node(s) are at |cFFFFFFFF0|r yards of a cluster point"] = "|cFFFFFFFF     %d|r 结点距离航线点 |cFFFFFFFF0|r 码"
-L["The cluster radius of this route is |cFFFFFFFF%d|r yards."] = "本条路线的聚合半径为 |cFFFFFFFF%d|r 码."
+L["This route is a clustered route, down from the original |cffffd200%d|r nodes."] = "这个路线是聚合路线, 源自原始路线的 |cffffd200%d|r 结点."
+L["|cffffd200     %d|r node(s) are between |cffffd200%d|r-|cffffd200%d|r yards of a cluster point"] = "|cffffd200     %d|r 结点距离航线点在 |cffffd200%d|r-|cffffd200%d|r 码之间"
+L["|cffffd200     %d|r node(s) are at |cffffd2000|r yards of a cluster point"] = "|cffffd200     %d|r 结点距离航线点 |cffffd2000|r 码"
+L["The cluster radius of this route is |cffffd200%d|r yards."] = "本条路线的聚合半径为 |cffffd200%d|r 码."
 
 L["Line settings"] = "线条设置"
 L["These settings control the visibility and look of the drawn route."] = "这些设置控制路线可视性以及绘制路线的外观"
@@ -181,7 +181,7 @@ L["Delete node"] = "删除结点"
 L["Add node before (red)"] = "添加顶点于本顶点前(红色)"
 L["Add node after (green)"] = "添加顶点于本顶点后(绿色)"
 L["You may not delete a taboo that is being edited."] = "由于本禁区正在编辑,你可能无法删除他"
-L["TABOO_EDIT_DESC"] = "点击 |cFFFFFFFF编辑|r 按钮以开始编辑禁忌区域. 禁忌区域将绘制在世界地图上. 绘制顶点以确定其位置(可以使用鼠标拖动). 右键点击顶点以添加或删除顶点. 编辑完毕后,你可以点击 |cFFFFFFFF保存|r 按钮来保存你的变更, 或点击 |cFFFFFFFF取消|r 按钮来放弃变更."
+L["TABOO_EDIT_DESC"] = "点击 |cffffd200编辑|r 按钮以开始编辑禁忌区域. 禁忌区域将绘制在世界地图上. 绘制顶点以确定其位置(可以使用鼠标拖动). 右键点击顶点以添加或删除顶点. 编辑完毕后,你可以点击 |cffffd200保存|r 按钮来保存你的变更, 或点击 |cffffd200取消|r 按钮来放弃变更."
 L["Edit taboo region"] = "编辑禁忌区域"
 L["Edit this taboo region on the world map"] = "在世界地图上编辑本禁忌区域"
 L["Save taboo edit"] = "保存禁区编辑"
@@ -201,52 +201,52 @@ L["Taboos in %s"] = "禁区于 %s"
 L["A taboo with that name already exists. Overwrite?"] = "同名禁区已存在.是否进行覆盖?"
 L["This route has the following taboo regions:"] = "本路线包含下列禁忌区域:"
 L["This route has no taboo regions."] = "本路线不包含禁忌区域"
-L["This route contains |cFFFFFFFF%d|r nodes that have been tabooed."] = "本路线包含的 |cFFFFFFFF%d|r 结点已被禁区限制"
+L["This route contains |cffffd200%d|r nodes that have been tabooed."] = "本路线包含的 |cffffd200%d|r 结点已被禁区限制"
 L["TABOO_DESC2"] = "禁忌区域可以对于你指定的路线范围进行忽视. 这些禁区内的结点标记被忽视同时也不被包含进路线中. 在你优化路线时,得到的最优路线会尽最大的可能避免穿越任何禁忌区域."
 L["Taboos"] = "禁区"
 L["Select taboo regions to apply:"] = "选择应用禁忌区域:"
-L["You have |cFFFFFFFF%d|r taboo region(s) in |cFFFFFFFF%s|r."] = "共有 |cFFFFFFFF%d|r 禁忌区域于 |cFFFFFFFF%s|r."
+L["You have |cffffd200%d|r taboo region(s) in |cffffd200%s|r."] = "共有 |cffffd200%d|r 禁忌区域于 |cffffd200%s|r."
 
 -- FAQ
 L["FAQ"] = true
 L["Frequently Asked Questions"] = "常见问答"
 L["FAQ_TEXT"] = [[
-|cffce0a11当我试着创建一个路线时, 他说没有数据. 我那些地方做错了?|r
+|cffffd200当我试着创建一个路线时, 他说没有数据. 我那些地方做错了?|r
 正确的意思: 没有找到相关数据, 主要是由于插件没有载入或在待命状态. 如果你使用 |cffffff78Cartographer_<Profession>|r 模块, 这些模块必须被载入同时启用相关数据库,也就是说你必须有相关的数据库的支持. 
 
 需要注意的是 |cffffff78Cartographer_Professions|r 模块一般都为按需载入，同时 |cffffff78Cartographer_<Profession>|r 需设定为启用。
 
-|cffce0a11我使用富精金矿石数据创建了一条采集路线，但当我在某同一地点发现普通的精金矿石时, GatherMate/Cartographer会删除富精金矿结点标记同时替换为普通精金矿，这样会使路线上的这个结点被删除，我该怎么做? 
+|cffffd200我使用富精金矿石数据创建了一条采集路线，但当我在某同一地点发现普通的精金矿石时, GatherMate/Cartographer会删除富精金矿结点标记同时替换为普通精金矿，这样会使路线上的这个结点被删除，我该怎么做? 
 |r 
 1.你可以创建一条同时包括富矿和普通精金矿的采集路线. 
 
 2.你可以设定ROUTES不自动插入/删除结点点.该选项可以在ROUTES的根配置菜单找到。
 
-|cffce0a11可以做一个关于后台优化路线所需时间的进度指示器吗?|r
+|cffffd200可以做一个关于后台优化路线所需时间的进度指示器吗?|r
 路线优化过程的进度指示器是不可能实现的，因为它是一个非线性算法。 他工作在 "多重遍数" 的基础上, 插件持续进行校对直到达到最小的改变,插件终止进程. 
 
 这个有点类似于 |cffffff78Windows XP 磁盘碎片整理|r 程序, 他的进度条是无价值的由于他只显示每一遍的%, 可是他不知道他要做多少遍, 可能是3遍,也可能是10遍, 他直到他以为可以时才停止. 这也是为什么 |cffffff78Vista|r 版本不再显示进度条的原因.
 
-|cffce0a11你打算添加对于 Gatherer 或其他新扩充插件结点的支持吗?|r
+|cffffd200你打算添加对于 Gatherer 或其他新扩充插件结点的支持吗?|r
 本插件目前已经支持 |cffffff78Gatherer|r, 同时还会添加更多的支持.
 
-|cffce0a11ROUTES插件是如何执行路线优化的? |r
+|cffffd200ROUTES插件是如何执行路线优化的? |r
 Routes插件使用的算法叫做 |cffffff78Ant Colony Optimization|r (ACO) 这是一个启发式/概率计算方法，优化图表的基础来自与现实生活中蚂蚁的行为。
 
 ACO 算法使用一种叫 |cffffff78Traveling Salesman Problem|r (TSP)的最佳靠近算法. 更多信息请访问 Google 或 Wikipedia.
 
-|cffce0a11关于 "额外优化" 选项是怎么回事?|r
+|cffffd200关于 "额外优化" 选项是怎么回事?|r
 默认状态下, 我们优化路线时使用的 ACO 算法标准只有 |cffffff782-opt|r. 开启 "额外优化" 后路线将使用 2.5-opt, 有些细节部位将使用 3-opt. 可以获得更好的路线,同时资源占用增加.
 
-|cffce0a11关于聚合结点使用了什么样的算法?|r
+|cffffd200关于聚合结点使用了什么样的算法?|r
 我们采用了一种 Hierarchical Agglomerative Clustering 算法 ,所以他的输出是确定的.
 
-|cffce0a11我创建了一个禁忌区域, 使他作用于采集路线, 同时对路线进行了优化. 可是我的采集路线还是穿越了禁忌区域. 这是为什么?|r
+|cffffd200我创建了一个禁忌区域, 使他作用于采集路线, 同时对路线进行了优化. 可是我的采集路线还是穿越了禁忌区域. 这是为什么?|r
 本插件并不是总能找到不穿越禁区或高难度的路线的.
 
 用户有可能创造禁忌地区分裂地图为不可逾越的路段和地区，所以该算法只是简单的计算不通过他们，如果是有可能的.
 
-|cffce0a11我发现了一个错误!我去那提交他们?|r
+|cffffd200我发现了一个错误!我去那提交他们?|r
 你可以报告错误或提供意见于 |cffffff78http://www.wowace.com/forums/index.php?topic=10992.0|r
 
 二选一, 同样的你还可以在这找到我们: |cffffff78irc://irc.freenode.org/wowace|r
@@ -255,7 +255,7 @@ ACO 算法使用一种叫 |cffffff78Traveling Salesman Problem|r (TSP)的最佳�
 
 
 当你要报告一个BUG时, 请确信包含 |cffffff78如何生成的BUG|r, 如果可能请提供一些 |cffffff78错误信息|r , 提供出现问题Routes的 |cffffff78版本号|r 和你使用的是 |cffffff78英文客户端还是其他|r.
-|cffce0a11是谁编写了这么酷的插件?|r
+|cffffd200是谁编写了这么酷的插件?|r
 |cffffff78Xaros|r on EU Doomhammer Alliance & |cffffff78Xinhuan|r on US Blackrock Alliance .
 ]]
 

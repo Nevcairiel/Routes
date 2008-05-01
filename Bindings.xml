@@ -8,4 +8,13 @@
 	<Binding name="ROUTESCWPCHANGEDIR">
 		LibStub("AceAddon-3.0"):GetAddon("Routes"):GetModule("Waypoints"):ChangeWaypointDirection()
 	</Binding>
+	<Binding name="ROUTESTTSTART">
+		LibStub("AceAddon-3.0"):GetAddon("Routes"):GetModule("TomTom"):QueueFirstNode()
+	</Binding>
+	<Binding name="ROUTESTTSTOP">
+		LibStub("AceAddon-3.0"):GetAddon("Routes"):GetModule("TomTom"):RemoveQueuedNode()
+	</Binding>
+	<Binding name="ROUTESTTCHANGEDIR">
+		LibStub("AceAddon-3.0"):GetAddon("Routes"):GetModule("TomTom"):ChangeWaypointDirection()
+	</Binding>
 </Bindings>

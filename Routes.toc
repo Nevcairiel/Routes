@@ -28,6 +28,7 @@ Data.lua
 # Routes Module files
 Modules\AutoShow.lua
 Modules\Waypoints.lua
+Modules\TomTom.lua
 
 # Addons we can draw data from
 Plugins\Cartographer.lua

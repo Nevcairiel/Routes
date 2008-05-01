@@ -67,6 +67,22 @@ L["Start using Waypoints"] = true
 L["Start using Cartographer_Waypoints by finding the closest visible route/node in the current zone and using that as the waypoint"] = true
 L["Stop using Waypoints"] = true
 L["Stop using Cartographer_Waypoints by clearing the last queued node"] = true
+L["Start using Waypoints (Carto)"] = true
+L["Stop using Waypoints (Carto)"] = true
+L["Change direction (Carto)"] = true
+
+-- TomTom
+L["Waypoints (TomTom)"] = true
+L["Integrated support options for TomTom"] = true
+L["This section implements TomTom support for Routes. Click Start to find the nearest node in a visible route in the current zone.\n"] = true
+L["Start using TomTom"] = true
+L["Start using TomTom by finding the closest visible route/node in the current zone and using that as the waypoint"] = true
+L["Stop using TomTom"] = true
+L["Stop using TomTom by clearing the last queued node"] = true
+L["TomTom is missing or disabled"] = true
+L["Start using Waypoints (TomTom)"] = true
+L["Stop using Waypoints (TomTom)"] = true
+L["Change direction (TomTom)"] = true
 
 -- Add Route Config
 L["Add"] = true

@@ -145,45 +145,6 @@ end
 
 
 ------------------------------------------------------------------
-local KeybindHelper = {}
-do
-	local t = {}
-	function KeybindHelper:MakeKeyBindingTable(...)
-		for k in pairs(t) do t[k] = nil end
-		for i = 1, select("#", ...) do
-			local key = select(i, ...)
-			if key ~= "" then
-				tinsert(t, key)
-			end
-		end
-		return t
-	end
-
-	function KeybindHelper:GetKeybind(info)
-		return table.concat(self:MakeKeyBindingTable(GetBindingKey(info.arg)), ", ")
-	end
-
-	function KeybindHelper:SetKeybind(info, key)
-		if key == "" then
-			local t = self:MakeKeyBindingTable(GetBindingKey(info.arg))
-			for i = 1, #t do
-				SetBinding(t[i])
-			end
-		else
-			local oldAction = GetBindingAction(key)
-			local frame = LibStub("AceConfigDialog-3.0").OpenFrames["Routes"]
-			if frame then
-				if ( oldAction ~= "" and oldAction ~= info.arg ) then
-					frame:SetStatusText(KEY_UNBOUND_ERROR:format(GetBindingText(oldAction, "BINDING_NAME_")))
-				else
-					frame:SetStatusText(KEY_BOUND)
-				end
-			end
-			SetBinding(key, info.arg)
-		end
-		SaveBindings(GetCurrentBindingSet())
-	end
-end
 
 options = {
 	name = L["Waypoints (Carto)"], type = "group",
@@ -222,7 +183,7 @@ options = {
 			name = "Keybind to Start",
 			desc = "Keybind to Start",
 			type = "keybinding",
-			handler = KeybindHelper,
+			handler = Routes.KeybindHelper,
 			get = "GetKeybind",
 			set = "SetKeybind",
 			arg = "ROUTESCWPSTART",
@@ -244,7 +205,7 @@ options = {
 			name = "Keybind to Stop",
 			desc = "Keybind to Stop",
 			type = "keybinding",
-			handler = KeybindHelper,
+			handler = Routes.KeybindHelper,
 			get = "GetKeybind",
 			set = "SetKeybind",
 			arg = "ROUTESCWPSTOP",
@@ -266,7 +227,7 @@ options = {
 			name = "Keybind to Change",
 			desc = "Keybind to Change",
 			type = "keybinding",
-			handler = KeybindHelper,
+			handler = Routes.KeybindHelper,
 			get = "GetKeybind",
 			set = "SetKeybind",
 			arg = "ROUTESCWPCHANGEDIR",
@@ -278,9 +239,9 @@ options = {
 
 -- Setup keybinds in keybinding menu
 BINDING_HEADER_Routes = L["Routes"]
-BINDING_NAME_ROUTESCWPSTART = L["Start using Waypoints"]
-BINDING_NAME_ROUTESCWPSTOP = L["Stop using Waypoints"]
-BINDING_NAME_ROUTESCWPCHANGEDIR = L["Change direction"]
+BINDING_NAME_ROUTESCWPSTART = L["Start using Waypoints (Carto)"]
+BINDING_NAME_ROUTESCWPSTOP = L["Stop using Waypoints (Carto)"]
+BINDING_NAME_ROUTESCWPCHANGEDIR = L["Change direction (Carto)"]
 
 
 -- vim: ts=4 noexpandtab

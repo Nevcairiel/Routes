@@ -1,8 +1,8 @@
 ﻿--[[
 ********************************************************************************
 Routes
-3 February 2008
-(Written for live servers v2.3.3.7799)
+2 May 2008
+(Written for live servers v2.4.1.8125)
 
 Author: Xaros @ EU Doomhammer Alliance & Xinhuan @ US Blackrock Alliance
 ********************************************************************************
@@ -27,13 +27,16 @@ Features:
 	- Select color/thickness/transparancy/visibility for each route
 	- For any route created, finding a new node will try to add that as
 	  optimal as possible
+	- Quick clustering algorithm to merge nearby nodes into a single travelling
+	  point
+	- Quickly mark entire areas/regions as "out of bounds" or "taboo" to Routes,
+	  meaning your routes will ignore nodes in those areas and avoid cross them
 	- Fubar plugin available to quickly access your routes
-	- Cartographer_Waypoints support for quickly following a route
+	- Cartographer_Waypoints and TomTom support for quickly following a route
 
 Download:
-	Routes is currently in Beta and is only available on the branches on
-	the wowace SVN. Once it is fully released after the launch of Ace3, we
-	will update this with download links.
+	The latest version of Routes is always available on
+	- http://files.wowace.com
 
 Contact:
 	If you find any bugs or have any suggestions, you can contact us on:
@@ -988,6 +991,50 @@ end
 
 ------------------------------------------------------------------------------------------------------
 -- Ace options table stuff
+
+do
+	-- Helper functions for setting/clearing keybinds in our option tables
+	local KeybindHelper = {}
+	Routes.KeybindHelper = KeybindHelper
+
+	local t = {}
+	function KeybindHelper:MakeKeyBindingTable(...)
+		for k in pairs(t) do t[k] = nil end
+		for i = 1, select("#", ...) do
+			local key = select(i, ...)
+			if key ~= "" then
+				tinsert(t, key)
+			end
+		end
+		return t
+	end
+
+	function KeybindHelper:GetKeybind(info)
+		return table.concat(self:MakeKeyBindingTable(GetBindingKey(info.arg)), ", ")
+	end
+
+	function KeybindHelper:SetKeybind(info, key)
+		if key == "" then
+			local t = self:MakeKeyBindingTable(GetBindingKey(info.arg))
+			for i = 1, #t do
+				SetBinding(t[i])
+			end
+		else
+			local oldAction = GetBindingAction(key)
+			local frame = LibStub("AceConfigDialog-3.0").OpenFrames["Routes"]
+			if frame then
+				if ( oldAction ~= "" and oldAction ~= info.arg ) then
+					frame:SetStatusText(KEY_UNBOUND_ERROR:format(GetBindingText(oldAction, "BINDING_NAME_")))
+				else
+					frame:SetStatusText(KEY_BOUND)
+				end
+			end
+			SetBinding(key, info.arg)
+		end
+		SaveBindings(GetCurrentBindingSet())
+	end
+end
+
 
 options = {
 	type = "group",

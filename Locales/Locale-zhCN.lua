@@ -67,6 +67,22 @@ L["Start using Waypoints"] = "开始使用路径点"
 L["Start using Cartographer_Waypoints by finding the closest visible route/node in the current zone and using that as the waypoint"] = "开始使用Cartographer_Waypoints路径点模块在当前区域搜寻最接近路线或结点,并加入到路径点航线指示"
 L["Stop using Waypoints"] = "停止使用路径点"
 L["Stop using Cartographer_Waypoints by clearing the last queued node"] = "停止使用Cartographer_Waypoints模块指示同时清除最后队列的结点"
+L["Start using Waypoints (Carto)"] = "开始使用路径点(Carto)"
+L["Stop using Waypoints (Carto)"] = "停止使用路径点(Carto)"
+L["Change direction (Carto)"] = "改变方向(Carto)"
+
+-- TomTom
+L["Waypoints (TomTom)"] = "路径点(TomTom)"
+L["Integrated support options for TomTom"] = "TomTom综合支持选项"
+L["This section implements TomTom support for Routes. Click Start to find the nearest node in a visible route in the current zone.\n"] = "这部分提供Routes对于TomTom的支持.点击开始在当前区域搜寻最接近可见路线的结点.\n"
+L["Start using TomTom"] = "开始使用TomTom"
+L["Start using TomTom by finding the closest visible route/node in the current zone and using that as the waypoint"] = "开始使用TomTom在当前区域搜寻最接近路线或结点,并加入到路径点航线指示"
+L["Stop using TomTom"] = "停止使用TomTom"
+L["Stop using TomTom by clearing the last queued node"] = "停止使用TomTom指示同时清除最后队列的结点"
+L["TomTom is missing or disabled"] = "TomTom 未安装或未启用"
+L["Start using Waypoints (TomTom)"] = "开始使用路径点(TomTom)"
+L["Stop using Waypoints (TomTom)"] = "停止使用路径点(TomTom)"
+L["Change direction (TomTom)"] = "改变方向(TomTom)"
 
 -- Add Route Config
 L["Add"] = "添加"

@@ -2325,7 +2325,7 @@ do
 			-- Create new node
 			taboo_node_count = taboo_node_count + 1
 			node = CreateFrame( "Button", "RoutesTabooNodePin"..taboo_node_count, RoutesTabooFrame )
-			node:SetFrameLevel( 6 ) -- we need to be above others (GatherMate nodes are @ 5)
+			node:SetFrameLevel( RoutesTabooFrame:GetFrameLevel() + 6 ) -- we need to be above others (GatherMate nodes are @ 5)
 
 			-- set it up
 			local texture = node:CreateTexture( nil, "OVERLAY" )

@@ -28,6 +28,10 @@ function TT:FindClosestVisibleRoute()
 		Routes:Print(L["TomTom is missing or disabled"])
 		return
 	end
+	if not TomTom.SetCustomWaypoint then
+		Routes:Print(L["An updated copy of TomTom is required for TomTom integration to work"])
+		return
+	end
 	local Astrolabe = DongleStub("Astrolabe-0.4-NC")
 	local c, z, x, y = Astrolabe:GetCurrentPlayerPosition()
 	local zone = GetRealZoneText()
@@ -59,6 +63,10 @@ function TT:QueueFirstNode()
 		Routes:Print(L["TomTom is missing or disabled"])
 		return
 	end
+	if not TomTom.SetCustomWaypoint then
+		Routes:Print(L["An updated copy of TomTom is required for TomTom integration to work"])
+		return
+	end
 	local a, b, c = self:FindClosestVisibleRoute()
 	if a then
 		if stored_uid then
@@ -71,14 +79,16 @@ function TT:QueueFirstNode()
 		local c, z, x, y = Astrolabe:GetCurrentPlayerPosition()
 		local x2, y2 = Routes:getXY(route_table.route[node_num])
 		stored_nodeID = route_table.route[node_num]
-		stored_uid = TomTom:SetWaypoint(c, z, x2, y2, callbacks, false, false)
+		--stored_uid = TomTom:SetWaypoint(c, z, x2, y2, callbacks, false, false)
+		stored_uid = TomTom:SetCustomWaypoint(c, z, x2*100, y2*100, callbacks, false, false)
 		TomTom:SetCrazyArrow(stored_uid, db.defaults.waypoint_hit_distance, L["%s - Node %d"]:format(route_name, node_num))
 	end
 end
 
 function TT.WaypointHit(event, uid, distance, dist, lastdist)
 	if stored_uid == uid then
-		TomTom:ClearWaypoint(uid)
+		--TomTom:ClearWaypoint(uid)
+		TomTom:RemoveWaypoint(stored_uid)
 		stored_uid = nil
 
 		local route = route_table.route
@@ -102,7 +112,8 @@ function TT.WaypointHit(event, uid, distance, dist, lastdist)
 					if dist > db.defaults.waypoint_hit_distance then
 						--Routes:Print("Adding node "..node_num)
 						stored_nodeID = route[node_num]
-						stored_uid = TomTom:SetWaypoint(c, z, x2, y2, callbacks, false, false)
+						--stored_uid = TomTom:SetWaypoint(c, z, x2, y2, callbacks, false, false)
+						stored_uid = TomTom:SetCustomWaypoint(c, z, x2*100, y2*100, callbacks, false, false)
 						TomTom:SetCrazyArrow(stored_uid, db.defaults.waypoint_hit_distance, L["%s - Node %d"]:format(route_name, node_num))
 						return
 					end
@@ -122,8 +133,13 @@ function TT:RemoveQueuedNode()
 		Routes:Print(L["TomTom is missing or disabled"])
 		return
 	end
+	if not TomTom.SetCustomWaypoint then
+		Routes:Print(L["An updated copy of TomTom is required for TomTom integration to work"])
+		return
+	end
 	if stored_uid then
-		TomTom:ClearWaypoint(stored_uid)
+		--TomTom:ClearWaypoint(stored_uid)
+		TomTom:RemoveWaypoint(stored_uid)
 		stored_uid = nil
 	end
 end

@@ -83,6 +83,7 @@ L["TomTom is missing or disabled"] = true
 L["Start using Waypoints (TomTom)"] = true
 L["Stop using Waypoints (TomTom)"] = true
 L["Change direction (TomTom)"] = true
+L["An updated copy of TomTom is required for TomTom integration to work"] = true
 
 -- Add Route Config
 L["Add"] = true

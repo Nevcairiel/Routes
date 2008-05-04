@@ -1472,6 +1472,10 @@ end
 
 function ConfigHandler:DoForeground(info)
 	local t = db.routes[info.arg.zone][info.arg.route]
+	if #t.route > 724 then
+		Routes:Print(L["TOO_MANY_NODES_ERROR"])
+		return
+	end
 	local taboos = {}
 	for tabooname, used in pairs(t.taboos) do
 		if used then
@@ -1495,6 +1499,10 @@ end
 
 function ConfigHandler:DoBackground(info)
 	local t = db.routes[info.arg.zone][info.arg.route]
+	if #t.route > 724 then
+		Routes:Print(L["TOO_MANY_NODES_ERROR"])
+		return
+	end
 	local taboos = {}
 	for tabooname, used in pairs(t.taboos) do
 		if used then

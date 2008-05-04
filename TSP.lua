@@ -303,14 +303,14 @@ function TSP:SolveTSP(nodes, metadata, taboos, zonename, parameters, path, nonbl
 	local GLOBALDECAY       = parameters.global_decay or 0.2        -- Parameter: Governs global trail decay rate [0, 1]
 	local TWOOPTPASSES      = parameters.twoopt_passes or 3         -- Parameter: Number of times to perform 2-opt passes
 	local TWOPOINTFIVEOPT   = parameters.two_point_five_opt or false-- Parameter: Run improved 2-opt pass?
-	local QUALITY           = zoneH                                 -- Parameter: Tunable parameter that should be somewhat close to 1/4 to 1/2 (distance) of a good solution
+	local QUALITY           = 2 * zoneH                             -- Parameter: Tunable parameter that should be somewhat close to 1/4 to 1/2 (distance) of a good solution
 	local numAnts           = ceil(2 * numNodes ^ 0.5)              -- Parameter: Number of ants.
 	local LOCALDECAYUPDATE  = LOCALDECAY * LOCALUPDATE              -- Just a constant.
 	-- If ALPHA = 0, the closest cities are more likely to be selected.
 	-- If BETA = 0, only pheromone amplifications is at work.
 	-- The number of ants will directly determine the speed of the algorithm proportionally. More ants will get more optimal results, but don't use more ants than the number of nodes.
 	-- You need more ants when there are more nodes to have more chances to find a good path quickly. The usual default is numAnts = numNodes, but this takes too long in WoW.
-	local PRUNEDIST         = zoneW * 0.15                           -- Another constant for our own pruning
+	local PRUNEDIST         = zoneW * 0.20                          -- Another constant for our own pruning
 
 	local shortestPathLength = math.huge
 	local shortestPath = newTable()
@@ -324,6 +324,7 @@ function TSP:SolveTSP(nodes, metadata, taboos, zonename, parameters, path, nonbl
 	for i = 1, numNodes do
 		prune[i] = newTable()
 	end
+
 	for i = 1, numNodes do
 		local x1, y1 = floor(nodes[i] / 10000) / 10000, (nodes[i] % 10000) / 10000
 		local u = i*numNodes-i
@@ -453,7 +454,7 @@ function TSP:SolveTSP(nodes, metadata, taboos, zonename, parameters, path, nonbl
 					break
 				end
 			end]]
-			while TSP:TwoOpt(antpath, weight, prune, TWOPOINTFIVEOPT, nonblocking) > 1 do
+			while TSP:TwoOpt(antpath, weight, prune, TWOPOINTFIVEOPT, nonblocking) > 0 do
 				if nonblocking then
 					coroutine.yield()
 				end

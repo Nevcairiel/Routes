@@ -227,51 +227,65 @@ L["You have |cffffd200%d|r taboo region(s) in |cffffd200%s|r."] = "共有 |cffff
 L["FAQ"] = true
 L["Frequently Asked Questions"] = "常见问答"
 L["FAQ_TEXT"] = [[
-|cffffd200当我试着创建一个路线时, 他说没有数据. 我那些地方做错了?|r
+|cffffd200
+当我试着创建一个路线时, 他说没有数据. 我那些地方做错了?
+|r
 正确的意思: 没有找到相关数据, 主要是由于插件没有载入或在待命状态. 如果你使用 |cffffff78Cartographer_<Profession>|r 模块, 这些模块必须被载入同时启用相关数据库,也就是说你必须有相关的数据库的支持. 
 
 需要注意的是 |cffffff78Cartographer_Professions|r 模块一般都为按需载入，同时 |cffffff78Cartographer_<Profession>|r 需设定为启用。
 
-|cffffd200我使用富精金矿石数据创建了一条采集路线，但当我在某同一地点发现普通的精金矿石时, GatherMate/Cartographer会删除富精金矿结点标记同时替换为普通精金矿，这样会使路线上的这个结点被删除，我该怎么做? 
+|cffffd200
+我使用富精金矿石数据创建了一条采集路线，但当我在某同一地点发现普通的精金矿石时, GatherMate/Cartographer会删除富精金矿结点标记同时替换为普通精金矿，这样会使路线上的这个结点被删除，我该怎么做? 
 |r 
 1.你可以创建一条同时包括富矿和普通精金矿的采集路线. 
 
 2.你可以设定ROUTES不自动插入/删除结点点.该选项可以在ROUTES的根配置菜单找到。
 
-|cffffd200可以做一个关于后台优化路线所需时间的进度指示器吗?|r
+|cffffd200
+可以做一个关于后台优化路线所需时间的进度指示器吗?
+|r
 路线优化过程的进度指示器是不可能实现的，因为它是一个非线性算法。 他工作在 "多重遍数" 的基础上, 插件持续进行校对直到达到最小的改变,插件终止进程. 
 
 这个有点类似于 |cffffff78Windows XP 磁盘碎片整理|r 程序, 他的进度条是无价值的由于他只显示每一遍的%, 可是他不知道他要做多少遍, 可能是3遍,也可能是10遍, 他直到他以为可以时才停止. 这也是为什么 |cffffff78Vista|r 版本不再显示进度条的原因.
 
-|cffffd200你打算添加对于 Gatherer 或其他新扩充插件结点的支持吗?|r
-本插件目前已经支持 |cffffff78Gatherer|r, 同时还会添加更多的支持.
-
-|cffffd200ROUTES插件是如何执行路线优化的? |r
+|cffffd200
+ROUTES插件是如何执行路线优化的?
+|r
 Routes插件使用的算法叫做 |cffffff78Ant Colony Optimization|r (ACO) 这是一个启发式/概率计算方法，优化图表的基础来自与现实生活中蚂蚁的行为。
 
 ACO 算法使用一种叫 |cffffff78Traveling Salesman Problem|r (TSP)的最佳靠近算法. 更多信息请访问 Google 或 Wikipedia.
 
-|cffffd200关于 "额外优化" 选项是怎么回事?|r
+|cffffd200
+关于 "额外优化" 选项是怎么回事?
+|r
 默认状态下, 我们优化路线时使用的 ACO 算法标准只有 |cffffff782-opt|r. 开启 "额外优化" 后路线将使用 2.5-opt, 有些细节部位将使用 3-opt. 可以获得更好的路线,同时资源占用增加.
 
-|cffffd200关于聚合结点使用了什么样的算法?|r
+|cffffd200
+关于聚合结点使用了什么样的算法?
+|r
 我们采用了一种 Hierarchical Agglomerative Clustering 算法 ,所以他的输出是确定的.
 
-|cffffd200我创建了一个禁忌区域, 使他作用于采集路线, 同时对路线进行了优化. 可是我的采集路线还是穿越了禁忌区域. 这是为什么?|r
+|cffffd200
+我创建了一个禁忌区域, 使他作用于采集路线, 同时对路线进行了优化. 可是我的采集路线还是穿越了禁忌区域. 这是为什么?
+|r
 本插件并不是总能找到不穿越禁区或高难度的路线的.
 
 用户有可能创造禁忌地区分裂地图为不可逾越的路段和地区，所以该算法只是简单的计算不通过他们，如果是有可能的.
 
-|cffffd200我发现了一个错误!我去那提交他们?|r
+|cffffd200
+我发现了一个错误!我去那提交他们?
+|r
 你可以报告错误或提供意见于 |cffffff78http://www.wowace.com/forums/index.php?topic=10992.0|r
 
 二选一, 同样的你还可以在这找到我们: |cffffff78irc://irc.freenode.org/wowace|r
 
 关于中文版本的翻译问题请访问 |cffffff78http://bbs.cwowaddon.com/thread-3568-1-1.html|r 或 EMAIL至|cffffff78Onlyfly@gmail.com|r
 
-
 当你要报告一个BUG时, 请确信包含 |cffffff78如何生成的BUG|r, 如果可能请提供一些 |cffffff78错误信息|r , 提供出现问题Routes的 |cffffff78版本号|r 和你使用的是 |cffffff78英文客户端还是其他|r.
-|cffffd200是谁编写了这么酷的插件?|r
+
+|cffffd200
+是谁编写了这么酷的插件?
+|r
 |cffffff78Xaros|r on EU Doomhammer Alliance & |cffffff78Xinhuan|r on US Blackrock Alliance .
 ]]
 

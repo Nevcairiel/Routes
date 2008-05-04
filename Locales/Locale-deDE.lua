@@ -201,11 +201,6 @@ Nein, das ist leider nicht möglich, da der Optimierungsprozess ein nicht-linear
 Das ist ein bisschen so wie das |cffffff78Windows XP Festplatten Defragmentierungs|r Programm und dessen Fortschrittsbalken, der auch sinnlos ist, da er nur die % jedes Durchgangs anzeigt, aber nicht weiß wieviele Durchgänge es benötigt. Es könnten 3 Durchgänge oder auch 10 sein. Er hört auf wenn er denkt, dass er genug getan hat. Aus diesem Grund gibt es in der |cffffff78Vista|r Version keinen Fortschrittsbalken mehr.
 
 |cffffd200
-Plant ihr auch Gatherer oder Addons mit Questnotizen zu unterstützen?
-|r
-Im Falle von |cffffff78Gatherer|r gibt es ein klares Ja und ein Vielleicht fürs Questen.
-
-|cffffd200
 Wie führt Routes die Routenoptimierung aus?
 |r
 Routes benutzt einen |cffffff78Ant Colony Optimization|r (ACO) genannten Algorithmus, der eine Methode zur heuristischen/wahrscheinlichkeitstheoretischen Berechnung für optimale Graphen, basierend auf den Beobachtungen des Verhaltens von Ameisen aus dem echten Leben, darstellt.

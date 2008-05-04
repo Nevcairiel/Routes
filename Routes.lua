@@ -1072,19 +1072,153 @@ options = {
 		},
 		faq_group = {
 			type = "group",
-			name = L["FAQ"],
-			desc = L["Frequently Asked Questions"],
+			name = L["Help File"],
+			desc = L["Help File"],
 			order = 300,
 			args = {
-				header = {
-					type = "header",
-					name = L["Frequently Asked Questions"],
-					order = 0,
+				overview = {
+					type = "group",
+					name = L["Overview"],
+					desc = L["Overview"],
+					order = 10,
+					args = {
+						header = {
+							type = "header",
+							name = L["Overview"],
+							order = 0,
+						},
+						desc = {
+							type = "description",
+							name = L["OVERVIEW_TEXT"],
+							order = 1,
+						},
+					},
 				},
-				desc = {
-					type = "description",
-					name = L["FAQ_TEXT"],
-					order = 1,
+				create_route = {
+					type = "group",
+					name = L["Creating a route"],
+					desc = L["Creating a route"],
+					order = 20,
+					args = {
+						header = {
+							type = "header",
+							name = L["Creating a route"],
+							order = 0,
+						},
+						desc = {
+							type = "description",
+							name = L["CREATE_ROUTE_TEXT"],
+							order = 1,
+						},
+					},
+				},
+				optimizing_route = {
+					type = "group",
+					name = L["Optimizing a route"],
+					desc = L["Optimizing a route"],
+					order = 30,
+					args = {
+						header = {
+							type = "header",
+							name = L["Optimizing a route"],
+							order = 0,
+						},
+						desc = {
+							type = "description",
+							name = L["OPTIMIZING_ROUTE_TEXT"],
+							order = 1,
+						},
+					},
+				},
+				customizing_route = {
+					type = "group",
+					name = L["Customizing route display"],
+					desc = L["Customizing route display"],
+					order = 40,
+					args = {
+						header = {
+							type = "header",
+							name = L["Customizing route display"],
+							order = 0,
+						},
+						desc = {
+							type = "description",
+							name = L["CUSTOMIZING_ROUTE_TEXT"],
+							order = 1,
+						},
+					},
+				},
+				create_taboos = {
+					type = "group",
+					name = L["Creating a taboo region"],
+					desc = L["Creating a taboo region"],
+					order = 50,
+					args = {
+						header = {
+							type = "header",
+							name = L["Creating a taboo region"],
+							order = 0,
+						},
+						desc = {
+							type = "description",
+							name = L["CREATE_TABOOS_TEXT"],
+							order = 1,
+						},
+					},
+				},
+				waypoints_integration = {
+					type = "group",
+					name = L["Waypoints Integration"],
+					desc = L["Waypoints Integration"],
+					order = 60,
+					args = {
+						header = {
+							type = "header",
+							name = L["Waypoints Integration"],
+							order = 0,
+						},
+						desc = {
+							type = "description",
+							name = L["WAYPOINTS_INTEGRATION_TEXT"],
+							order = 1,
+						},
+					},
+				},
+				auto_update = {
+					type = "group",
+					name = L["Automatic route updating"],
+					desc = L["Automatic route updating"],
+					order = 70,
+					args = {
+						header = {
+							type = "header",
+							name = L["Automatic route updating"],
+							order = 0,
+						},
+						desc = {
+							type = "description",
+							name = L["AUTOMATIC_UPDATE_TEXT"],
+							order = 1,
+						},
+					},
+				},
+				faq = {
+					type = "group",
+					name = L["FAQ"],
+					desc = L["Frequently Asked Questions"],
+					order = 100,
+					args = {
+						header = {
+							type = "header",
+							name = L["Frequently Asked Questions"],
+							order = 0,
+						},
+						desc = {
+							type = "description",
+							name = L["FAQ_TEXT"],
+							order = 1,
+						},
+					},
 				},
 			},
 		},

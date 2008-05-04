@@ -2202,9 +2202,9 @@ do
 				-- Perform a deep copy instead so that db defaults apply
 				local mapfile = Routes.zoneData[create_zone][4]
 				db.routes[mapfile][create_name] = nil -- overwrite old route
+				new_route.route = Routes.TSP:DecrossRoute(new_route.route)
 				deep_copy_table(db.routes[mapfile][create_name], new_route)
 
-				-- TODO Check if we can do a one-pass TSP run here as well if the user selected it.
 				db.routes[mapfile][create_name].length = Routes.TSP:PathLength(new_route.route, create_zone)
 
 				-- Create the aceopts table entry for our new route
@@ -2227,6 +2227,10 @@ do
 				opts[mapfile].args[routekey] = Routes:CreateAceOptRouteTable(mapfile, create_name)
 
 				-- Draw it
+				local AutoShow = Routes:GetModule("AutoShow", true)
+				if AutoShow and db.defaults.use_auto_showhide then
+					AutoShow:ApplyVisibility()
+				end
 				Routes:DrawWorldmapLines()
 				Routes:DrawMinimapLines(true)
 

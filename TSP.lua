@@ -992,5 +992,81 @@ function TSP:ClusterRoute(nodes, zonename, radius)
 	return nodes, metadata, pathLength
 end
 
--- vim: ts=4 noexpandtab
 
+
+-- TSP:DecrossRoute(nodes)
+-- Arguments
+--   nodes    - The table containing a list of Routes node IDs to path
+--              This list should only contain nodes on the same map. This
+--              table should be indexed numerically from nodes[1] to nodes[n].
+-- Returns nothing
+-- Notes: The original table sent in is modified directly
+-- 
+-- This function is contributed by Polarina for quickly solving a TSP in
+-- O(n log n). The method merely calculates a centroid, and compares the angle
+-- of every node with the centroid and sorts it that way, resulting in a tour
+-- that doesn't cross itself, but obviously not ideal. Used for initial route
+-- creation to get an initial quality value.
+function TSP:DecrossRoute(nodes)
+	local numNodes = #nodes
+	local math_atan2 = math.atan2
+
+	-- Find the nodes centroid
+	local x, y = 0, 0
+	for index, value in ipairs(nodes) do
+		x = x + floor(value / 1e4)
+		y = y + value % 1e4
+	end
+	x = x / numNodes
+	y = y / numNodes
+
+	-- From the middle, link all nodes in a circle
+	table.sort(nodes, function(a, b)
+		local aX = floor(a / 1e4)
+		local aY = a % 1e4
+		local bX = floor(b / 1e4)
+		local bY = b % 1e4
+		return math_atan2(aY - y, aX - x) < math_atan2(bY - y, bX - x)
+	end)
+
+	--[[
+	local weight = newTable()
+	local path = newTable()
+	local prune = newTable()
+	for i = 1, numNodes do
+		prune[i] = newTable()
+	end
+
+	for i = 1, numNodes do
+		local x1, y1 = floor(nodes[i] / 10000) / 10000, (nodes[i] % 10000) / 10000
+		local u = i*numNodes-i
+		weight[u] = 0
+		for j = i+1, numNodes do
+			local x2, y2 = floor(nodes[j] / 10000) / 10000, (nodes[j] % 10000) / 10000
+			local u, v = i*numNodes-j, j*numNodes-i
+			weight[u] = ((x2 - x1)^2 + (y2 - y1)^2)^0.5 -- Calc distance between each node pair
+			weight[v] = weight[u]
+			--if weight[u] < 0.4 then
+				tinsert(prune[i], j)
+				tinsert(prune[j], i)
+			--end
+		end
+		path[i] = i
+	end
+
+	while TSP:TwoOpt(path, weight, prune, false, false) > 0 do end
+
+	local newpath = newTable()
+	for i = 1, numNodes do
+		newpath[i] = nodes[ path[i] ]
+	end
+	delTable(weight)
+	delTable(path)
+	delTable(prune)
+
+	return newpath]]
+
+	return nodes
+end
+
+-- vim: ts=4 noexpandtab

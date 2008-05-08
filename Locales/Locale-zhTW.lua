@@ -249,7 +249,7 @@ L["FAQ_TEXT"] = [[
 |r
 1. 你可以創建了一條包含豐沃的和普通的堅鋼礦脈路線.
 
-2. 你可以將GatherMate程式設定為不自動插入/刪除資源點. 這選項可在GatherMate程式的基本選項裡找到. Cartographer應有近像的選項, 請自行找找.
+2. 你可以將GatherMate程式設定為不自動插入/刪除資源點. 這選項可在GatherMate程式的基本選項裡找到. Cartographer應有近似的選項, 請自行找找.
 
 |cffffd200
 請問可否加入如進度條來顯示優化路線時所需的時間?
@@ -296,6 +296,7 @@ ACO 蟻群算法是 |cffffff78旅行推銷員|r (TSP) 的最近似完美的解�
 |r
 |cffffff78Xaros|r on EU Doomhammer Alliance & |cffffff78Xinhuan|r on US Blackrock Alliance 一同製作.
 
+|cffffd200
 誰人那麼無聊做這些艱難的翻譯?
 |r
 |cffffff78天明|r 眾星之子
@@ -356,7 +357,7 @@ L["OPTIMIZING_ROUTE_TEXT"] = [[
 L["CUSTOMIZING_ROUTE_TEXT"] = [[
 您可以很容易地自訂在您地圖上的路線顯示. 選項分為兩部分. 在左邊的 |cffffff78選項|r 包含適用於一般的全局設置,  在每一獨立路線內的 |cffffff78劃線設定|r 則是用來更改一些和全局設置不同的設定.
 
-在地圖繪製，你可以令Routes在任何地圖內繪製您的路線, 以及預設的顏色和線條的寬度. 此外, 您更可改變小地圖內線的距離使他們不會覆蓋由 |cffffff78GatherMate|r/|cffffff78Cartographer|r/|cffffff78Gatherer|r 所產生的黃色追踪點和圖示.
+在地圖繪製，你可以令Routes在任何地圖內繪製您的路線, 以及預設的顏色和線條的寬度. 此外, 您更可改變小地圖內線的距離使他們不會覆蓋由 |cffffff78GatherMate|r/|cffffff78Cartographer|r/|cffffff78Gatherer|r 所產生的黃色追蹤點和圖示.
 
 在路線的設置內你可改變每條路線的特定顏色和寬度, 以及是否完全隱藏某一路線. 這可讓您標記你不再想使用但既不是要刪除的路線出現在地圖上.  在一般選項中的 |cffffff78顯示隱藏路線|r 選項可以用來淩駕這個個別路線設置.
 

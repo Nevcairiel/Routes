@@ -1,5 +1,5 @@
 ﻿-- Routes
--- deDE Localization file, by Stanzilla
+-- deDE Localization file, by Stan (Arcádia - EU Zirkel des Cenarius)
 
 local L = LibStub("AceLocale-3.0"):NewLocale("Routes", "deDE")
 if not L then return end
@@ -58,7 +58,7 @@ L["Never show"] = "Niemals anzeigen"
 -- Waypoints
 L["Waypoints (Carto)"] = "Wegpunkte (Carto)"
 L["Integrated support options for Cartographer_Waypoints"] = "Integrierte Optionen für Cartographer_Waypoints"
-L["This section implements Cartographer_Waypoints support for Routes. Click Start to find the nearest node in a visible route in the current zone.\n"] = "Dieser Bereich implementiert Cartographer_Waypoints Unterstützung in Routes. Klicken Sie Start um den nächsten Knotenpunkt einer sichtbaren Route in der momentanen Zone zu finden"
+L["This section implements Cartographer_Waypoints support for Routes. Click Start to find the nearest node in a visible route in the current zone.\n"] = "Dieser Bereich implementiert Cartographer_Waypoints Unterstützung in Routes. Klicken Sie Start um den nächsten Knotenpunkt einer sichtbaren Route in der momentanen Zone zu finden.\n"
 L["Waypoint hit distance"] = "Distanz nach der der Wegpunkt als erreicht gilt."
 L["This is the distance in yards away from a waypoint to consider as having reached it so that the next node in the route can be added as the waypoint"] = "Das ist die Distanz in Yards die einen Wegpunkt als erreicht vermeldet um den nächsten Knotenpunkt als Wegpunkt hinzuzufügen."
 L["Change direction"] = "Richtung ändern"
@@ -67,6 +67,23 @@ L["Start using Waypoints"] = "Wegpunkte benutzen"
 L["Start using Cartographer_Waypoints by finding the closest visible route/node in the current zone and using that as the waypoint"] = "Beginne Cartographer_Waypoints zu nutzen um den/die nächsten sichtbaren Knotenpunkt/Route in der aktuellen Zone als Wegpunkt zu benutzen"
 L["Stop using Waypoints"] = "Wegpunkte nicht mehr benutzen"
 L["Stop using Cartographer_Waypoints by clearing the last queued node"] = "Beende die Nutzung von Cartographer_Waypoints indem der letzte Knotenpunkt in der Reihe gelöscht wird"
+L["Start using Waypoints (Carto)"] = "Wegpunkte (Carto) benutzen"
+L["Stop using Waypoints (Carto)"] = "Wegpunkte (Carto) nicht mehr benutzen"
+L["Change direction (Carto)"] = "Richtung ändern (Carto)"
+
+-- TomTom
+L["Waypoints (TomTom)"] = "Wegpunkte (TomTom)"
+L["Integrated support options for TomTom"] = "Integrierte Optionen für TomTom"
+L["This section implements TomTom support for Routes. Click Start to find the nearest node in a visible route in the current zone.\n"] = "Dieser Bereich implementiert TomTom Unterstützung in Routes. Klicken Sie Start um den nächsten Knotenpunkt einer sichtbaren Route in der momentanen Zone zu finden.\n"
+L["Start using TomTom"] = "TomTom benutzen"
+L["Start using TomTom by finding the closest visible route/node in the current zone and using that as the waypoint"] = "Beginne TomTom zu nutzen um den/die nächsten sichtbaren Knotenpunkt/Route in der aktuellen Zone als Wegpunkt zu benutzen"
+L["Stop using TomTom"] = "TomTom nicht mehr benutzen"
+L["Stop using TomTom by clearing the last queued node"] = "Beende die Nutzung von TomTom indem der letzte Knotenpunkt in der Reihe gelöscht wird"
+L["TomTom is missing or disabled"] = "TomTom fehlt oder ist deaktiviert"
+L["Start using Waypoints (TomTom)"] = "Wegpunkte (TomTom) benutzen"
+L["Stop using Waypoints (TomTom)"] = "Wegpunkte (TomTom) nicht mehr benutzen"
+L["Change direction (TomTom)"] = "Richtung ändern (TomTom)"
+L["An updated copy of TomTom is required for TomTom integration to work"] = "Eine aktuelle Version von TomTom wird vorrausgesetzt damit die Integrierung funktioniert"
 
 -- Add Route Config
 L["Add"] = "Hinzufügen"
@@ -175,7 +192,47 @@ L["Cartographer_Waypoints module is missing or disabled"] = "Das Cartographer_Wa
 L["%s - Node %d"] = "%s - Knotenpunkt %d"
 L["Direction changed"] = "Richtung geändert"
 
+-- Taboo stuff
+L["Routes Node Menu"] = "Routes Knotenpunkte Menü"
+L["Delete node"] = "Knotenpunkt löschen"
+L["Add node before (red)"] = "Knotenpunkt davor hinzufügen (rot)"
+L["Add node after (green)"] = "Knotenpunkt danach hinzufügen (grün)"
+L["You may not delete a taboo that is being edited."] = "Tabus die gerade bearbeitet werden, können nicht gelöscht werden."
+L["TABOO_EDIT_DESC"] = "Um eine Taburegion zu bearbeiten, klicken Sie auf den |cffffd200Bearbeiten|r-Knopf. Die Taburegion wird auf der Weltkarte gezeichnet. Ziehen Sie an den Ecken um sie zu positionieren. Klicken Sie mit der rechten Maustauste auf die Ecken um weitere Ecken hinzuzufügen oder zu entfernen. Nachdem Bearbeiten können Sie den |cffffd200Speichern|r-Knopf um ihre Änderungen zu Speichern, oder den |cffffd200Abbrechen|r-Knopf um sie zu verwerfen."
+L["Edit taboo region"] = "Taburegion bearbeiten"
+L["Edit this taboo region on the world map"] = "Diese Taburegion auf der Weltkarte bearbeiten"
+L["Save taboo edit"] = "Bearbeitung speichern"
+L["Stop editing this taboo region on the world map and save the edits"] = "Bearbeitung dieser Taburegion auf der Weltkarte abbrechen und Änderungen speichern"
+L["Cancel taboo edit"] = "Bearbeitung abbrechen"
+L["Stop editing this taboo region on the world map and abandon changes made"] = "Bearbeitung dieser Taburegion auf der Weltkarte abbrechen und Änderungen nicht speichern"
+L["Delete Taboo"] = "Tabu löschen"
+L["Delete this taboo region permanently. This will also remove it from all routes that use it."] = "Diese Taburegion unwideruflich löschen. Dies wird sie auch von allen Routen entfernen die sie nutzen."
+L["Are you sure you want to delete this taboo? This action will also remove the taboo from all routes that use it."] = "Sind Sie sicher, dass Sie dieses Tabu entfernen möchten? Diese Aktion wird es auch von allen Routen entfernen die sie nutzen."
+L["TABOO_DESC"] = "Taburegionen sind Bereiche die Sie festlegen um Knotenpunkte auszuschliessen. Sobald Sie eine Taburegion erstellt haben, können Sie diese Taburegion zu einer bereits existierenden Route hinzufügen, alle Knotenpunkte dieser Region werden entfernt und keine neuen mehr hinzugefügt."
+L["Name of Taboo"] = "Name des Tabus"
+L["Name of taboo region to add"] = "Name der Taburegion die hinzugefügt werden soll"
+L["No name given for new taboo region"] = "Es wurde kein Name für die neue Taburegion angegeben"
+L["Zone to create taboo in"] = "Zone in der das Tabu erstellt werden soll"
+L["Create Taboo"] = "Tabu erstellen"
+L["Taboos in %s"] = "Tabus in %s"
+L["A taboo with that name already exists. Overwrite?"] = "Ein Tabu mit diesem Namen existiert bereits. Überschreiben?"
+L["This route has the following taboo regions:"] = "Diese Route hate die folgenden Taburegionen:"
+L["This route has no taboo regions."] = "Diese Route hat keine Taburegionen."
+L["This route contains |cffffd200%d|r nodes that have been tabooed."] = "Diese Route enthält |cffffd200%d|r Knotenpunkte die ausgeschlossen wurden."
+L["TABOO_DESC2"] = "Taburegionen sind Bereiche die Sie festlegen damit sie von Routen ignoriert werden. Knotenpunkte in diesen Taburegionen werden ignoriert und nicht in die Route eingeschlossen. Desweiteren wird bei der Routenoptiomierung versucht diese Gebiete nicht zu durchqueren, soweit dies möglich ist."
+L["Taboos"] = "Tabus"
+L["Select taboo regions to apply:"] = "Wählen Sie die Taburegion zum Übernehmen"
+L["You have |cffffd200%d|r taboo region(s) in |cffffd200%s|r."] = "Sie haben |cffffd200%d|r Taburegion(en) in |cffffd200%s|r."
+
 -- FAQ
+L["Help File"] = "Hilfedatei"
+L["Overview"] = "Übersicht"
+L["Creating a route"] = "Eine Route erstellen"
+L["Optimizing a route"] = "Eine Route optimieren"
+L["Customizing route display"] = "Die Anzeige einer Route anpassen"
+L["Creating a taboo region"] = "Eine Taburegion erstellen"
+L["Waypoints Integration"] = "Integration von Wegpunkten"
+L["Automatic route updating"] = "Automatisches Updaten von Routen"
 L["FAQ"] = true
 L["Frequently Asked Questions"] = true
 L["FAQ_TEXT"] = [[
@@ -213,16 +270,16 @@ Was macht die "Extra Optimierung" Option?
 Standardmäßig benutzen wir ACO nur mit dem Standard |cffffff782-opt Algorithmus|r um Routen zu optimieren. Wenn Sie "Extra Optimierung" anschalten, wird Routes auch 2.5-opt verwenden, der eine spezielle Untermenge von 3-opt ist. 2-opt ist der Prozess bei dem paarweise angeordnete Ecken ausgetauscht werden (A-B und C-D werden zu A-C und B-D) um kürzere Routen zu produzieren.
 
 |cffffd200
-What algorithm does node clustering use?
+Welchen Algorithmus nutzt die Routenkomprimierung?
 |r
-We employ a Hierarchical Agglomerative Clustering algorithm using a greedy approach, so the output is deterministic.
+Wir nutzen einen Hierarchical Agglomerative Clustering Algorithmus auf eine sehr erfolgshungrige Weise, so dass das Ergebnis plangesteuert ist.
 
 |cffffd200
-I created a taboo region, attached it to a route, and optimized it. My route still flies through the taboo region. Why?
+Ich habe eine Taburegion erstellt, sie an eine Route angehängt und optimiert. Meine Route führt trotzdem noch durch die Taburegion. Warum?
 |r
-It is not possible to always find a route that does not fly through a taboo region or sometimes highly unfeasible to do so.
+Es ist nicht immer möglich eine Route zu finden die nicht durch eine Taburegion geht oder nicht sehr brauchbar.
 
-The user could potentially create taboo regions that split the map into impassable sections and regions, so the algorithm is simply biased not to pass through them if it is possible.
+Der Benutzer könnte eventuell Taburegionen erstellen die die Karte in unpassierbare Sektionen und Regionen aufteilt, so dass der Algorithmusgorithm einfach zu befangen ist sie zu durchqueren auch wenn es möglich ist.
 
 |cffffd200
 Ich habe einen Fehler gefunden! Wo kann ich ihn melden?
@@ -239,4 +296,128 @@ Wer hat dieses coole Addon geschrieben?
 |cffffff78Xaros|r von EU Doomhammer Allianz & |cffffff78Xinhuan|r von US Blackrock Allianz waren es.
 ]]
 
+L["OVERVIEW_TEXT"] = [[
+|cffffff78Routes|r ist ein Addon das dazu konstruiert wurde um das Sammeln von Dingen zu effizienter zu gestalten. Es macht dies indem es effiziente Sammelrouten, basierend auf dem was man Sammeln will, erstellt und dabei existierende Daten aus Ihren |cffffff78GatherMate|r, |cffffff78Cartographer_<Profs>|r oder |cffffff78Gatherer|r Addons nutzt. Diese Routen werden dann auf Ihren Karten gezeichnet und Sie können Ihren einfach und schnell folgen.
+
+Das|cffffff78Travelling Salesman Problem|r (TSP) ist ein traditionelles Problem bei dem N Städte und die Entfernung zwischen irgendeinem Paar von Städten gegeben ist und die kürzeste Reise zwischen diesen Städten, die jede Stadt genau einmal besucht und dann zum Ausgangspunkt zurückkehrt, gefunden werden soll. Das selbe Problem kann auf Sammelpunkte in World of Warcraft angewendet werden um die kürzeste mögliche Route zu finden um jeden bekannten Sammelpunkt in einem Kreis abzulaufen.
+]]
+L["CREATE_ROUTE_TEXT"] = [[
+Eine Route zu erstellen besteht aus 4 einfachen Punkten. Als ersters öffnen Sie die |cffffff78Hinzufügen|r Sektion auf der linken Seite.
+
+|cffffff781.|r Geben Sie den Namen der Route ein und und drücken Sie |cffffff78ENTER|r oder klicken den |cffffff78OK|r-Knopf.
+
+|cffffff782.|r Wählen Sie die Zone in der Sie die Route erstellen wollen.
+
+|cffffff783.|r Wählen Sie die Quelle für ihre Daten.
+
+|cffffff784.|r Wählen Sie die Datentypen die Sie in Ihrer Route benutzen möchten.
+
+
+|cffffd200Anmerkungen:|r
+
+* Es ist wichtig, dass Sie den |cffffff78ENTER|r-Knopf drücken oder auf |cffffff78OK|r klicken, wenn Sie einen Routennamen eingeben, sonst wird der Name nicht gespeichert.
+
+* Standardmäßig wird das |cffffff78Zone wählen|r Aufklappmenü nur die Zonen der Scherbenwelt, die in der Sie sich gerade befinden und die Zone die Sie sich momentan in der Weltkarte anschauen angezeigt werden. Das bedeutet, wenn Sie eine Zone in den Westlichen Pestländern erstellen möchten, während Sie in Eisenschmiede sind, müssen Sie zuerst die Weltkarte öffnen, sich das Gebiet der WPL anzeigen lassen und auch geöffnet lassen bevor Sie das Optionsmenü von Routes öffnen.
+
+* Wenn die Route erfolgreich erstellt wurde, werden Sie pinke Linien sehen, die im gewählten Gebiet über Ihre ganze Karte verlaufen. Es wird ein Eintrag auf der rechten Seite unter Routen für jede Route angelegt. Diese anfängliche Route ist nicht optimiert und muss deswegen verbessert werden.
+]]
+L["OPTIMIZING_ROUTE_TEXT"] = [[
+Neue Routen die erstellt werden sind von Anfang an nicht optimiert und sehen aus wie ein planloser Haufen Linien auf der Karte. Um eine Route zu optimieren, klicken Sie auf Ihre Route auf der linken Seite. Auf der rechten Seite sind nun 4 Registerkarten; Klicken Sie auf |cffffff78Route Optimieren|r.
+
+Die Optimierung einer Route besteht aus 2 Teilen. Der erste ist das komprimieren der Route, der zweite die Routenoptimierung.
+
+|cffffff781.|r Klicken Sie auf den |cffffff78Komprimieren|r-Knopf um die Route zu komprimieren.
+
+|cffffff782.|r Klicken Sie auf den |cffffff78Vordergrund|r ODER |cffffff78Hintergrund|r-Knopf und warten Sie.
+
+
+|cffffd200Anmerkungen:|r
+
+* Das Routenkomprimieren ist optional. Was es genau macht ist, dass es nahe beieinander stehende Knotenpunkte in einer festgelegten Entfernung in einen einzigen Wegpunkt kombiniert. Das komprimieren einer Route ist ein umkehrbarer Prozess, es gehen keine Daten verloren.
+
+* Die Routenoptimierung kann entweder im Vordergrund oder Hintergrund durchgeführt werden. Beide Methoden bewirken das selbe. Bei der Vordergrundmethode wird die komplette, verfügbare CPU Zeit genutzt und bringt WoW kurz zum "hängen" bis der Vorgang abgeschlossen ist, während die Hintergrundoptimierung das Selbe viel langsamer im Hintergrund durchführt ohne WoW einfrieren zu lassen.
+
+* Einfach gesagt, nutzen Sie die Vordergrundoptimierung wenn Ihre Route weniger als 100 Knotenpunkte hat, Hintergrund wenn die Anzahl der Knotenpunkte hoch ist, sonst besteht die Gefahr, dass Ihre Verbindung mit dem WoW-Serven getrennt wird, wenn die Optimierung zu lange dauert.
+
+* Die Routenerstellung nutzt einen Algorithmus der als |cffffff78Ant Colony Optimization|r bekannt ist. Dieser Algorithmus basiert auf Beobachtungen von Ameisen im echten Leben und nutzt tausende, zufallsgenerierte, Zahlen um die Ameisen zu simulieren und die Route zu erstellen.
+
+* Das bedeutet, dass die Routengenerierung zufällig ist und beim Optimieren der selben Anfangsroute jedesmal ein anderes Ergebnis dabei hervorkommt. Sie können eine Route mehrmals optimieren um zu versuchen eine bessere Lösung zu finden, Routes wird immer die kürzeste bekannte Lösung benutzen.
+
+* Der andere Grund warum wir eine zufällige Route generiert haben wollen, ist die Tatsache dass wir nicht wollen, dass tausende andere Leute genau die selbe Route benutzen wie man selbst, oder? Die Standard WowHead Knotenpunktdaten sind sehr einfach zu downloaden für die 3 Datenerfassungsaddons.
+
+* In der momentanen Implementierung wir der ACO Algorithmus in einer sehr beschnittenen Version genutzt um die Rechendauer zu reduzieren. Zu versuchen ein NP-Komplettes Problem in einer WoW Sandbox, die eine Lua Scriptsprache benutzt, zu lösen, ist nicht unbedingt das Beste was man machen kann.
+
+* Wir geben unser Bestes die Route daran zu hindern sich selbst zu überkreuzen, aber manchmal passiert es und der Algorithmus kann es nicht auffangen. Falls dies passieren sollte, optimieren Sie die Route einfach nochmal.
+]]
+L["CUSTOMIZING_ROUTE_TEXT"] = [[
+Sie können die Anzeige Ihrer Routen auf der Karte sehr leicht anpassen. Die Einstellungen sind in zwei Teile gegliedert. Die |cffffff78Einstellungen|r Sektion auf der linken Seite enthält globale Einstellungen die alles betreffen, die |cffffff78Linien Einstellungen|r Optionen jeder individuellen Route wird benutzt um unterschiedliche Einstellungen von den Globalen Einstellungen pro Route zu verwenden.
+
+Was das Zeichnen auf den Karten angeht, so können Sie bestimmen auf welchen Karten Routes Ihre Routen anzeigt und was die Standardfarbe und -breit der Linien ist. Weiterhin können Sie einstellen ob Linien auf der Minikarte kleine Lücken aufweisen sollen, damit sie die gelben Sammelsymbole und die Zeichen die von |cffffff78GatherMate|r/|cffffff78Cartographer|r/|cffffff78Gatherer|r gesetzt wurden nicht überlappen.
+
+Jede Route kann in ihren Optionen dahingehend geändert werden, dass sie eine spezifische Farbe und Linienbreite besitzt, oder sogar ob sie gänzlich versteckt werden soll. Dies ermöglicht Ihnen Routen die Sie nicht länger benutzen aber auch nicht löschen möchten vom auftauchen auf der Karte zu hindern. Die |cffffff78Zeige versteckte Routen|r Option in den allgemeinen Einstellungen kann dazu benutzt werden die individuellen Einstellungen der Routen zu überschreiben.
+
+Sie können allerdings auch die |cffffff78Auto. Anzeigen/Verstecken|r Funktion verwenden, die es Routes ermöglicht Routen basierend auf ihren Knotenpunkttypen wie Erz oder Kräuterkunde anzuzeigen und festlegen ob derartige Routen nur auf den Karten auftauchen sollen wenn Sie über den notwendigen Beruf verfügen oder die entsprechende Suchfähigkeit aktiviert ist, immer oder niemals angezeigt werden sollen. Wenn eine Route mehrer Knotenpunkttypen enthält, wird die Route angezeigt solange mindestens eine Bedingung zutrifft um angezeigt zu werden.
+]]
+L["CREATE_TABOOS_TEXT"] = [[
+|cffffff78Taburegionen|r sind Bereiche (2D Polygone) auf der Weltkarte die Sie festlegen um Routes zu sagen, dass sie ignoriert werden sollen. Wenn solche Bereiche angelegt werden, wird Routes jegliche Knotenpunkte die in diesen Gebieten liegen ignorieren und versuchen, dass die generierte Route diese Bereiche nicht durchquert. Das ist sehr hilftreich um Gegenden zu markieren, die nur im Weg umgehen, wie zB fliegende Inseln, Höhlen, hohe Berge, feindliche Städte und so weiter.
+
+Taburegionen werden durch folgende Schritte erstellt:
+
+|cffffff781.|r Wählen Sie |cffffff78Tabus|r aus dem Hauptverzeichnis auf der linken Seite des Einstellungsfenster aus.
+
+|cffffff782.|r Geben Sie der Taburegionen einen Namen und drücken Sie |cffffff78ENTER|r oder klicken Sie auf den|cffffff78OK|r-Knopf.
+
+|cffffff783.|r Wählen Sie eine Zone aus dem Auswahlmenü in der Sie die Taburegion erstellen möchten.
+
+|cffffff784.|r Klicken Sie auf |cffffff78Tabu erstellen|r.
+
+|cffffff785.|r Wählen Sie die neu erstelle Taburegion auf der linken Seite des Einstellungsfenster im |cffffff78Tabus|r Bereich aus.
+
+|cffffff786.|r Klicken Sie auf den |cffffff78Taburegion bearbeiten|r-Knopf.
+
+|cffffff787.|r Öffnen Sie die Weltkarte und wählen Sie die falls nötig die korrekte Karte auf der sich die Taburegion befindet, aus.
+
+|cffffff788.|r Sie sollten jetzt einen gestreiften Bereich auf der Weltkarte sehen. Bearbeiten Sie die Taburegion indem Sie
+a) Die Knotenpunkte des Polygons|cffffff78ziehen|r;
+b) Einen Knotenpunkt in das Polygon einfügen indem Sie auf einen bereits existierenden Knotenpunkt |cffffff78rechts-klicken|r;
+c) Einen Knotenpunkt löschen indem Sie auf einen bereits existierenden Knotenpunkt|cffffff78rechts-klicken|r.
+
+|cffffff789.|r Klicken Sie auf |cffffff78Bearbeitung speichern|r um Ihre Änderungen zu speichern, oder auf |cffffff78Bearbeitung abbrechen|r um die Änderungen zu verwerfen.
+
+Taburegionen können sich überlappen und soviele Knotenpunkte beinhalten wie Sie möchten. Das bedeutet, dass Sie sehr komplizierte und detailierte Taburegionen erstellen können, falls Sie das denn möchten.
+
+
+|cffffd200Anmerkungen:|r
+
+* Sobalt eine Taburegion erstellt wurde, können Sie die Taburegion an eine bereits existierende Route in den individuellen Einstellungen der Route anfügen. Sie müssen aber die Route neu optimieren, nachdem Sie eine Taburegion angefügt oder entfernt haben.
+
+* Das Bearbeiten einer Taburegion betrifft alle Routen alle Routen die diese benutzen, so wird eine Taburegion auch von allen Routen entfernt auf der sie benutzt wird, wenn Sie sie löschen.
+]]
+L["WAYPOINTS_INTEGRATION_TEXT"] = [[
+Routes verfügt über direkte Unterstützung für |cffffff78Cartographer_Waypoints|r oder |cffffff78TomTom|r, um das Wegpunkte-System zu benutzen um Ihnen ein schnelles Reisen auf Ihren Routen zu ermöglichen ohne mitten auf dem Weg die Orientierung zu verlieren.
+
+Das Benutzen von Wegpunkten ist einfach. Gehen Sie einfach zu einer Zone mit einer sichtbaren Route und klicken Sie auf den |cffffff78Anfangen Wegpunkte zu Benutzen|r-Knopf. Das führt dazu, dass sich Routes den am nahesten gelegenen Knotenpunkt in der am nahe liegensten, sichtbaren, Route sucht und diesen dann in die Reihe von Wegpunkten in |cffffff78Cartographer_Waypoints|r oder |cffffff78TomTom|r einfügt. Ein grafischer Pfeil wird jetzt in der Mitte Ihres Bildschirms erscheinen der Ihnen die Richtung und Entfernung anzeigt um den Wegpunkt zu erreichen.
+
+Wenn Sie den Knotenpunkt erreichen, wird Routes automatisch den nächsten Punkt anwählen und so weiter. Klicken Sie auf |cffffff78Aufhören Wegpunkte zu benutzen|r um den momentan anvisierten Wegpunkt zu entfernen und |cffffff78Richtung ändern|r um die Richtung zu ändern in der die Knotenpunkte angewählt werden.
+
+Für ein bisschen Hilfe bei der Nutzung von Wegpunkten, können Sie einfach Tastenkombinationen zum Starten/Stoppen und Richtung ändern im Routes Einstellungsmenü oder über ESC -> Tastenbelegungen anlegen ESC -> Key Bindings. Weiterhin bietet auch |cffffff78FuBar_RoutesFu|r einen schnellen Zugriff auf diese Funktionen.
+
+
+|cffffd200Anmerkungen:|r
+
+* Die integrierten Wegpunktsysteme sind deaktiviert falls kein unterstütztes Addon gefunden werden kann.
+]]
+L["AUTOMATIC_UPDATE_TEXT"] = [[
+Routes wird Ihre Routen automatisch aktualisieren und Knotenpunkte einfügen/entfernen wie es von verlangt wird wenn Sie |cffffff78GatherMate|r oder |cffffff78Cartographer_<Profs>|r als Datenquellen nutzen. |cffffff78Gatherer|r wird nicht unterstützt, da es momentan keine Callbacks liefert.
+
+Wenn Sie in einem dieser Addons einen neuen Knotenpunkt finden, wird Routes die Zonen nach existierenden Routen mit diesem Knotenpunkttyp durchsuchen und ihn in die beste Position in der Route einfügen. Ähnliches passiert, wenn Sie einen Knotenpunkt in diesen Addons entfernen, dann wird Routes den Knotenpunkt auch aus den relevanten Routen entfernen.
+
+Das Verschieben eines Knotenpunkts um ein paar Yards wird mit einer Löschung und Wiedereintragung gehandhabt. Das ist die selbe Methode die auch von GatherMate und Cartographer_<Profs> intern verwendet wird.
+
+Um das automatische Aktualisieren zu deaktivieren folgen Sie folgenden Schritten:
+
+|cffffff781.|r Wechseln Sie in das |cffffff78Routes|r-Hauptverzeichnis auf der linken Seite des Konfigurationsfensters.
+
+|cffffff782.|r Entfernen Sie die Haken der Boxen jeder Datenquelle.
+]]
 -- vim: ts=4 noexpandtab

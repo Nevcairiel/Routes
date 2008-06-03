@@ -1,8 +1,4 @@
-﻿do
-	return
-end
-
-local Routes = LibStub("AceAddon-3.0"):GetAddon("Routes")
+﻿local Routes = LibStub("AceAddon-3.0"):GetAddon("Routes")
 local TT = Routes:NewModule("TomTom", "AceEvent-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("Routes")
 

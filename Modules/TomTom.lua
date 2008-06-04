@@ -28,7 +28,7 @@ function TT:FindClosestVisibleRoute()
 		Routes:Print(L["An updated copy of TomTom is required for TomTom integration to work"])
 		return
 	end
-	local Astrolabe = DongleStub("Astrolabe-0.4-NC")
+	local Astrolabe = DongleStub("Astrolabe-0.4")
 	local c, z, x, y = Astrolabe:GetCurrentPlayerPosition()
 	local zone = GetRealZoneText()
 	local closest_zone, closest_route, closest_node
@@ -71,7 +71,7 @@ function TT:QueueFirstNode()
 		route_name = b
 		route_table = db.routes[ Routes.zoneData[a][4] ][b]
 		node_num = c
-		local Astrolabe = DongleStub("Astrolabe-0.4-NC")
+		local Astrolabe = DongleStub("Astrolabe-0.4")
 		local c, z, x, y = Astrolabe:GetCurrentPlayerPosition()
 		local x2, y2 = Routes:getXY(route_table.route[node_num])
 		stored_nodeID = route_table.route[node_num]
@@ -91,7 +91,7 @@ function TT.WaypointHit(event, uid, distance, dist, lastdist)
 		for i = 1, #route do
 			if stored_nodeID == route[i] then
 				-- Match found, get the next node to waypoint
-				local Astrolabe = DongleStub("Astrolabe-0.4-NC")
+				local Astrolabe = DongleStub("Astrolabe-0.4")
 				local c, z, x, y = Astrolabe:GetCurrentPlayerPosition()
 				node_num = i
 

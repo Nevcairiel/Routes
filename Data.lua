@@ -70,6 +70,26 @@ local zone_data = { -- {width, height, zoneID}
 	Feralas = {6949.760203962193,4633.173469308129,63,},
 	Hilsbrad = {3199.802496078764,2133.201664052509,64,},
 	Sunwell = {3327.0830078125,2218.7490234375,65,},
+	-- Wrath Zones
+	--[[ These valus derived from the dbc client files, they may change and/or are not final
+	UtgardeKeep = {0.0,0.0},
+	Nexus = {0.0,0.0},
+	Dalaran = {0.0,0.0},
+	--]]	
+	Northrend = {17751.3984375,11834.2650146484,66,},
+	BoreanTundra = {5764.5830088,3843.749878,67,},
+	Dragonblight = {5608.33312988281,3739.58337402344,68,},
+	GrizzlyHills = {5249.999878,3499.999878,69,},
+	HowlingFjord = {6045.83288574219,4031.24981689453,70,},
+	IcecrownGlacier = {6270.83331298828, 4181.25,71,},
+	SholazarBasin = {4356.25,2904.166504,72,},
+	TheStormPeaks = {7112.49963378906,4741.666015625,73,},
+	ZulDrak = {4993.75,3329.166504,74,},
+	LakeWintergrasp = {2974.99987792969,1983.33325195312,75,},
+	ScarletEnclave = {3162.5,2108.333374,76,},
+	CrystalsongForest = {2722.91662597656,1814.5830078125,77,},
+	LakeWintergrasp = {2974.99987792969,1983.33325195312,78,},
+	StrandoftheAncients = {1743.74993896484,1162.49993896484,79,},
 }
 -- meta table to return 0 for all unknown zones, instances, and what not
 local emptyZoneTbl = {0,0,0,""}

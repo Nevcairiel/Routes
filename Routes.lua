@@ -1,8 +1,9 @@
 ﻿--[[
 ********************************************************************************
 Routes
-2 May 2008
-(Written for live servers v2.4.1.8125)
+v1.1
+18 October 2008
+(Written for Live Servers v3.0.2.9056 or WotLK Beta Servers v3.0.3.9095)
 
 Author: Xaros @ EU Doomhammer Alliance & Xinhuan @ US Blackrock Alliance
 ********************************************************************************
@@ -36,12 +37,12 @@ Features:
 
 Download:
 	The latest version of Routes is always available on
-	- http://files.wowace.com
+	- http://www.wowace.com/projects/routes/
 
 Contact:
 	If you find any bugs or have any suggestions, you can contact us on:
 
-	Forum: http://www.wowace.com/forums/index.php?topic=10992.0
+	Forum: http://forums.wowace.com/showthread.php?t=10369
 	IRC  : Grum or Xinhuan on irc://irc.freenode.org/wowace
 	Email: Grum ( routes AT grum DOT nl )
 	       Xinhuan ( xinhuan AT gmail DOT com )
@@ -2504,7 +2505,7 @@ do
 		return node
 	end
 
-	local function TabooInsertNode(before, after)
+	local function TabooInsertNode(menubutton, before, after)
 		local new_id = Routes:getID( (before[X]+after[X])/2, (before[Y]+after[Y])/2 )
 
 		-- force the creation of a new node
@@ -2537,7 +2538,7 @@ do
 		Routes:DrawTaboos()
 	end
 
-	local function TabooDeleteNode(node)
+	local function TabooDeleteNode(menubutton, node)
 		local route = node[DATA].route
 		for i = 1, #route do
 			if route[i] == node[COORD] then
@@ -2557,7 +2558,7 @@ do
 	end
 
 	local info = {}
-	local function taboo_dropdown(level)
+	local function taboo_dropdown(self, level)
 		if (not level) then return end
 		for k in pairs(info) do info[k] = nil end
 		if (level == 1) then
@@ -2599,7 +2600,7 @@ do
 
 			-- Close menu item
 			info.text         = CLOSE
-			info.func         = CloseDropDownMenus
+			info.func         = function() CloseDropDownMenus() end
 			info.arg1         = nil
 			info.arg2         = nil
 			info.notCheckable = 1

@@ -25,10 +25,10 @@ Features:
 	- Optimize your route using the traveling salesmen problem (TSP) ant
 	  colony optimization (ACO) algorithm
 	- Background (nonblocking) and foreground (blocking) optimization
-	- Select color/thickness/transparancy/visibility for each route
+	- Select color/thickness/transparency/visibility for each route
 	- For any route created, finding a new node will try to add that as
 	  optimal as possible
-	- Quick clustering algorithm to merge nearby nodes into a single travelling
+	- Quick clustering algorithm to merge nearby nodes into a single traveling
 	  point
 	- Quickly mark entire areas/regions as "out of bounds" or "taboo" to Routes,
 	  meaning your routes will ignore nodes in those areas and avoid cross them

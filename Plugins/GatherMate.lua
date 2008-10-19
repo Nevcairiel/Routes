@@ -31,6 +31,7 @@ end
 
 local amount_of = {}
 local function Summarize(data, zone)
+	LN = LibStub("AceLocale-3.0"):GetLocale("GatherMateNodes", true) -- Workaround LoD of GatherMate if AddonLoader is used.
 	for db_type, db_data in pairs(GatherMate.gmdbs) do
 		-- reuse table
 		for k in pairs(amount_of) do amount_of[k] = nil end

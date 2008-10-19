@@ -924,6 +924,7 @@ function Routes:OnInitialize()
 			}
 		end
 	end
+	self:RegisterEvent("ADDON_LOADED")
 end
 
 local timerFrame = CreateFrame("Frame")
@@ -989,6 +990,12 @@ function Routes:OnDisable()
 	timerFrame:Hide()
 end
 
+function Routes:ADDON_LOADED(event, addon)
+	if IsLoggedIn() and self.plugins[addon] then
+		options.args.add_group.args[addon].disabled = false
+		options.args.add_group.args[addon].guiHidden = false
+	end
+end
 
 ------------------------------------------------------------------------------------------------------
 -- Ace options table stuff
@@ -2085,8 +2092,8 @@ do
 					values = get_source_values,
 					get = get_source_value,
 					set = set_source_value,
-					disabled = not plugin_table.IsActive(),
-					guiHidden = not plugin_table.IsActive(),
+					disabled = true,
+					guiHidden = true,
 				}
 			end
 		end

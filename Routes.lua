@@ -977,7 +977,7 @@ function Routes:OnEnable()
 		if db.defaults.callbacks[addon] and plugin_table.IsActive() then
 			plugin_table.AddCallbacks()
 		end
-	end	
+	end
 end
 
 function Routes:OnDisable()
@@ -986,7 +986,7 @@ function Routes:OnDisable()
 		if db.defaults.callbacks[addon] and plugin_table.IsActive() then
 			plugin_table.RemoveCallbacks()
 		end
-	end	
+	end
 	timerFrame:Hide()
 end
 
@@ -2274,7 +2274,7 @@ do
 	local function SortIntersection(a, b)
 		return a.x < b.x
 	end
-	
+
 	-- This function takes a taboo (a route basically), and draws it on screen and shades the inside
 	function Routes:DrawTaboo(route_data, width, color)
 		local fh, fw = WorldMapButton:GetHeight(), WorldMapButton:GetWidth()
@@ -2369,14 +2369,9 @@ do
 	end
 
 	-- Upvalues used for our taboo node functions
-	local taboo_nodes = {}
 	local taboo_cache = {}
-	local taboo_node_clicked
-
-	local taboo_node_count = 0
-	local taboo_node_texture = "Interface\\WorldMap\\WorldMapPartyIcon"
-
-	local TEXTURE, DATA, COORD, BEFORE, AFTER, X, Y = 1, 2, 3, 4, 5, 6, 7
+	local TEXTURE, DATA, COORD, CURRENT, REAL, X, Y  = 1, 2, 3, 4, 5, 6, 7
+	local GetOrCreateTabooNode
 
 	-- Define our functions for a node pin
 	local NodeHelper = {}
@@ -2413,77 +2408,125 @@ do
 
 		local new_id = Routes:getID(x,y)
 		if id == new_id then return end -- position didn't change, no updates
-
-		-- force the new position to be different position from an existing one
-		while taboo_nodes[new_id] do new_id = new_id + 1 end
 		x, y = Routes:getXY(new_id)
 
 		-- edit the route
-		local route = self[DATA].route
-		for i = 1, #route do
-			if route[i] == id then
-				route[i] = new_id
-				break
-			end
-		end
+		local current = self[CURRENT]
+		self[DATA].route[current] = new_id
+		self[COORD], self[X], self[Y] = new_id, x, y
 
-		-- update before & after
-		taboo_nodes[ self[BEFORE] ][AFTER] = new_id
-		taboo_nodes[ self[AFTER] ][BEFORE] = new_id
+		-- Relocate the before helper pin
+		local nodenum = current == 1 and #self[DATA].route or current-1
+		local node = self[DATA].fakenodes[nodenum]
+		local x2, y2 = Routes:getXY( self[DATA].route[nodenum] )
+		local new_id = Routes:getID( (x+x2)/2, (y+y2)/2 )
+		x2, y2 = Routes:getXY(new_id)
+		node[COORD], node[X], node[Y] = new_id, x2, y2
+		node:SetPoint("CENTER", RoutesTabooFrame, "TOPLEFT", x2*pw, -y2*ph)
 
-		-- update route
-		taboo_nodes[ id ] = nil
-		self[COORD] = new_id
-		self[X] = x
-		self[Y] = y
-		taboo_nodes[ new_id ] = self
+		-- Relocate the after helper pin
+		nodenum = current == #self[DATA].route and 1 or current+1
+		node = self[DATA].fakenodes[current]
+		x2, y2 = Routes:getXY( self[DATA].route[nodenum] )
+		new_id = Routes:getID( (x+x2)/2, (y+y2)/2 )
+		x2, y2 = Routes:getXY(new_id)
+		node[COORD], node[X], node[Y] = new_id, x2, y2
+		node:SetPoint("CENTER", RoutesTabooFrame, "TOPLEFT", x2*pw, -y2*ph)
 
 		-- redraw
 		Routes:DrawTaboos()
 	end
-	function NodeHelper:OnClick(button)
-		taboo_node_clicked = self
-		ToggleDropDownMenu(1, nil, Routes_GenericDropDownMenu, self:GetName(), 0, 0)
-	end
-	function NodeHelper:OnEnter()
-		if not Routes_GenericDropDownMenu.showing then
-			taboo_nodes[ self[BEFORE] ][TEXTURE]:SetVertexColor( 1, 0, 0, 1 )
-			taboo_nodes[ self[AFTER ] ][TEXTURE]:SetVertexColor( 0, 1, 0, 1 )
+	function NodeHelper:OnClick(button, down)
+		if button == "LeftButton" and not self[REAL] then
+			-- Promote helper node to a real node
+			self[REAL] = true
+			self:SetAlpha(1)
+			local current = self[CURRENT]+1
+			for i = current, #self[DATA].route do
+				self[DATA].nodes[i][CURRENT] = i+1
+				self[DATA].fakenodes[i][CURRENT] = i+1
+			end
+			self[CURRENT] = current
+			tinsert(self[DATA].route, current, self[COORD])
+			tinsert(self[DATA].nodes, current, self)
+			tremove(self[DATA].fakenodes, current-1)
+			local x, y = Routes:getXY(self[COORD])
+			local w, h = RoutesTabooFrame:GetWidth(), RoutesTabooFrame:GetHeight()
+
+			-- Now create the before helper pin
+			local nodenum = current == 1 and #self[DATA].route or current-1
+			local x2, y2 = Routes:getXY( self[DATA].route[nodenum] )
+			local new_id = Routes:getID( (x+x2)/2, (y+y2)/2 )
+			local node = GetOrCreateTabooNode(self[DATA], new_id)
+			x2, y2 = Routes:getXY(new_id)
+			node:SetPoint("CENTER", RoutesTabooFrame, "TOPLEFT", x2*w, -y2*h)
+			node:SetAlpha(0.4)
+			node[REAL] = false
+			node[CURRENT] = nodenum
+			tinsert(self[DATA].fakenodes, nodenum, node)
+
+			-- Create the after helper pin
+			nodenum = current == #self[DATA].route and 1 or current+1
+			x2, y2 = Routes:getXY( self[DATA].route[nodenum] )
+			new_id = Routes:getID( (x+x2)/2, (y+y2)/2 )
+			node = GetOrCreateTabooNode(self[DATA], new_id)
+			x2, y2 = Routes:getXY(new_id)
+			node:SetPoint("CENTER", RoutesTabooFrame, "TOPLEFT", x2*w, -y2*h)
+			node:SetAlpha(0.4)
+			node[REAL] = false
+			node[CURRENT] = current
+			tinsert(self[DATA].fakenodes, current, node)
+
+		elseif button == "RightButton" and self[REAL] and #self[DATA].route > 3 then
+			-- Delete node if we have more than 3 nodes
+			local current = self[CURRENT]
+			for i = current+1, #self[DATA].route do
+				self[DATA].nodes[i][CURRENT] = i-1
+				self[DATA].fakenodes[i][CURRENT] = i-1
+			end
+			tremove(self[DATA].route, current)
+			local a = tremove(self[DATA].nodes, current)
+			local b = tremove(self[DATA].fakenodes, current)
+
+			-- Relocate the before helper pin
+			local w, h = RoutesTabooFrame:GetWidth(), RoutesTabooFrame:GetHeight()
+			local nodenum = current == 1 and #self[DATA].route or current-1
+			local nodenum2 = current > #self[DATA].route and 1 or current
+			local node = self[DATA].fakenodes[nodenum]
+			local x, y = Routes:getXY( self[DATA].route[nodenum] )
+			local x2, y2 = Routes:getXY( self[DATA].route[nodenum2] )
+			local new_id = Routes:getID( (x+x2)/2, (y+y2)/2 )
+			x2, y2 = Routes:getXY(new_id)
+			node[COORD], node[X], node[Y] = new_id, x2, y2
+			node:SetPoint("CENTER", RoutesTabooFrame, "TOPLEFT", x2*w, -y2*h)
+
+			-- Recycle ourselves
+			a:Hide()
+			b:Hide()
+			taboo_cache[a] = true
+			taboo_cache[b] = true
+			Routes:DrawTaboos()
 		end
-	end
-	function NodeHelper:OnLeave()
-		if DropDownList1:IsVisible() then
-			self:SetScript("OnUpdate", NodeHelper.OnUpdate2)
-			Routes_GenericDropDownMenu.showing = true
-		else
-			NodeHelper.OnUpdate2(self)
-		end
-	end
-	function NodeHelper:OnUpdate2()
-		if not DropDownList1:IsVisible() then
-			taboo_nodes[ self[BEFORE] ][TEXTURE]:SetVertexColor( 1, 1, 1, 1 )
-			taboo_nodes[ self[AFTER ] ][TEXTURE]:SetVertexColor( 1, 1, 1, 1 )
-			self:SetScript("OnUpdate", nil)
-			Routes_GenericDropDownMenu.showing = false
+
+		-- Check data
+		for i = 1, #self[DATA].route do
+			assert(self[DATA].nodes[i][CURRENT] == i)
+			assert(self[DATA].fakenodes[i][CURRENT] == i)
 		end
 	end
 
-	local function GetOrCreateTabooNode( route_data, coord )
-		local node = taboo_nodes[coord]
-		if node then return node end
-		
+	GetOrCreateTabooNode = function( route_data, coord )
 		node = next( taboo_cache )
 		if node then
 			taboo_cache[ node ] = nil
 		else
 			-- Create new node
-			taboo_node_count = taboo_node_count + 1
-			node = CreateFrame( "Button", "RoutesTabooNodePin"..taboo_node_count, RoutesTabooFrame )
+			node = CreateFrame( "Button", nil, RoutesTabooFrame )
 			node:SetFrameLevel( RoutesTabooFrame:GetFrameLevel() + 6 ) -- we need to be above others (GatherMate nodes are @ 5)
 
 			-- set it up
 			local texture = node:CreateTexture( nil, "OVERLAY" )
-			texture:SetTexture( taboo_node_texture )
+			texture:SetTexture("Interface\\WorldMap\\WorldMapPartyIcon")
 			texture:SetAllPoints(node)
 			node[TEXTURE] = texture
 
@@ -2499,50 +2542,12 @@ do
 		node[DATA] = route_data
 
 		node:RegisterForDrag("LeftButton")
-		node:RegisterForClicks("RightButtonUp")
+		node:RegisterForClicks("LeftButtonDown", "RightButtonUp")
 		node:SetScript("OnDragStart", NodeHelper.StartMoving)
 		node:SetScript("OnClick", NodeHelper.OnClick)
 		node:SetScript("OnDragStop", NodeHelper.OnDragStop)
-		node:SetScript("OnEnter", NodeHelper.OnEnter)
-		node:SetScript("OnLeave", NodeHelper.OnLeave)
-
-		taboo_nodes[coord] = node
 		node:Show()
-
 		return node
-	end
-
-	local function TabooInsertNode(menubutton, before, after)
-		local new_id = Routes:getID( (before[X]+after[X])/2, (before[Y]+after[Y])/2 )
-
-		-- force the creation of a new node
-		while taboo_nodes[new_id] do new_id = new_id + 1 end
-		local node = GetOrCreateTabooNode( before[DATA], new_id )
-
-		-- force the position
-		local w, h = RoutesTabooFrame:GetWidth(), RoutesTabooFrame:GetHeight()
-		local x, y = Routes:getXY( new_id )
-		node:SetPoint("CENTER", RoutesTabooFrame, "TOPLEFT", x*w, -y*h)
-
-		-- fix the chain
-		node[ BEFORE ]  = before[COORD]
-		node[ AFTER  ]  = after[COORD]
-		before[ AFTER ] = new_id
-		after[ BEFORE ] = new_id
-
-		local route = node[DATA].route
-		for i = 1, #route do
-			if route[i] == after[COORD] then
-				local tmp = i - 1
-				if tmp < 1 then tmp = #route end
-				if route[tmp] == before[COORD] then
-					tinsert( route, i, node[COORD] )
-					break
-				end
-			end
-		end
-
-		Routes:DrawTaboos()
 	end
 
 	local function TabooDeleteNode(menubutton, node)
@@ -2554,77 +2559,18 @@ do
 			end
 		end
 
-		taboo_nodes[ node[COORD] ] = nil
-		taboo_nodes[ node[BEFORE] ][AFTER ] = node[AFTER]
-		taboo_nodes[ node[AFTER ] ][BEFORE] = node[BEFORE]
-
 		node:Hide()
 		taboo_cache[node] = true
-
-		Routes:DrawTaboos()
 	end
 
-	local info = {}
-	local function taboo_dropdown(self, level)
-		if (not level) then return end
-		for k in pairs(info) do info[k] = nil end
-		if (level == 1) then
-			-- Create the title of the menu
-			info.isTitle      = true
-			info.text         = L["Routes Node Menu"]
-			info.notCheckable = true
-			UIDropDownMenu_AddButton(info, level)
-
-			-- Generate a menu item for each pin the mouse is on
-			info.isTitle      = nil
-			info.notCheckable = nil
-
-			-- Delete option
-			info.text         = L["Delete node"]
-			info.func         = TabooDeleteNode
-			info.arg1         = taboo_node_clicked
-			if #taboo_node_clicked[DATA].route <= 3 then
-				info.disabled = true
-			else
-				info.disabled = nil
-			end
-			UIDropDownMenu_AddButton(info, level)
-			info.disabled     = nil
-
-			-- Before
-			info.text         = L["Add node before (red)"]
-			info.func         = TabooInsertNode
-			info.arg1         = taboo_nodes[ taboo_node_clicked[BEFORE] ]
-			info.arg2         = taboo_node_clicked
-			UIDropDownMenu_AddButton(info, level)
-
-			-- After
-			info.text         = L["Add node after (green)"]
-			info.func         = TabooInsertNode
-			info.arg1         = taboo_node_clicked
-			info.arg2         = taboo_nodes[ taboo_node_clicked[AFTER] ]
-			UIDropDownMenu_AddButton(info, level)
-
-			-- Close menu item
-			info.text         = CLOSE
-			info.func         = function() CloseDropDownMenus() end
-			info.arg1         = nil
-			info.arg2         = nil
-			info.notCheckable = 1
-			UIDropDownMenu_AddButton(info, level)
-		end
-	end
-	local Routes_GenericDropDownMenu = CreateFrame("Frame", "Routes_GenericDropDownMenu")
-	Routes_GenericDropDownMenu.displayMode = "MENU"
-	Routes_GenericDropDownMenu.initialize = taboo_dropdown
 
 	local TabooHandler = {}
 	function TabooHandler:EditTaboo(info)
 		local zone, taboo = info.arg.zone, info.arg.taboo
-		
+
 		-- make a copy of the taboo for editing
 		local taboo_data = db.taboo[zone][taboo]
-		local copy_of_taboo_data = {route = {}}
+		local copy_of_taboo_data = {route = {}, nodes = {}, fakenodes = {}}
 		for i = 1, #taboo_data.route do
 			copy_of_taboo_data.route[i] = taboo_data.route[i]
 		end
@@ -2633,19 +2579,28 @@ do
 		local fh, fw = RoutesTabooFrame:GetHeight(), RoutesTabooFrame:GetWidth()
 
 		local route = copy_of_taboo_data.route
-		local before, after
+		-- Pin the real nodes
 		for i=1, #route do
 			local node = GetOrCreateTabooNode(copy_of_taboo_data, route[i])
-
-			-- place it
 			local x, y = node[X], node[Y]
 			node:SetPoint("CENTER", RoutesTabooFrame, "TOPLEFT", x*fw, -y*fh)
-
-			-- setup before and after
-			if i == 1 then before = route[#route] else before = route[i-1] end
-			if i == #route then after = route[1]  else after  = route[i+1] end
-			node[BEFORE] = before
-			node[AFTER ] = after
+			node[CURRENT] = i
+			node[REAL] = true
+			copy_of_taboo_data.nodes[i] = node
+			node:SetAlpha(1)
+		end
+		-- Pin the helper nodes
+		for i=1, #route do
+			local beforeX, beforeY = Routes:getXY(route[i])
+			local afterX, afterY = Routes:getXY(route[i == #route and 1 or i+1])
+			local new_id = Routes:getID( (beforeX+afterX)/2, (beforeY+afterY)/2 )
+			local node = GetOrCreateTabooNode(copy_of_taboo_data, new_id)
+			local x, y = Routes:getXY(new_id)
+			node:SetPoint("CENTER", RoutesTabooFrame, "TOPLEFT", x*fw, -y*fh)
+			node[CURRENT] = i
+			node[REAL] = false
+			copy_of_taboo_data.fakenodes[i] = node
+			node:SetAlpha(0.4)
 		end
 		Routes:DrawTaboos()
 	end
@@ -2670,12 +2625,20 @@ do
 		local copy_of_taboo = taboo_edit_list[taboo]
 		taboo_edit_list[taboo] = nil
 		for i = 1, #copy_of_taboo.route do
-			local point = copy_of_taboo.route[i]
-			local node = taboo_nodes[point]
+			-- Return the pool of pins representing real nodes
+			local node = copy_of_taboo.nodes[i]
 			node:Hide()
-			taboo_nodes[point] = nil
 			taboo_cache[node] = true
+			copy_of_taboo.nodes[i] = nil
+
+			-- Return the pool of pins representing helper nodes
+			node = copy_of_taboo.fakenodes[i]
+			node:Hide()
+			taboo_cache[node] = true
+			copy_of_taboo.fakenodes[i] = nil
 		end
+		assert(not next(copy_of_taboo.fakenodes))
+		assert(not next(copy_of_taboo.nodes))
 		Routes:DrawTaboos()
 		return copy_of_taboo -- return the edited table
 	end
@@ -2905,7 +2868,6 @@ do
 				local point = self:getID(i, j)
 				local node = GetOrCreateTabooNode(taboo, point)
 				node:Hide()
-				taboo_nodes[point] = nil
 				taboo_cache[node] = true
 			end
 		end
@@ -3025,7 +2987,7 @@ local TAXIROUTE_LINEFACTOR_2 = TAXIROUTE_LINEFACTOR / 2; -- Half of that
 -- relPoint - Relative point on canvas to interpret coords (Default BOTTOMLEFT)
 function G:DrawLine(C, sx, sy, ex, ey, w, color, layer)
 	local relPoint = "BOTTOMLEFT"
-	
+
 	if not C.Routes_Lines then
 		C.Routes_Lines={}
 		C.Routes_Lines_Used={}
@@ -3060,7 +3022,7 @@ function G:DrawLine(C, sx, sy, ex, ey, w, color, layer)
 		Bwid = ((l * c) - (w * s)) * TAXIROUTE_LINEFACTOR_2;
 		Bhgt = ((w * c) - (l * s)) * TAXIROUTE_LINEFACTOR_2;
 		BLx, BLy, BRy = (w / l) * sc, s * s, (l / w) * sc;
-		BRx, TLx, TLy, TRx = 1 - BLy, BLy, 1 - BRy, 1 - BLx; 
+		BRx, TLx, TLy, TRx = 1 - BLy, BLy, 1 - BRy, 1 - BLx;
 		TRy = BRx;
 	else
 		Bwid = ((l * c) + (w * s)) * TAXIROUTE_LINEFACTOR_2;

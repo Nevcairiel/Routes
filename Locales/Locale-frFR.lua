@@ -71,6 +71,7 @@ L["Stop using Cartographer_Waypoints by clearing the last queued node"] = "Arrê
 L["Start using Waypoints (Carto)"] = "Débuter la navigation (Carto)"
 L["Stop using Waypoints (Carto)"] = "Arrêter la navigation (Carto)"
 L["Change direction (Carto)"] = "Changer de direction (Carto)"
+
 -- TomTom
 L["Waypoints (TomTom)"] = "Navigation (TomTom)"
 L["Integrated support options for TomTom"] = "Options concernant le support intégré de TomTom."
@@ -124,6 +125,7 @@ L["Mining"] = "Minage"
 L["Fishing"] = "Pêche"
 L["Treasure"] = "Trésor"
 L["ExtractGas"] = "Gaz"
+L["Note"] = true
 
 -- Route Config
 L["When the following data sources add or delete node data, update my routes automatically by inserting or removing the same node in the relevant routes."] = "Quand les sources de données suivantes ajoutent ou suppriment des données d'un nœud, mettre à jour automatiquement mes routes en insérant ou en enlevant ce même nœud des routes appropriées."
@@ -180,6 +182,19 @@ L["Cluster"] = "Agréger"
 L["Cluster this route"] = "Agrège cette route."
 L["Uncluster"] = "Désagréger"
 L["Uncluster this route"] = "Désagrège cette route."
+
+L["Edit Route Manually"] = true
+L["Edit route"] = true
+L["Edit this route on the world map"] = true
+L["Save route edit"] = true
+L["Stop editing this route on the world map and save the edits"] = true
+L["Cancel route edit"] = true
+L["Stop editing this route on the world map and abandon changes made"] = true
+L["ROUTE_EDIT_DESC"] = [[
+To edit a route, click on the |cffffd200Edit|r button. The route will be drawn on the World Map. Drag the nodes to position them, left click on an in-between vertex to add nodes, right click on them to delete. After editing, you may click the |cffffd200Save|r button to save your changes, or the |cffffd200Cancel|r button to discard your changes.
+
+Please note that you cannot edit a route when it is being optimized in the background or if the route is a clustered route.
+]]
 
 -- Profession Names in the skills tab in the character frame
 -- Doing these 4 localizations specifically to avoid using Babble-Spell

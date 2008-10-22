@@ -183,6 +183,19 @@ L["Cluster this route"] = true
 L["Uncluster"] = true
 L["Uncluster this route"] = true
 
+L["Edit Route Manually"] = true
+L["Edit route"] = true
+L["Edit this route on the world map"] = true
+L["Save route edit"] = true
+L["Stop editing this route on the world map and save the edits"] = true
+L["Cancel route edit"] = true
+L["Stop editing this route on the world map and abandon changes made"] = true
+L["ROUTE_EDIT_DESC"] = [[
+To edit a route, click on the |cffffd200Edit|r button. The route will be drawn on the World Map. Drag the nodes to position them, left click on an in-between vertex to add nodes, right click on them to delete. After editing, you may click the |cffffd200Save|r button to save your changes, or the |cffffd200Cancel|r button to discard your changes.
+
+Please note that you cannot edit a route when it is being optimized in the background or if the route is a clustered route.
+]]
+
 -- Profession Names in the skills tab in the character frame
 -- Doing these 4 localizations specifically to avoid using Babble-Spell
 L["Skill-Fishing"] = "Fishing"

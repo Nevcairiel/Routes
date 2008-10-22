@@ -196,7 +196,7 @@ function Routes:DrawWorldmapLines()
 			local halfwidth = route_data.width_battlemap or defaults.width_battlemap
 			local color = route_data.color or defaults.color
 
-			if (not route_data.hidden and (route_data.visible or not defaults.use_auto_showhide)) or defaults.show_hidden then
+			if (not route_data.hidden and not route_data.editing and (route_data.visible or not defaults.use_auto_showhide)) or defaults.show_hidden then
 				if route_data.hidden then color = defaults.hidden_color end
 				local last_point
 				local sx, sy
@@ -887,9 +887,10 @@ function Routes:OnInitialize()
 				desc = L["Routes in %s"]:format(localizedZoneName),
 				args = {},
 			}
-			for route in pairs(zone_table) do
+			for route, route_table in pairs(zone_table) do
 				local routekey = route:gsub("%s", "\255") -- can't have spaces in the key
 				opts[zone].args[routekey] = self:CreateAceOptRouteTable(zone, route)
+				route_table.editing = nil -- in case server crashes during edit.
 			end
 			opts[zone].args.desc = {
 				type = "description",
@@ -1617,6 +1618,8 @@ end
 function ConfigHandler:DoForeground(info)
 	local t = db.routes[info.arg.zone][info.arg.route]
 	if #t.route > 724 then
+		-- Lua has 4mb limit on table size. 725x725 will result in a table of size 525625
+		-- 524288 (or 2^19) is the max as 8 bytes per entry (4 bytes for key, 4 bytes for value) will give exactly 4 Mb
 		Routes:Print(L["TOO_MANY_NODES_ERROR"])
 		return
 	end
@@ -1706,6 +1709,9 @@ function ConfigHandler:SetTabooRegionStatus(info, k, v)
 		end
 	end
 end
+function ConfigHandler:IsBeingManualEdited(info)
+	return db.routes[info.arg.zone][info.arg.route].editing
+end
 
 -- These tables are referenced inside CreateAceOptRouteTable() defined right below this
 local blank_line_table = {
@@ -1726,6 +1732,7 @@ local two_point_five_group_table = {
 			name = L["Extra optimization"], type = "toggle",
 			desc = L["ExtraOptDesc"],
 			get = "GetTwoPointFiveOpt", set = "SetTwoPointFiveOpt",
+			disabled = false, -- to avoid inheriting from parent, so we don't have to use an arg= field
 			order = 100,
 		},
 	},
@@ -1810,7 +1817,9 @@ function Routes:CreateAceOptRouteTable(zone, route)
 						confirm = true,
 						confirmText = L["Are you sure you want to delete this route?"],
 						order = 100,
+						disabled = "IsBeingManualEdited",
 					},
+					edit = Routes:CreateAceOptRouteEditTable(zone_route_table),
 				},
 			},
 			setting_group = {
@@ -1818,6 +1827,8 @@ function Routes:CreateAceOptRouteTable(zone, route)
 				name = L["Line settings"],
 				desc = L["Line settings"],
 				order = 100,
+				disabled = "IsBeingManualEdited",
+				arg = zone_route_table,
 				args = {
 					desc = {
 						type = "description",
@@ -1877,6 +1888,8 @@ function Routes:CreateAceOptRouteTable(zone, route)
 				type = "group",
 				order = 200,
 				name = L["Optimize route"],
+				disabled = "IsBeingManualEdited",
+				arg = zone_route_table,
 				args = {
 					desc = {
 						type = "description",
@@ -1969,6 +1982,8 @@ function Routes:CreateAceOptRouteTable(zone, route)
 				type = "group",
 				order = 200,
 				name = L["Taboos"],
+				disabled = "IsBeingManualEdited",
+				arg = zone_route_table,
 				args = {
 					desc = taboo_desc_table,
 					taboos = {
@@ -2288,6 +2303,8 @@ do
 			end
 		end
 
+		if route_data.isroute then return end
+
 		-- The shade-lines get half-alpha and 66% width
 		color[4] = color[4] / 2
 		width = 2/3 * width
@@ -2430,6 +2447,8 @@ do
 		if button == "LeftButton" and not self[REAL] then
 			-- Promote helper node to a real node
 			self[REAL] = true
+			self:SetWidth(16)
+			self:SetHeight(16)
 			self:SetAlpha(1)
 			local current = self[CURRENT]+1
 			for i = current, #self[DATA].route do
@@ -2450,7 +2469,9 @@ do
 			local node = GetOrCreateTabooNode(self[DATA], new_id)
 			x2, y2 = Routes:getXY(new_id)
 			node:SetPoint("CENTER", RoutesTabooFrame, "TOPLEFT", x2*w, -y2*h)
-			node:SetAlpha(0.4)
+			node:SetWidth(10)
+			node:SetHeight(10)
+			node:SetAlpha(0.75)
 			node[REAL] = false
 			node[CURRENT] = nodenum
 			tinsert(self[DATA].fakenodes, nodenum, node)
@@ -2462,7 +2483,9 @@ do
 			node = GetOrCreateTabooNode(self[DATA], new_id)
 			x2, y2 = Routes:getXY(new_id)
 			node:SetPoint("CENTER", RoutesTabooFrame, "TOPLEFT", x2*w, -y2*h)
-			node:SetAlpha(0.4)
+			node:SetWidth(10)
+			node:SetHeight(10)
+			node:SetAlpha(0.75)
 			node[REAL] = false
 			node[CURRENT] = current
 			tinsert(self[DATA].fakenodes, current, node)
@@ -2556,11 +2579,17 @@ do
 
 	local TabooHandler = {}
 	function TabooHandler:EditTaboo(info)
-		local zone, taboo = info.arg.zone, info.arg.taboo
-
 		-- make a copy of the taboo for editing
-		local taboo_data = db.taboo[zone][taboo]
+		local taboo_data = info.arg.isroute and db.routes[info.arg.zone][info.arg.route] or	db.taboo[info.arg.zone][info.arg.taboo]
 		local copy_of_taboo_data = {route = {}, nodes = {}, fakenodes = {}}
+		if info.arg.isroute then
+			local is_running, route_table = Routes.TSP:IsTSPRunning()
+			if is_running and route_table == taboo_data then return end
+			if ConfigHandler:IsCluster(info) then return end
+			copy_of_taboo_data.isroute = true
+			taboo_data.editing = true
+			throttleFrame:Show()  -- To remove the route from the map
+		end
 		for i = 1, #taboo_data.route do
 			copy_of_taboo_data.route[i] = taboo_data.route[i]
 		end
@@ -2577,6 +2606,8 @@ do
 			node[CURRENT] = i
 			node[REAL] = true
 			copy_of_taboo_data.nodes[i] = node
+			node:SetWidth(16)
+			node:SetHeight(16)
 			node:SetAlpha(1)
 		end
 		-- Pin the helper nodes
@@ -2590,28 +2621,53 @@ do
 			node[CURRENT] = i
 			node[REAL] = false
 			copy_of_taboo_data.fakenodes[i] = node
-			node:SetAlpha(0.4)
+			node:SetWidth(10)
+			node:SetHeight(10)
+			node:SetAlpha(0.75)
 		end
 		Routes:DrawTaboos()
 	end
 	function TabooHandler:SaveEditTaboo(info)
-		local zone, taboo = info.arg.zone, info.arg.taboo
-		local taboo_data = db.taboo[zone][taboo]
-		local copy_of_taboo = self:CancelEditTaboo(info)
-		taboo_data.route = copy_of_taboo.route
-		-- Update all routes with this taboo
-		for route_name, route_data in pairs(db.routes[zone]) do
-			if route_data.taboos[taboo] then
-				Routes:ApplyTabooToRoute(zone, taboo_data, route_data)
-				Routes:UnTabooRoute(zone, route_data)
-			else
-				-- Set the false value (acedb generated default) to nil, so we don't pairs() over it
-				route_data.taboos[taboo] = nil
+		if info.arg.isroute then
+			local zone, route = info.arg.zone, info.arg.route
+			local route_data = db.routes[zone][route]
+			local copy_of_taboo = self:CancelEditTaboo(info)
+			for i = 1, #copy_of_taboo.route do
+				route_data.route[i] = copy_of_taboo.route[i]
+			end
+			for i = #copy_of_taboo.route + 1, #route_data.route do
+				route_data.route[i] = nil
+			end
+			for tabooname, used in pairs(route_data.taboos) do
+				if used then
+					local taboo_data = db.taboo[zone][tabooname]
+					Routes:ApplyTabooToRoute(zone, taboo_data, route_data)
+				end
+			end
+		else
+			local zone, taboo = info.arg.zone, info.arg.taboo
+			local taboo_data = db.taboo[zone][taboo]
+			local copy_of_taboo = self:CancelEditTaboo(info)
+			taboo_data.route = copy_of_taboo.route
+			-- Update all routes with this taboo
+			for route_name, route_data in pairs(db.routes[zone]) do
+				if route_data.taboos[taboo] then
+					Routes:ApplyTabooToRoute(zone, taboo_data, route_data)
+					Routes:UnTabooRoute(zone, route_data)
+				else
+					-- Set the false value (acedb generated default) to nil, so we don't pairs() over it
+					route_data.taboos[taboo] = nil
+				end
 			end
 		end
+		throttleFrame:Show()  -- Redraw the changes
 	end
 	function TabooHandler:CancelEditTaboo(info)
-		local taboo = db.taboo[info.arg.zone][info.arg.taboo]
+		local taboo = info.arg.isroute and db.routes[info.arg.zone][info.arg.route] or db.taboo[info.arg.zone][info.arg.taboo]
+		if info.arg.isroute then
+			taboo.editing = nil
+			throttleFrame:Show()  -- Redraw the route
+		end
 		local copy_of_taboo = taboo_edit_list[taboo]
 		taboo_edit_list[taboo] = nil
 		for i = 1, #copy_of_taboo.route do
@@ -2657,7 +2713,7 @@ do
 		end
 	end
 	function TabooHandler:IsBeingEdited(info)
-		local taboo = db.taboo[info.arg.zone][info.arg.taboo]
+		local taboo = info.arg.isroute and db.routes[info.arg.zone][info.arg.route] or db.taboo[info.arg.zone][info.arg.taboo]
 		if taboo_edit_list[taboo] then return true end
 		return false
 	end
@@ -2816,6 +2872,65 @@ do
 			confirmText = L["A taboo with that name already exists. Overwrite?"],
 		},
 	}
+
+	function TabooHandler:IsNotEditAllowed(info)
+		local route_table = db.routes[info.arg.zone][info.arg.route]
+		if taboo_edit_list[route_table] then return true end
+		local is_running, route_table2 = Routes.TSP:IsTSPRunning()
+		if is_running and route_table2 == route_table then
+			return true
+		end
+		if ConfigHandler:IsCluster(info) then
+			return true
+		end
+		return false
+	end
+	local route_edit_desc_table = {
+		type = "description",
+		order = 0,
+		name = L["ROUTE_EDIT_DESC"],
+	}
+	function Routes:CreateAceOptRouteEditTable(zone_route_table)
+		zone_route_table.isroute = true
+		return {
+			type = "group",
+			inline = true,
+			order = 200,
+			name = L["Edit Route Manually"],
+			desc = L["Edit Route Manually"],
+			handler = TabooHandler,
+			args = {
+				desc = route_edit_desc_table,
+				edit_route = {
+					type = "execute",
+					name = L["Edit route"],
+					desc = L["Edit this route on the world map"],
+					arg = zone_route_table,
+					order = 1,
+					func = "EditTaboo",
+					disabled = "IsNotEditAllowed",
+				},
+				save_edit_route = {
+					type = "execute",
+					name = L["Save route edit"],
+					desc = L["Stop editing this route on the world map and save the edits"],
+					arg = zone_route_table,
+					order = 2,
+					func = "SaveEditTaboo",
+					disabled = "IsNotBeingEdited",
+				},
+				cancel_edit_route = {
+					type = "execute",
+					name = L["Cancel route edit"],
+					desc = L["Stop editing this route on the world map and abandon changes made"],
+					arg = zone_route_table,
+					order = 3,
+					func = "CancelEditTaboo",
+					disabled = "IsNotBeingEdited",
+				},
+			},
+		}
+	end
 
 	--/run Routes:TestFunc()
 	--/run Routes:ClearTestFunc()

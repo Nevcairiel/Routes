@@ -125,6 +125,7 @@ L["Mining"] = "采矿"
 L["Fishing"] = "钓鱼"
 L["Treasure"] = "宝藏"
 L["ExtractGas"] = "气体云"
+L["Note"] = true
 
 -- Route Config
 L["When the following data sources add or delete node data, update my routes automatically by inserting or removing the same node in the relevant routes."] = "当下列数据源添加或删除结点数据时，自动更新我的相关路线,插入或删除相同的结点."
@@ -181,6 +182,19 @@ L["Cluster"] = "聚合"
 L["Cluster this route"] = "聚合这条路线"
 L["Uncluster"] = "反聚合"
 L["Uncluster this route"] = "反聚合本路线"   
+
+L["Edit Route Manually"] = true
+L["Edit route"] = true
+L["Edit this route on the world map"] = true
+L["Save route edit"] = true
+L["Stop editing this route on the world map and save the edits"] = true
+L["Cancel route edit"] = true
+L["Stop editing this route on the world map and abandon changes made"] = true
+L["ROUTE_EDIT_DESC"] = [[
+To edit a route, click on the |cffffd200Edit|r button. The route will be drawn on the World Map. Drag the nodes to position them, left click on an in-between vertex to add nodes, right click on them to delete. After editing, you may click the |cffffd200Save|r button to save your changes, or the |cffffd200Cancel|r button to discard your changes.
+
+Please note that you cannot edit a route when it is being optimized in the background or if the route is a clustered route.
+]]
 
 -- Profession Names in the skills tab in the character frame
 -- Doing these 4 localizations specifically to avoid using Babble-Spell

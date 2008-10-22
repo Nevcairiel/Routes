@@ -125,6 +125,7 @@ L["Mining"] = "Bergbau"
 L["Fishing"] = "Angeln"
 L["Treasure"] = "Schätze"
 L["ExtractGas"] = "Gas"
+L["Note"] = true
 
 -- Route Config
 L["When the following data sources add or delete node data, update my routes automatically by inserting or removing the same node in the relevant routes."] = "Wenn die folgenden Datenquellen Knotenpunkte hinzufügen oder entfernen, aktualisiere meine Routen indem diese Knotenpunkte in den relevanten Routen hinzugefügt oder entfernt werden"
@@ -171,6 +172,7 @@ L["Path with %d nodes found with length %.2f yards after %d iterations in %.2f s
 L["Now running TSP in the background..."] = "Führt TSP jetzt im Hintergrund aus..."
 L["There is already a TSP running in background. Wait for it to complete first."] = "Es läuft schon eine TSP im Hintergrund. Bitte warten Sie, bis die erste abgeschlossen ist."
 L["The following error occured in the background path generation coroutine, please report to Grum or Xinhuan:"] = "Der folgende Fehler trat bei der Berechnung des Pfades auf, bitte melden Sie ihn bei Grum oder Xinhuan:"
+L["TOO_MANY_NODES_ERROR"] = "This route has more than 724 nodes. Please reduce it by removing some nodes or by clustering otherwise memory allocation errors will occur."
 
 L["Route Clustering"] = "Routen Komprimierung"
 L["CLUSTER_DESC"] = "Bei der Routenkomprimierung nimmt Routes alle Knotenpunkte die nahe beieinander sind und kombiniert sie zu einem einzigen Knotenpunkt als Reiseziel. Dieser Prozess dauert eine Weile aber ists halbwegs schnell."
@@ -180,6 +182,19 @@ L["Cluster"] = "Anhäufung"
 L["Cluster this route"] = "Diese Route komprimieren"
 L["Uncluster"] = "Dekomprimieren"
 L["Uncluster this route"] = "Diese Route dekomprimieren"
+
+L["Edit Route Manually"] = true
+L["Edit route"] = true
+L["Edit this route on the world map"] = true
+L["Save route edit"] = true
+L["Stop editing this route on the world map and save the edits"] = true
+L["Cancel route edit"] = true
+L["Stop editing this route on the world map and abandon changes made"] = true
+L["ROUTE_EDIT_DESC"] = [[
+To edit a route, click on the |cffffd200Edit|r button. The route will be drawn on the World Map. Drag the nodes to position them, left click on an in-between vertex to add nodes, right click on them to delete. After editing, you may click the |cffffd200Save|r button to save your changes, or the |cffffd200Cancel|r button to discard your changes.
+
+Please note that you cannot edit a route when it is being optimized in the background or if the route is a clustered route.
+]]
 
 -- Profession Names in the skills tab in the character frame
 -- Doing these 4 localizations specifically to avoid using Babble-Spell

@@ -924,6 +924,7 @@ function Routes:OnInitialize()
 			}
 		end
 	end
+	self:SetupSourcesOptTables()
 	self:RegisterEvent("ADDON_LOADED")
 end
 
@@ -972,7 +973,6 @@ function Routes:OnEnable()
 		-- Notes: Do not call self:MINIMAP_UPDATE_ZOOM() here because the CVARs aren't applied yet.
 		-- MINIMAP_UPDATE_ZOOM gets fired automatically by wow when it applies the CVARs.
 	end
-	self:SetupSourcesOptTables()
 	for addon, plugin_table in pairs(Routes.plugins) do
 		if db.defaults.callbacks[addon] and plugin_table.IsActive() then
 			plugin_table.AddCallbacks()
@@ -991,7 +991,7 @@ function Routes:OnDisable()
 end
 
 function Routes:ADDON_LOADED(event, addon)
-	if IsLoggedIn() and self.plugins[addon] then
+	if self.plugins[addon] then
 		options.args.add_group.args[addon].disabled = false
 		options.args.add_group.args[addon].guiHidden = false
 	end
@@ -2019,7 +2019,6 @@ options.args.routes_group.args.callbacks = {
 -- AceOpt config table for route creation
 do
 	-- Some upvalues used in the aceopts[] table for creating new routes
-	local outland_zones = {GetMapZones(3)}
 	local create_name = ""
 	local create_zones = {}
 	local create_zone
@@ -2092,8 +2091,8 @@ do
 					values = get_source_values,
 					get = get_source_value,
 					set = set_source_value,
-					disabled = true,
-					guiHidden = true,
+					disabled = not plugin_table.IsActive(),
+					guiHidden = not plugin_table.IsActive(),
 				}
 			end
 		end
@@ -2119,27 +2118,16 @@ do
 			desc = L["Zone to create route in"],
 			order = 200,
 			values = function()
-				-- reuse table
-				for k in pairs(create_zones) do create_zones[k] = nil end
-				-- setup zones to show
-				for i = 1, #outland_zones do
-					create_zones[ outland_zones[i] ] = outland_zones[i]
-				end
-				-- add current player zone
-				local zone = GetRealZoneText()
-				if zone and zone ~= "" and Routes.zoneData[zone][4] ~= "" then
-					create_zones[zone] = zone
-					if not create_zone then create_zone = zone end
-				end
-				-- add current viewed map zone
-				local zone = Routes.zoneNames[GetCurrentMapContinent()*100 + GetCurrentMapZone()]
-				if zone then
-					create_zones[zone] = zone
-					if not create_zone then create_zone = zone end
+				if not next(create_zones) then
+					for k, v in pairs(Routes.zoneNames) do
+						create_zones[v] = v
+					end
 				end
 				return create_zones
 			end,
 			get = function()
+				-- Use currently viewed map on first view.
+				create_zone = create_zone or Routes.zoneNames[GetCurrentMapContinent()*100 + GetCurrentMapZone()]
 				return create_zone
 			end,
 			set = function(info, key) create_zone = key end,
@@ -2734,7 +2722,6 @@ do
 
 	local taboo_name = ""
 	local create_zone
-	local outland_zones = {GetMapZones(3)}
 	local create_zones = {}
 	options.args.taboo_group.args = {
 		desc = {
@@ -2761,27 +2748,16 @@ do
 			desc = L["Zone to create taboo in"],
 			order = 200,
 			values = function()
-				-- reuse table
-				for k in pairs(create_zones) do create_zones[k] = nil end
-				-- setup zones to show
-				for i = 1, #outland_zones do
-					create_zones[ outland_zones[i] ] = outland_zones[i]
-				end
-				-- add current player zone
-				local zone = GetRealZoneText()
-				if zone and zone ~= "" and Routes.zoneData[zone][4] ~= "" then
-					create_zones[zone] = zone
-					if not create_zone then create_zone = zone end
-				end
-				-- add current viewed map zone
-				local zone = Routes.zoneNames[GetCurrentMapContinent()*100 + GetCurrentMapZone()]
-				if zone then
-					create_zones[zone] = zone
-					if not create_zone then create_zone = zone end
+				if not next(create_zones) then
+					for k, v in pairs(Routes.zoneNames) do
+						create_zones[v] = v
+					end
 				end
 				return create_zones
 			end,
 			get = function()
+				-- Use currently viewed map on first view.
+				create_zone = create_zone or Routes.zoneNames[GetCurrentMapContinent()*100 + GetCurrentMapZone()]
 				return create_zone
 			end,
 			set = function(info, key) create_zone = key end,

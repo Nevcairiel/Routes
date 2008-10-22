@@ -1,8 +1,8 @@
 ﻿--[[
 ********************************************************************************
 Routes
-v1.1
-18 October 2008
+v1.1.1
+22 October 2008
 (Written for Live Servers v3.0.2.9056 or WotLK Beta Servers v3.0.3.9095)
 
 Author: Xaros @ EU Doomhammer Alliance & Xinhuan @ US Blackrock Alliance

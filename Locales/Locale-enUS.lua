@@ -379,7 +379,7 @@ Taboo regions are created using the following steps:
 
 |cffffff788.|r You should see a triangular shaded region on the world map. Edit the taboo region by
 a) |cffffff78Dragging|r the nodes of the polygon;
-b) Inserting a node into the polygon by |cffffff78right-clicking|r an existing node;
+b) Inserting a node into the polygon by |cffffff78left-clicking|r an in-between node;
 c) Deleting a node from the polygon by |cffffff78right-clicking|r an existing node.
 
 |cffffff789.|r Click |cffffff78Save taboo edit|r to save your changes, or |cffffff78Cancel taboo edit|r to abandon your changes.

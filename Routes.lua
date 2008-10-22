@@ -2576,11 +2576,15 @@ do
 		taboo_cache[node] = true
 	end
 
-
 	local TabooHandler = {}
 	function TabooHandler:EditTaboo(info)
+		-- open the WorldMapFlame on the right zone
+		local zone_id = Routes.zoneData[ Routes.zoneMapFile[info.arg.zone] ][3]
+		SetMapZoom( floor( zone_id / 100 ), zone_id % 100 )
+		WorldMapFrame:Show();
+
 		-- make a copy of the taboo for editing
-		local taboo_data = info.arg.isroute and db.routes[info.arg.zone][info.arg.route] or	db.taboo[info.arg.zone][info.arg.taboo]
+		local taboo_data = info.arg.isroute and db.routes[info.arg.zone][info.arg.route] or db.taboo[info.arg.zone][info.arg.taboo]
 		local copy_of_taboo_data = {route = {}, nodes = {}, fakenodes = {}}
 		if info.arg.isroute then
 			local is_running, route_table = Routes.TSP:IsTSPRunning()

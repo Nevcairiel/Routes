@@ -312,8 +312,6 @@ La création d'une route comporte 4 étapes simples. Tout d'abord, rendez-vous d
 
 * Il est important d'appuyer sur |cffffff78ENTRÉE|r ou de cliquer sur le bouton |cffffff78OK|r lors de la saisie du nom de la route, sans quoi le nom ne sera pas sauvegardé.
 
-* Par défaut, le menu déroulant de |cffffff78Sélection de la zone|r affiche uniquement les zones de l'Outreterre, votre zone actuelle, et la zone actuellement affichée sur la carte du monde. Cela signifie que si vous souhaitez créer une zone dans les Maleterres de l'est tandis que vous vous trouvez à Forgefer, il vous faut ouvrir votre carte du monde, afficher la carte des Maleterres de l'est et garder la carte du monde ouverte avant d'ouvrir la fenêtre de configuration de Routes.
-
 * Si la création de la route a réussie, vous verrez des lignes roses se balader un peu partout sur votre carte du monde dans la zone sélectionnée. Une entrée pour cette route sera créée sur le côté gauche dans l'arborescence de Routes. Cette route initiale n'est pas optimisée : il s'agit de la prochaine étape !
 ]]
 L["OPTIMIZING_ROUTE_TEXT"] = [[

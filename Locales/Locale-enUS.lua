@@ -317,8 +317,6 @@ Creating a route has 4 simple steps. First, navigate to the |cffffff78Add|r sect
 
 * It is important to press the |cffffff78ENTER|r or click the |cffffff78OK|r button when entering the route name, otherwise the name will not be saved.
 
-* By default, the |cffffff78Select Zone|r dropdown will only list Outland zones, the zone you are in, and the zone you are viewing on the World Map. This means if you wish to create a zone in Eastern Plaguelands while in Ironforge, you need to open your World Map and navigate to EPL first and keep the world map open before opening the Routes configuration screen.
-
 * If the route creation is successful, you will see pink lines running all over your world map in the selected zone. A route entry will be created on the left side under Routes for each route. This initial route is unoptimized and will need optimization.
 ]]
 L["OPTIMIZING_ROUTE_TEXT"] = [[

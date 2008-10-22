@@ -317,8 +317,6 @@ Eine Route zu erstellen besteht aus 4 einfachen Punkten. Als ersters öffnen Sie
 
 * Es ist wichtig, dass Sie den |cffffff78ENTER|r-Knopf drücken oder auf |cffffff78OK|r klicken, wenn Sie einen Routennamen eingeben, sonst wird der Name nicht gespeichert.
 
-* Standardmäßig wird das |cffffff78Zone wählen|r Aufklappmenü nur die Zonen der Scherbenwelt, die in der Sie sich gerade befinden und die Zone die Sie sich momentan in der Weltkarte anschauen angezeigt werden. Das bedeutet, wenn Sie eine Zone in den Westlichen Pestländern erstellen möchten, während Sie in Eisenschmiede sind, müssen Sie zuerst die Weltkarte öffnen, sich das Gebiet der WPL anzeigen lassen und auch geöffnet lassen bevor Sie das Optionsmenü von Routes öffnen.
-
 * Wenn die Route erfolgreich erstellt wurde, werden Sie pinke Linien sehen, die im gewählten Gebiet über Ihre ganze Karte verlaufen. Es wird ein Eintrag auf der rechten Seite unter Routen für jede Route angelegt. Diese anfängliche Route ist nicht optimiert und muss deswegen verbessert werden.
 ]]
 L["OPTIMIZING_ROUTE_TEXT"] = [[

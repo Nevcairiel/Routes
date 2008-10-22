@@ -50,6 +50,7 @@ L["Routes with Gas"] = true
 L["Routes with Herbs"] = true
 L["Routes with Ore"] = true
 L["Routes with Treasure"] = true
+L["Routes with Notes"] = true
 L["Always show"] = true
 L["Only with profession"] = true
 L["Only while tracking"] = true
@@ -124,10 +125,11 @@ L["Mining"] = true
 L["Fishing"] = true
 L["Treasure"] = true
 L["ExtractGas"] = "Gas"
+L["Note"] = true
 
 -- Route Config
 L["When the following data sources add or delete node data, update my routes automatically by inserting or removing the same node in the relevant routes."] = true
-L[" Gatherer currently does not support callbacks, so this is impossible for Gatherer."] = true
+L[" Gatherer/HandyNotes currently does not support callbacks, so this is impossible for Gatherer/HandyNotes."] = true
 L["You have |cffffd200%d|r route(s) in |cffffd200%s|r."] = true
 L["Information"] = true
 L["This route has |cffffd200%d|r nodes and is |cffffd200%d|r yards long."] = true
@@ -350,7 +352,7 @@ Route optimization has 2 parts. The first is Route Clustering, the second is Rou
 L["CUSTOMIZING_ROUTE_TEXT"] = [[
 You can customize the display of your routes on the maps easily. The options comes in two parts. The |cffffff78Options|r section on the left contains global settings that apply to everything, the |cffffff78Line Settings|r options in each individual route is used to change settings to be different from the global settings.
 
-For map drawing, you may alter which maps Routes will draw your routes on as well as the default color and width of the lines. Additionally, you may change whether the lines on the minimap should have line gaps drawn so that they do not cover the minimap yellow tracking blips and icons placed there by |cffffff78GatherMate|r/|cffffff78Cartographer|r/|cffffff78Gatherer|r.
+For map drawing, you may alter which maps Routes will draw your routes on as well as the default color and width of the lines. Additionally, you may change whether the lines on the minimap should have line gaps drawn so that they do not cover the minimap yellow tracking blips and icons placed there by |cffffff78GatherMate|r/|cffffff78Cartographer|r/|cffffff78Gatherer|r/|cffffff78HandyNotes|r.
 
 Each route can be changed to have a specific color and width in the route settings, as well as whether to hide a route from showing completely. This allows you to mark routes that you no longer wish to use, but neither wish to delete, from showing up on the maps. The |cffffff78Show hidden routes|r option in the general options can be used to override this individual route setting.
 
@@ -406,7 +408,7 @@ To help with using waypoints, you can easily setup keybinds to start/stop and ch
 * The waypoint integration modules are disabled if the support addons are not found.
 ]]
 L["AUTOMATIC_UPDATE_TEXT"] = [[
-Routes will automatically update your routes and insert/remove nodes as required when you use |cffffff78GatherMate|r or |cffffff78Cartographer_<Profs>|r as your data sources. |cffffff78Gatherer|r is not supported as it currently does not support callbacks.
+Routes will automatically update your routes and insert/remove nodes as required when you use |cffffff78GatherMate|r or |cffffff78Cartographer_<Profs>|r as your data sources. |cffffff78Gatherer/HandyNotes|r is not supported as it currently does not support callbacks.
 
 When you find a new node in either of these addons, Routes will search the zone for existing routes with that node type and insert it in the best location in the route. SImilarly, when you delete a node in those addons, Routes will also remove the node from the relevant routes.
 

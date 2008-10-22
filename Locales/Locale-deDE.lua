@@ -50,6 +50,7 @@ L["Routes with Gas"] = "Routen mit Gasen"
 L["Routes with Herbs"] = "Routen mit Kräutern"
 L["Routes with Ore"] = "Routen mit Erzen"
 L["Routes with Treasure"] = "Routen mit Schätzen"
+L["Routes with Notes"] = "Routen mit Notizen"
 L["Always show"] = "Immer anzeigen"
 L["Only with profession"] = "Nur mit Beruf"
 L["Only while tracking"] = "Nur wenn man danach sucht"
@@ -127,7 +128,7 @@ L["ExtractGas"] = "Gas"
 
 -- Route Config
 L["When the following data sources add or delete node data, update my routes automatically by inserting or removing the same node in the relevant routes."] = "Wenn die folgenden Datenquellen Knotenpunkte hinzufügen oder entfernen, aktualisiere meine Routen indem diese Knotenpunkte in den relevanten Routen hinzugefügt oder entfernt werden"
-L[" Gatherer currently does not support callbacks, so this is impossible for Gatherer."] = " Gatherer unterstützt momentan keine Callbacks, also ist dies unmöglich für Gatherer" 
+L[" Gatherer/HandyNotes currently does not support callbacks, so this is impossible for Gatherer/HandyNotes."] = " Gatherer/HandyNotes unterstützt momentan keine Callbacks, also ist dies unmöglich für Gatherer/HandyNotes" 
 L["You have |cffffd200%d|r route(s) in |cffffd200%s|r."] = "Sie haben |cffffd200%d|r Route(n) in |cffffd200%s|r."
 L["Information"] = true
 L["This route has |cffffd200%d|r nodes and is |cffffd200%d|r yards long."] = "Diese Route hat |cffffd200%d|r Knotenpunkte und ist |cffffd200%d|r yards lang."
@@ -350,7 +351,7 @@ Die Optimierung einer Route besteht aus 2 Teilen. Der erste ist das komprimieren
 L["CUSTOMIZING_ROUTE_TEXT"] = [[
 Sie können die Anzeige Ihrer Routen auf der Karte sehr leicht anpassen. Die Einstellungen sind in zwei Teile gegliedert. Die |cffffff78Einstellungen|r Sektion auf der linken Seite enthält globale Einstellungen die alles betreffen, die |cffffff78Linien Einstellungen|r Optionen jeder individuellen Route wird benutzt um unterschiedliche Einstellungen von den Globalen Einstellungen pro Route zu verwenden.
 
-Was das Zeichnen auf den Karten angeht, so können Sie bestimmen auf welchen Karten Routes Ihre Routen anzeigt und was die Standardfarbe und -breit der Linien ist. Weiterhin können Sie einstellen ob Linien auf der Minikarte kleine Lücken aufweisen sollen, damit sie die gelben Sammelsymbole und die Zeichen die von |cffffff78GatherMate|r/|cffffff78Cartographer|r/|cffffff78Gatherer|r gesetzt wurden nicht überlappen.
+Was das Zeichnen auf den Karten angeht, so können Sie bestimmen auf welchen Karten Routes Ihre Routen anzeigt und was die Standardfarbe und -breit der Linien ist. Weiterhin können Sie einstellen ob Linien auf der Minikarte kleine Lücken aufweisen sollen, damit sie die gelben Sammelsymbole und die Zeichen die von |cffffff78GatherMate|r/|cffffff78Cartographer|r/|cffffff78Gatherer|r/|cffffff78HandyNotes|r gesetzt wurden nicht überlappen.
 
 Jede Route kann in ihren Optionen dahingehend geändert werden, dass sie eine spezifische Farbe und Linienbreite besitzt, oder sogar ob sie gänzlich versteckt werden soll. Dies ermöglicht Ihnen Routen die Sie nicht länger benutzen aber auch nicht löschen möchten vom auftauchen auf der Karte zu hindern. Die |cffffff78Zeige versteckte Routen|r Option in den allgemeinen Einstellungen kann dazu benutzt werden die individuellen Einstellungen der Routen zu überschreiben.
 
@@ -406,7 +407,7 @@ Für ein bisschen Hilfe bei der Nutzung von Wegpunkten, können Sie einfach Tast
 * Die integrierten Wegpunktsysteme sind deaktiviert falls kein unterstütztes Addon gefunden werden kann.
 ]]
 L["AUTOMATIC_UPDATE_TEXT"] = [[
-Routes wird Ihre Routen automatisch aktualisieren und Knotenpunkte einfügen/entfernen wie es von verlangt wird wenn Sie |cffffff78GatherMate|r oder |cffffff78Cartographer_<Profs>|r als Datenquellen nutzen. |cffffff78Gatherer|r wird nicht unterstützt, da es momentan keine Callbacks liefert.
+Routes wird Ihre Routen automatisch aktualisieren und Knotenpunkte einfügen/entfernen wie es von verlangt wird wenn Sie |cffffff78GatherMate|r oder |cffffff78Cartographer_<Profs>|r als Datenquellen nutzen. |cffffff78Gatherer/HandyNotes|r wird nicht unterstützt, da es momentan keine Callbacks liefert.
 
 Wenn Sie in einem dieser Addons einen neuen Knotenpunkt finden, wird Routes die Zonen nach existierenden Routen mit diesem Knotenpunkttyp durchsuchen und ihn in die beste Position in der Route einfügen. Ähnliches passiert, wenn Sie einen Knotenpunkt in diesen Addons entfernen, dann wird Routes den Knotenpunkt auch aus den relevanten Routen entfernen.
 

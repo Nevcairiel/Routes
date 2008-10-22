@@ -50,6 +50,7 @@ L["Routes with Gas"] = "Routes contenant des gaz"
 L["Routes with Herbs"] = "Routes contenant des herbes"
 L["Routes with Ore"] = "Routes contenant des minerais"
 L["Routes with Treasure"] = "Routes contenant des trésors"
+L["Routes with Notes"] = true
 L["Always show"] = "Toujours afficher"
 L["Only with profession"] = "Si j'ai le métier"
 L["Only while tracking"] = "Si le suivi est activé"
@@ -126,7 +127,7 @@ L["ExtractGas"] = "Gaz"
 
 -- Route Config
 L["When the following data sources add or delete node data, update my routes automatically by inserting or removing the same node in the relevant routes."] = "Quand les sources de données suivantes ajoutent ou suppriment des données d'un nœud, mettre à jour automatiquement mes routes en insérant ou en enlevant ce même nœud des routes appropriées."
-L[" Gatherer currently does not support callbacks, so this is impossible for Gatherer."] = " Gatherer ne supporte pas actuellement les fonctions de rappel, c'est donc impossible avec cet addon."
+L[" Gatherer/HandyNotes currently does not support callbacks, so this is impossible for Gatherer/HandyNotes."] = " Gatherer/HandyNotes ne supporte pas actuellement les fonctions de rappel, c'est donc impossible avec cet addon."
 L["You have |cffffd200%d|r route(s) in |cffffd200%s|r."] = "Vous avez |cffffd200%d|r route(s) dans |cffffd200%s|r."
 L["Information"] = "Informations"
 L["This route has |cffffd200%d|r nodes and is |cffffd200%d|r yards long."] = "Cette route contient |cffffd200%d|r nœuds et est longue de |cffffd200%d|r mètres."
@@ -345,7 +346,7 @@ Optimiser la route comporte deux parties. La première est l'Agrégation de la r
 L["CUSTOMIZING_ROUTE_TEXT"] = [[
 Vous pouvez facilement personnaliser l'affichage de vos routes sur les cartes. Les options se divisent en deux parties. La section |cffffff78Options|r sur la gauche contient les paramètres globaux qui s'appliquent à tout, les options des |cffffff78Paramètres des lignes|r situées dans chaque route individuelle sont utilisées pour utiliser des paramètres différents de ceux par défaut.
 
-Concernant les dessins des cartes, vous pouvez définir les cartes où Routes dessinera vos routes de même que la couleur et l'épaisseur par défaut des lignes. De plus, vous pouvez ajouter ou non des sauts de lignes sur la minicarte afin que ces dernières ne chevauchent pas les spots de suivi et les icônes placées par |cffffff78GatherMate|r/|cffffff78Cartographer|r/|cffffff78Gatherer|r.
+Concernant les dessins des cartes, vous pouvez définir les cartes où Routes dessinera vos routes de même que la couleur et l'épaisseur par défaut des lignes. De plus, vous pouvez ajouter ou non des sauts de lignes sur la minicarte afin que ces dernières ne chevauchent pas les spots de suivi et les icônes placées par |cffffff78GatherMate|r/|cffffff78Cartographer|r/|cffffff78Gatherer|r/|cffffff78HandyNotes|r.
 
 Chaque route peut être modifiée pour avoir une couleur et une épaisseur spécifique dans les paramètres de la route, ainsi qu'être complètement masquée ou non. Ce dernier point vous permet de marquer les routes que vous ne souhaitez plus utiliser, mais que vous préférez quand même ne pas supprimer au cas où elles seraient de nouveau utiles dans le futur. L'option |cffffff78Afficher les routes masquées|r dans les options générales peut-être utilisée pour surplanter ce paramètre individuel de la route.
 
@@ -401,7 +402,7 @@ Pour vous aider à utiliser les points de navigation, vous pouvez facilement par
 * Les modules d'intégration des points de navigation sont désactivés si les addons supportés ne sont pas détectés.
 ]]
 L["AUTOMATIC_UPDATE_TEXT"] = [[
-Routes mettra automatiquement à jour vos et insérera/enlèvera les nœuds nécessaires quand vous utilisez |cffffff78GatherMate|r ou |cffffff78Cartographer_<Métiers>|r comme sources de données. |cffffff78Gatherer|r n'est pas supporté car il n'accepte pas actuellement les fonctions de rappel.
+Routes mettra automatiquement à jour vos et insérera/enlèvera les nœuds nécessaires quand vous utilisez |cffffff78GatherMate|r ou |cffffff78Cartographer_<Métiers>|r comme sources de données. |cffffff78Gatherer/HandyNotes|r n'est pas supporté car il n'accepte pas actuellement les fonctions de rappel.
 
 Quand vous trouvez un nouveau nœud avec l'un de ces addons, Routes cherchera les routes existantes dans cette zone comportant ce type de nœud et l'insérera au mieux dans les routes concernées. De même, quand vous supprimez un nœud sans ces addons, Routes enlèvera également le nœud des routes concernées.
 

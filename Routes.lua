@@ -1,7 +1,7 @@
 ﻿--[[
 ********************************************************************************
 Routes
-v1.1.1
+v1.2
 22 October 2008
 (Written for Live Servers v3.0.2.9056 or WotLK Beta Servers v3.0.3.9095)
 
@@ -22,6 +22,7 @@ Features:
 	   * Cartographer_Treasure
 	   * GatherMate
 	   * Gatherer
+	   * HandyNotes
 	- Optimize your route using the traveling salesmen problem (TSP) ant
 	  colony optimization (ACO) algorithm
 	- Background (nonblocking) and foreground (blocking) optimization
@@ -120,6 +121,7 @@ local defaults = {
 				Fishing    = "Always",
 				Treasure   = "Always",
 				ExtractGas = "Always",
+				Note       = "Always",
 			},
 			use_auto_showhide = false,
 			waypoint_hit_distance = 50,
@@ -1987,7 +1989,7 @@ end
 local source_data = {}
 options.args.routes_group.args.desc = {
 	type = "description",
-	name = L["When the following data sources add or delete node data, update my routes automatically by inserting or removing the same node in the relevant routes."]..L[" Gatherer currently does not support callbacks, so this is impossible for Gatherer."],
+	name = L["When the following data sources add or delete node data, update my routes automatically by inserting or removing the same node in the relevant routes."]..L[" Gatherer/HandyNotes currently does not support callbacks, so this is impossible for Gatherer/HandyNotes."],
 	order = 0,
 }
 options.args.routes_group.args.callbacks = {
@@ -1996,7 +1998,7 @@ options.args.routes_group.args.callbacks = {
 	order = 100,
 	values = source_data,
 	get = function(info, k)
-		if Routes.plugins[k].IsActive() and k ~= "Gatherer" then
+		if Routes.plugins[k].IsActive() and k ~= "Gatherer" and k ~= "HandyNotes" then
 			return db.defaults.callbacks[k]
 		else
 			return nil
@@ -2004,7 +2006,7 @@ options.args.routes_group.args.callbacks = {
 	end,
 	set = function(info, k, v)
 		-- If plugin is not active, don't toggle anything
-		if not Routes.plugins[k].IsActive() or k == "Gatherer" then return end
+		if not Routes.plugins[k].IsActive() or k == "Gatherer" or k == "HandyNotes" then return end
 		if v == nil then v = false end
 		db.defaults.callbacks[k] = v
 		if v then

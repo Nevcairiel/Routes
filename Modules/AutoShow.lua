@@ -114,6 +114,10 @@ local prof_options3 = { -- For Gas, which doesn't have tracking as a skill
 	["With Profession"] = L["Only with profession"],
 	["Never"]           = L["Never show"],
 }
+local prof_options4 = { -- For Note, which isn't a profession or tracging skill
+	["Always"]          = L["Always show"],
+	["Never"]           = L["Never show"],
+}
 
 options = {
 	name = L["Auto show/hide"], type = "group",
@@ -180,6 +184,13 @@ options = {
 					order = 500,
 					values = prof_options2,
 					arg = "Treasure",
+				},
+				note = {
+					name = L["Note"], type = "select",
+					desc = L["Routes with Notes"],
+					order = 600,
+					values = prof_options4,
+					arg = "Note",
 				},
 			},
 		},

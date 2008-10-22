@@ -50,6 +50,7 @@ L["Routes with Gas"] = "气体云路线"
 L["Routes with Herbs"] = "草药路线"
 L["Routes with Ore"] = "矿石路线"
 L["Routes with Treasure"] = "宝藏路线"
+L["Routes with Notes"] = true
 L["Always show"] = "总是显示"
 L["Only with profession"] = "只在具备专业技能时显示"
 L["Only while tracking"] = "只在跟踪技能启动时显示"
@@ -127,7 +128,7 @@ L["ExtractGas"] = "气体云"
 
 -- Route Config
 L["When the following data sources add or delete node data, update my routes automatically by inserting or removing the same node in the relevant routes."] = "当下列数据源添加或删除结点数据时，自动更新我的相关路线,插入或删除相同的结点."
-L[" Gatherer currently does not support callbacks, so this is impossible for Gatherer."] = "Gatherer当前不支持数据回收,所以本操作无法作用于Gatherer."
+L[" Gatherer/HandyNotes currently does not support callbacks, so this is impossible for Gatherer/HandyNotes."] = "Gatherer/HandyNotes当前不支持数据回收,所以本操作无法作用于Gatherer/HandyNotes."
 L["You have |cffffd200%d|r route(s) in |cffffd200%s|r."] = "你已有 |cffffd200%d|r 路线于 |cffffd200%s|r."
 L["Information"] = "信息"
 L["This route has |cffffd200%d|r nodes and is |cffffd200%d|r yards long."] = "本路线包括 |cffffd200%d|r 结点和总长 |cffffd200%d|r 码距离."
@@ -353,7 +354,7 @@ L["OPTIMIZING_ROUTE_TEXT"] = [[
 L["CUSTOMIZING_ROUTE_TEXT"] = [[
 你可以很容易的在地图上自定义显示你的路线。选项分为两部分。 左边栏里的 |cffffff78选项|r 部分包括全局的路线设置，每条单独路线内的|cffffff78线条设置|r 选项标签可以对路线进行一些不同与全局设置的更改。
 
-关于地图绘制，你可以切换哪条地图路线将被绘制同时你也可以改变线条的默认颜色和宽度。另外你还可以设置于小地图上是否绘制线条间断， 使线条不至于遮挡住小地图上的雷达跟踪点和由 |cffffff78GatherMate|r/|cffffff78Cartographer|r/|cffffff78Gatherer|r 所生成的采集图标.
+关于地图绘制，你可以切换哪条地图路线将被绘制同时你也可以改变线条的默认颜色和宽度。另外你还可以设置于小地图上是否绘制线条间断， 使线条不至于遮挡住小地图上的雷达跟踪点和由 |cffffff78GatherMate|r/|cffffff78Cartographer|r/|cffffff78Gatherer|r/|cffffff78HandyNotes|r 所生成的采集图标.
 
 路线设置可以改变每条路线的颜色和宽度，你还可以设置隐藏路线。 这个设置允许将你不再使用但又不想删除的路线进行切换显示，  |cffffff78显示隐藏路线|r 选项可以对其进行设置。
 
@@ -409,7 +410,7 @@ Routes 直接提供对 |cffffff78Cartographer_Waypoints|r 或 |cffffff78TomTom|r
 * 如果相关支援插件无法找到则 waypoint 路径点综合支持选项将关闭。
 ]]
 L["AUTOMATIC_UPDATE_TEXT"] = [[
-当你使用 |cffffff78GatherMate|r 或 |cffffff78Cartographer_<Profs>|r 做为数据源时，Routes将自动更新路线和在必要情况下插入/移除结点. |cffffff78Gatherer|r 无法被支持因为目前他不支持回收。
+当你使用 |cffffff78GatherMate|r 或 |cffffff78Cartographer_<Profs>|r 做为数据源时，Routes将自动更新路线和在必要情况下插入/移除结点. |cffffff78Gatherer/HandyNotes|r 无法被支持因为目前他不支持回收。
 
 当你使用这些插件发现一个新的结点资源时, Routes将搜索当前地区现有的同类型结点并将其插入到路线的最佳位置。同样的, 当你删除一个结点, Routes也将其从相关路线中移除.
 

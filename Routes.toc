@@ -4,12 +4,12 @@
 ## Notes-frFR: Routes sur votre carte du monde et minicarte !
 ## Notes-zhCN:Routes可以在已有采集相关数据的基础上形成采集路线，并可以优化路线，提高采集效率。
 ## Author: Grum, Xinhuan
-## Version: 1.1.1
+## Version: 1.2
 ## DefaultState: enabled
 ## X-Category: Map
 ## X-eMail: cartographer_routes @ grum DOT nl & xinhuan @ gmail DOT com
 ## X-Name: Routes
-## OptionalDeps: Ace3, Cartographer, Cartographer_Notes, GatherMate, Gatherer
+## OptionalDeps: Ace3, Cartographer, Cartographer_Notes, GatherMate, Gatherer, HandyNotes
 ## SavedVariables: RoutesDB
 
 # Library files
@@ -51,3 +51,4 @@ Modules\TomTom.lua
 Plugins\Cartographer.lua
 Plugins\GatherMate.lua
 Plugins\Gatherer.lua
+Plugins\HandyNotes.lua

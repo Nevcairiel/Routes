@@ -50,6 +50,7 @@ L["Routes with Gas"] = "氣雲路線"
 L["Routes with Herbs"] = "草藥路線"
 L["Routes with Ore"] = "採礦路線"
 L["Routes with Treasure"] = "寶葙路線"
+L["Routes with Notes"] = true
 L["Always show"] = "永遠顯示"
 L["Only with profession"] = "只在有專業技能時才顯示"
 L["Only while tracking"] = "只有在追蹤時"
@@ -127,7 +128,7 @@ L["ExtractGas"] = "氣雲"
 
 -- Route Config
 L["When the following data sources add or delete node data, update my routes automatically by inserting or removing the same node in the relevant routes."] = "當下列的資料新增或刪除資源點時自動更新我的路線, 在相近的路線插入新的或刪除重覆的資源點."
-L[" Gatherer currently does not support callbacks, so this is impossible for Gatherer."] = "Gatherer不支援資料恢復"
+L[" Gatherer/HandyNotes currently does not support callbacks, so this is impossible for Gatherer/HandyNotes."] = "Gatherer/HandyNotes不支援資料恢復"
 L["You have |cffffd200%d|r route(s) in |cffffd200%s|r."] = "你有 |cffffd200%d|r 路線在 |cffffd200%s|r."
 L["Information"] = "資訊"
 L["This route has |cffffd200%d|r nodes and is |cffffd200%d|r yards long."] = "這路線有 |cffffd200%d|r 個資源點和總長 |cffffd200%d|r 碼."
@@ -355,7 +356,7 @@ L["OPTIMIZING_ROUTE_TEXT"] = [[
 L["CUSTOMIZING_ROUTE_TEXT"] = [[
 您可以很容易地自訂在您地圖上的路線顯示. 選項分為兩部分. 在左邊的 |cffffff78選項|r 包含適用於一般的全局設置,  在每一獨立路線內的 |cffffff78劃線設定|r 則是用來更改一些和全局設置不同的設定.
 
-在地圖繪製，你可以令Routes在任何地圖內繪製您的路線, 以及預設的顏色和線條的寬度. 此外, 您更可改變小地圖內線的距離使他們不會覆蓋由 |cffffff78GatherMate|r/|cffffff78Cartographer|r/|cffffff78Gatherer|r 所產生的黃色追蹤點和圖示.
+在地圖繪製，你可以令Routes在任何地圖內繪製您的路線, 以及預設的顏色和線條的寬度. 此外, 您更可改變小地圖內線的距離使他們不會覆蓋由 |cffffff78GatherMate|r/|cffffff78Cartographer|r/|cffffff78Gatherer|r/|cffffff78HandyNotes|r 所產生的黃色追蹤點和圖示.
 
 在路線的設置內你可改變每條路線的特定顏色和寬度, 以及是否完全隱藏某一路線. 這可讓您標記你不再想使用但既不是要刪除的路線出現在地圖上.  在一般選項中的 |cffffff78顯示隱藏路線|r 選項可以用來淩駕這個個別路線設置.
 
@@ -411,7 +412,7 @@ Routes直接支援 |cffffff78Cartographer_Waypoints|r 或 |cffffff78TomTom|r, �
 * waypoint 整合支援模組如找不到相應插件會被關上.
 ]]
 L["AUTOMATIC_UPDATE_TEXT"] = [[
-當您使用 |cffffff78GatherMate|r 或 |cffffff78Cartographer_<Profs>|r 作為您的數據來源時, Routes 將會自動更新您的路線和插入/刪除資源點. |cffffff78Gatherer|r 不被支援是因為它目前不支持回朔.
+當您使用 |cffffff78GatherMate|r 或 |cffffff78Cartographer_<Profs>|r 作為您的數據來源時, Routes 將會自動更新您的路線和插入/刪除資源點. |cffffff78Gatherer/HandyNotes|r 不被支援是因為它目前不支持回朔.
 
 當這兩個插件找到一個新的資源點, Routes將搜索該區現有的路線與資源點類型並在該路線最佳位置插入它, 同樣當您在這兩個插件中刪除一個資源點也會將資源點從有關路線刪除.
 

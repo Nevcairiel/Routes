@@ -21,6 +21,8 @@ L["Minimap"] = "Minicarte"
 L["Minimap drawing"] = "Dessine ou non sur la minicarte."
 L["Zone Map"] = "Carte locale"
 L["Zone Map drawing"] = "Dessine ou non sur la carte locale."
+L["Minimap when indoors"] = true
+L["Draw on minimap when indoors"] = true
 L["Set the width of lines on each of the maps."] = "Largeur des lignes sur les cartes"
 L["Normal lines"] = "Lignes normales"
 L["Width of the line in the Worldmap"] = "Détermine la largeur des lignes sur la carte du monde."
@@ -102,6 +104,9 @@ L["No data found"] = "Aucune donnée trouvée"
 L["Create Route"] = "Créer la route"
 L["No data selected for new route"] = "Aucune donnée n'a été sélectionnée pour la nouvelle route."
 L["A route with that name already exists. Overwrite?"] = "Une route portant ce nom existe déjà. L'écraser ?"
+L["Create Route from Data Sources"] = true
+L["Create Bare Route"] = true
+L["CREATE_BARE_ROUTE_DESC"] = "This will create a route with just 3 initial points in it, and does not use any data from any source. You may then manually edit this route to insert and move nodes."
 
 -- DB prefix abbreviations 
 -- M pour Minage, H pour Herbes, P pour Pêche/Poisson, G pour Gaz, T pour Trésor

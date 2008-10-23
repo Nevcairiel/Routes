@@ -21,6 +21,8 @@ L["Minimap"] = "小地图"
 L["Minimap drawing"] = "小地图绘制"
 L["Zone Map"] = "区域地图"
 L["Zone Map drawing"] = "区域地图绘制"
+L["Minimap when indoors"] = true
+L["Draw on minimap when indoors"] = true
 L["Set the width of lines on each of the maps."] = "设置各个地图上的线条宽度"
 L["Normal lines"] = "标准线条"
 L["Width of the line in the Worldmap"] = "世界地图上的线条宽度"
@@ -102,6 +104,9 @@ L["No data found"] = "无相关数据"
 L["Create Route"] = "创建路线"
 L["No data selected for new route"] = "新路线没有选择数据"
 L["A route with that name already exists. Overwrite?"] = "同名路线已存在.是否进行覆盖?"
+L["Create Route from Data Sources"] = true
+L["Create Bare Route"] = true
+L["CREATE_BARE_ROUTE_DESC"] = "This will create a route with just 3 initial points in it, and does not use any data from any source. You may then manually edit this route to insert and move nodes."
 
 -- DB prefix abbreviations 
 -- M for Mining, H for Herbs, F for fishing, G for Gas, T for Treasure

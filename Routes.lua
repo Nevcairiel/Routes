@@ -102,9 +102,10 @@ local defaults = {
 			update_distance = 1,
 			fake_point      = -1,
 			fake_data       = 'dummy',
-			draw_minimap    = 1,
-			draw_worldmap   = 1,
-			draw_battlemap  = 1,
+			draw_minimap    = true,
+			draw_worldmap   = true,
+			draw_battlemap  = true,
+			draw_indoors    = false,
 			tsp = {
 				initial_pheromone  = 0.1,   -- Initial pheromone trail value
 				alpha              = 1,     -- Likelihood of ants to follow pheromone trails (larger value == more likely)
@@ -332,7 +333,7 @@ function Routes:DrawMinimapLines(forceUpdate)
 	local zone = GetRealZoneText()
 
 	-- if we are indoors, or the zone we are in is not defined in our tables ... no routes
-	if not zone or self.zoneData[zone][4] == "" or indoors == "indoor" then
+	if not zone or self.zoneData[zone][4] == "" or (not db.defaults.draw_indoors and indoors == "indoor") then
 		G:HideLines(Minimap)
 		return
 	end
@@ -1287,6 +1288,14 @@ options.args.options_group.args = {
 						order = 300,
 						arg = "draw_battlemap",
 					},
+					indoors_toggle = {
+						name = L["Minimap when indoors"],
+						desc = L["Draw on minimap when indoors"],
+						type  = "toggle",
+						order = 400,
+						arg = "draw_indoors",
+						disabled = function() return not db.defaults.draw_minimap end,
+					},
 				},
 			},
 			default_group = {
@@ -2150,6 +2159,11 @@ do
 			set = function(info, key) create_zone = key end,
 			style = "radio",
 		},
+		header1 = {
+			type = "header",
+			name = L["Create Route from Data Sources"],
+			order = 225,
+		},
 		source_choices = {
 			name = L["Select sources of data"], type = "multiselect",
 			order = 250,
@@ -2211,6 +2225,78 @@ do
 					Routes:Print(L["No data selected for new route"])
 					return
 				end
+
+				-- Perform a deep copy instead so that db defaults apply
+				local mapfile = Routes.zoneData[create_zone][4]
+				db.routes[mapfile][create_name] = nil -- overwrite old route
+				new_route.route = Routes.TSP:DecrossRoute(new_route.route)
+				deep_copy_table(db.routes[mapfile][create_name], new_route)
+
+				db.routes[mapfile][create_name].length = Routes.TSP:PathLength(new_route.route, create_zone)
+
+				-- Create the aceopts table entry for our new route
+				local opts = options.args.routes_group.args
+				if not opts[mapfile] then
+					opts[mapfile] = { -- use a 3 digit string which is alphabetically sorted zone names by continent
+						type = "group",
+						name = create_zone,
+						desc = L["Routes in %s"]:format(create_zone),
+						args = {},
+					}
+					opts[mapfile].args.desc = {
+						type = "description",
+						name = GetZoneDescText,
+						arg = mapfile,
+						order = 0,
+					}
+				end
+				local routekey = create_name:gsub("%s", "\255") -- can't have spaces in the key
+				opts[mapfile].args[routekey] = Routes:CreateAceOptRouteTable(mapfile, create_name)
+
+				-- Draw it
+				local AutoShow = Routes:GetModule("AutoShow", true)
+				if AutoShow and db.defaults.use_auto_showhide then
+					AutoShow:ApplyVisibility()
+				end
+				Routes:DrawWorldmapLines()
+				Routes:DrawMinimapLines(true)
+
+				-- clear stored name
+				create_name = ""
+				create_zone = nil
+			end,
+			disabled = function()
+				return not create_name or strtrim(create_name) == ""
+			end,
+			confirm = function()
+				if #db.routes[ Routes.zoneData[create_zone][4] ][create_name].route > 0 then
+					return true
+				end
+				return false
+			end,
+			confirmText = L["A route with that name already exists. Overwrite?"],
+		},
+		header2 = {
+			type = "header",
+			name = L["Create Bare Route"],
+			order = 500,
+		},
+		info2 = {
+			type = "description",
+			name = L["CREATE_BARE_ROUTE_DESC"],
+			order = 501,
+		},
+		add_route2 = {
+			name = L["Create Bare Route"], type = "execute",
+			desc = L["CREATE_BARE_ROUTE_DESC"],
+			order = 502,
+			func = function()
+				create_name = strtrim(create_name)
+				if not create_name or create_name == "" then
+					Routes:Print(L["No name given for new route"])
+					return
+				end
+				local new_route = { route = {71117111, 12357823, 11171123}, selection = {}, db_type = {} }
 
 				-- Perform a deep copy instead so that db defaults apply
 				local mapfile = Routes.zoneData[create_zone][4]

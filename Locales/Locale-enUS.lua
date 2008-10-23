@@ -21,6 +21,8 @@ L["Minimap"] = true
 L["Minimap drawing"] = true
 L["Zone Map"] = true
 L["Zone Map drawing"] = true
+L["Minimap when indoors"] = true
+L["Draw on minimap when indoors"] = true
 L["Set the width of lines on each of the maps."] = true
 L["Normal lines"] = true
 L["Width of the line in the Worldmap"] = true
@@ -102,6 +104,9 @@ L["No data found"] = true
 L["Create Route"] = true
 L["No data selected for new route"] = true
 L["A route with that name already exists. Overwrite?"] = true
+L["Create Route from Data Sources"] = true
+L["Create Bare Route"] = true
+L["CREATE_BARE_ROUTE_DESC"] = "This will create a route with just 3 initial points in it, and does not use any data from any source. You may then manually edit this route to insert and move nodes."
 
 -- DB prefix abbreviations 
 -- M for Mining, H for Herbs, F for fishing, G for Gas, T for Treasure

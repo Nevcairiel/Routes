@@ -2666,8 +2666,6 @@ do
 	function TabooHandler:EditTaboo(info)
 		-- open the WorldMapFlame on the right zone
 		local zone_id = Routes.zoneData[ Routes.zoneMapFile[info.arg.zone] ][3]
-		SetMapZoom( floor( zone_id / 100 ), zone_id % 100 )
-		WorldMapFrame:Show();
 
 		-- make a copy of the taboo for editing
 		local taboo_data = info.arg.isroute and db.routes[info.arg.zone][info.arg.route] or db.taboo[info.arg.zone][info.arg.taboo]
@@ -2716,6 +2714,8 @@ do
 			node:SetAlpha(0.75)
 		end
 		Routes:DrawTaboos()
+		WorldMapFrame:Show()
+		SetMapZoom( floor( zone_id / 100 ), zone_id % 100 )
 	end
 	function TabooHandler:SaveEditTaboo(info)
 		if info.arg.isroute then

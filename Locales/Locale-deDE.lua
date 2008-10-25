@@ -305,7 +305,7 @@ Der Benutzer könnte eventuell Taburegionen erstellen die die Karte in unpassier
 |cffffd200
 Ich habe einen Fehler gefunden! Wo kann ich ihn melden?
 |r
-Hier können Sie Fehler melden oder Vorschläge abgeben: |cffffff78http://www.wowace.com/forums/index.php?topic=10992.0|r
+Hier können Sie Fehler melden oder Vorschläge abgeben: |cffffff78http://forums.wowace.com/showthread.php?t=10369|r
 
 Alternativ finden Sie uns auch auf |cffffff78irc://irc.freenode.org/wowace|r
 

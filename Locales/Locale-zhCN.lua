@@ -305,7 +305,7 @@ ACO 算法使用一种叫 |cffffff78巡回售货员问题|r (TSP)的最佳靠近
 |cffffd200
 我发现了一个错误!我去那提交他们?
 |r
-你可以报告错误或提供意见于 |cffffff78http://www.wowace.com/forums/index.php?topic=10992.0|r
+你可以报告错误或提供意见于 |cffffff78http://forums.wowace.com/showthread.php?t=10369|r
 
 二选一, 同样的你还可以在这找到我们: |cffffff78irc://irc.freenode.org/wowace|r
 

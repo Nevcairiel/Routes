@@ -303,7 +303,7 @@ L'utilisateur peut s'il le souhaite créer des régions taboues qui coupent la c
 |cffffd200
 J'ai trouvé un bogue ! Où puis-je le signaler ?
 |r
-Sur |cffffff78http://www.wowace.com/forums/index.php?topic=10992.0|r ou sur |cffffff78irc://irc.freenode.org/wowace|r
+Sur |cffffff78http://forums.wowace.com/showthread.php?t=10369|r ou sur |cffffff78irc://irc.freenode.org/wowace|r
 
 Quand vous voulez signaler un bogue, essayez de fournir les |cffffff78étapes à suivre pour reproduire ce bogue|r, indiquez les |cffffff78messages d'erreur|r que vous avez vus, donnez le |cffffff78numéro de révision|r de Routes où le problème a été découvert et précisez également la |cffffff78langue de votre jeu|r.
 

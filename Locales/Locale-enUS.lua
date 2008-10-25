@@ -305,7 +305,7 @@ The user could potentially create taboo regions that split the map into impassab
 |cffffd200
 I've found a bug! Where do I report it?
 |r
-You can report bugs or give suggestions at |cffffff78http://www.wowace.com/forums/index.php?topic=10992.0|r
+You can report bugs or give suggestions at |cffffff78http://forums.wowace.com/showthread.php?t=10369|r
 
 Alternatively, you can also find us on |cffffff78irc://irc.freenode.org/wowace|r
 

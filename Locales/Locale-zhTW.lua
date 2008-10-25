@@ -305,7 +305,7 @@ ACO 蟻群算法是 |cffffff78旅行推銷員|r (TSP) 的最近似完美的解�
 |cffffd200
 我發現有臭蟲! 在那裡可以舉報?
 |r
-你可以在 |cffffff78http://www.wowace.com/forums/index.php?topic=10992.0|r 裡貼文關於臭蟲或建議(不過要用英文).
+你可以在 |cffffff78http://forums.wowace.com/showthread.php?t=10369|r 裡貼文關於臭蟲或建議(不過要用英文).
 
 另外, 你可以 |cffffff78irc://irc.freenode.org/wowace|r 找到我們(也是要用英文).
 

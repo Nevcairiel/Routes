@@ -1,8 +1,8 @@
 ﻿--[[
 ********************************************************************************
 Routes
-v1.2
-25 October 2008
+v1.2.1
+26 October 2008
 (Written for Live Servers v3.0.2.9056 or WotLK Beta Servers v3.0.3.9095)
 
 Author: Xaros @ EU Doomhammer Alliance & Xinhuan @ US Blackrock Alliance
@@ -35,10 +35,13 @@ Features:
 	  meaning your routes will ignore nodes in those areas and avoid cross them
 	- Fubar plugin available to quickly access your routes
 	- Cartographer_Waypoints and TomTom support for quickly following a route
+	- Full in-game help file and FAQ, guiding you step by step on what to do! 
 
 Download:
 	The latest version of Routes is always available on
 	- http://www.wowace.com/projects/routes/
+	- http://wow.curse.com/downloads/wow-addons/details/routes.aspx
+	- http://www.wowinterface.com/downloads/info11401-Routes.html
 
 Contact:
 	If you find any bugs or have any suggestions, you can contact us on:

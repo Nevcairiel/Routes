@@ -109,20 +109,19 @@ L["Create Bare Route"] = true
 L["CREATE_BARE_ROUTE_DESC"] = "This will create a route with just 3 initial points in it, and does not use any data from any source. You may then manually edit this route to insert and move nodes."
 
 -- DB prefix abbreviations 
--- M for Mining, H for Herbs, F for fishing, G for Gas, T for Treasure
-L["CartographerHerbalism"] = "H"
-L["CartographerMining"] = "M"
-L["CartographerFishing"] = "F"
-L["CartographerTreasure"] = "T"
-L["CartographerExtractGas"] = "G"
-L["GatherMateHerb Gathering"] = "H"
-L["GatherMateMining"] = "M"
-L["GatherMateFishing"] = "F"
-L["GatherMateExtract Gas"] = "G"
-L["GatherMateTreasure"] = "T"
-L["GathererMINE"] = "M"
-L["GathererHERB"] = "H"
-L["GathererOPEN"] = "T"
+L["CartographerHerbalism"] = "草药"
+L["CartographerMining"] = "采矿"
+L["CartographerFishing"] = "钓鱼"
+L["CartographerTreasure"] = "宝藏"
+L["CartographerExtractGas"] = "气体云"
+L["GatherMateHerb Gathering"] = "草药"
+L["GatherMateMining"] = "采矿"
+L["GatherMateFishing"] = "钓鱼"
+L["GatherMateExtract Gas"] = "气体云"
+L["GatherMateTreasure"] = "宝藏"
+L["GathererMINE"] = "采矿"
+L["GathererHERB"] = "草药"
+L["GathererOPEN"] = "宝藏"
 
 -- Node types
 L["Herbalism"] = "草药"
@@ -146,7 +145,7 @@ L["|cffffd200     %d|r node(s) are between |cffffd200%d|r-|cffffd200%d|r yards o
 L["|cffffd200     %d|r node(s) are at |cffffd2000|r yards of a cluster point"] = "|cffffd200     %d|r 结点距离航线点 |cffffd2000|r 码"
 L["The cluster radius of this route is |cffffd200%d|r yards."] = "本条路线的聚合半径为 |cffffd200%d|r 码."
 
-L["Line settings"] = "线条设置"
+L["Line Settings"] = "线条设置"
 L["These settings control the visibility and look of the drawn route."] = "这些设置控制路线可视性以及绘制路线的外观"
 L["Width (Map)"] = "宽度(地图)"
 L["Width of the line in the map"] = "世界地图上的线条宽度"
@@ -165,7 +164,7 @@ L["You may not delete a route that is being optimized in the background."] = "�
 L["Reset"] = "重置"
 L["Reset the line settings to defaults"] = "重置线条设置为默认"
 
-L["Optimize route"] = "优化路线"
+L["Optimize Route"] = "优化路线"
 L["Route Optimizing"] = "路线优化"   
 L["Extra optimization"] = "额外优化"
 L["ExtraOptDesc"] = "打开这个选项将会使优化路线需时增加约40 ％,但会产生略好的路线.建议的设定是关闭"

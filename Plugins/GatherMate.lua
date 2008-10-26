@@ -45,7 +45,7 @@ local function Summarize(data, zone)
 			-- store combinations with all information we have
 			for node,count in pairs(amount_of) do
 				local translatednode = GatherMate.reverseNodeIDs[db_type][node]
-				data[ ("%s;%s;%s;%s"):format(SourceName, db_type, node, count) ] = ("%s - %s - %d"):format(L[SourceName..db_type], translatednode, count)
+				data[ ("%s;%s;%s;%s"):format(SourceName, db_type, node, count) ] = ("%s - %s (%d)"):format(L[SourceName..db_type], translatednode, count)
 			end
 		end
 	end

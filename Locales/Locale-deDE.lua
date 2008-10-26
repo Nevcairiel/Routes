@@ -109,20 +109,19 @@ L["Create Bare Route"] = true
 L["CREATE_BARE_ROUTE_DESC"] = "This will create a route with just 3 initial points in it, and does not use any data from any source. You may then manually edit this route to insert and move nodes."
 
 -- DB prefix abbreviations 
--- M for Mining, H for Herbs, F for fishing, G for Gas, T for Treasure
-L["CartographerHerbalism"] = "H"
-L["CartographerMining"] = "M"
-L["CartographerFishing"] = "F"
-L["CartographerTreasure"] = "T"
-L["CartographerExtractGas"] = "G"
-L["GatherMateHerb Gathering"] = "H"
-L["GatherMateMining"] = "M"
-L["GatherMateFishing"] = "F"
-L["GatherMateExtract Gas"] = "G"
-L["GatherMateTreasure"] = "T"
-L["GathererMINE"] = "M"
-L["GathererHERB"] = "H"
-L["GathererOPEN"] = "T"
+L["CartographerHerbalism"] = "Kräuterkunde"
+L["CartographerMining"] = "Bergbau"
+L["CartographerFishing"] = "Angeln"
+L["CartographerTreasure"] = "Schätze"
+L["CartographerExtractGas"] = "Gas"
+L["GatherMateHerb Gathering"] = "Kräuterkunde"
+L["GatherMateMining"] = "Bergbau"
+L["GatherMateFishing"] = "Angeln"
+L["GatherMateExtract Gas"] = "Gas"
+L["GatherMateTreasure"] = "Schätze"
+L["GathererMINE"] = "Bergbau"
+L["GathererHERB"] = "Kräuterkunde"
+L["GathererOPEN"] = "Schätze"
 
 -- Node types
 L["Herbalism"] = "Kräuterkunde"
@@ -146,7 +145,7 @@ L["|cffffd200     %d|r node(s) are between |cffffd200%d|r-|cffffd200%d|r yards o
 L["|cffffd200     %d|r node(s) are at |cffffd2000|r yards of a cluster point"] = "|cffffd200     %d|r Knotenpunkt(e) sind bei |cffffd2000|r Yards des Anhäufungspunkts"
 L["The cluster radius of this route is |cffffd200%d|r yards."] = "Der Anhäufungsradius dieser Route ist |cffffd200%d|r Yards."
 
-L["Line settings"] = "Linieneinstellungen"
+L["Line Settings"] = "Linieneinstellungen"
 L["These settings control the visibility and look of the drawn route."] = "Diese Einstellungen kontrollieren die Sichtbarkeit und das Aussehen der gezeichneten Route"
 L["Width (Map)"] = "Breite (Karte)"
 L["Width of the line in the map"] = "Breite der Linie auf der Karte"
@@ -165,7 +164,7 @@ L["You may not delete a route that is being optimized in the background."] = "Si
 L["Reset"] = "Zurücksetzen"
 L["Reset the line settings to defaults"] = "Setzt die Linieneinstellungen auf ihre Ursprungswerte zurück"
 
-L["Optimize route"] = "Route optimieren"
+L["Optimize Route"] = "Route Optimieren"
 L["Route Optimizing"] = "Routen Optimierung"
 L["Extra optimization"] = "Extra Optimierung"
 L["ExtraOptDesc"] = "Wenn Sie diese Option aktivieren, dauert das Optimieren der Route ungefähr 40% länger, aber es wird eine -leicht- bessere Route generiert. Empfohlene Einstellung ist AUS."

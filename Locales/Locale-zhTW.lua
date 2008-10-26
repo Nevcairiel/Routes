@@ -109,20 +109,19 @@ L["Create Bare Route"] = true
 L["CREATE_BARE_ROUTE_DESC"] = "This will create a route with just 3 initial points in it, and does not use any data from any source. You may then manually edit this route to insert and move nodes."
 
 -- DB prefix abbreviations 
--- M for Mining, H for Herbs, F for fishing, G for Gas, T for Treasure
-L["CartographerHerbalism"] = "H"
-L["CartographerMining"] = "M"
-L["CartographerFishing"] = "F"
-L["CartographerTreasure"] = "T"
-L["CartographerExtractGas"] = "G"
-L["GatherMateHerb Gathering"] = "H"
-L["GatherMateMining"] = "M"
-L["GatherMateFishing"] = "F"
-L["GatherMateExtract Gas"] = "G"
-L["GatherMateTreasure"] = "T"
-L["GathererMINE"] = "M"
-L["GathererHERB"] = "H"
-L["GathererOPEN"] = "T"
+L["CartographerHerbalism"] = "採藥"
+L["CartographerMining"] = "採礦"
+L["CartographerFishing"] = "釣魚"
+L["CartographerTreasure"] = "寶藏"
+L["CartographerExtractGas"] = "氣雲"
+L["GatherMateHerb Gathering"] = "採藥"
+L["GatherMateMining"] = "採礦"
+L["GatherMateFishing"] = "釣魚"
+L["GatherMateExtract Gas"] = "氣雲"
+L["GatherMateTreasure"] = "寶藏"
+L["GathererMINE"] = "採礦"
+L["GathererHERB"] = "採藥"
+L["GathererOPEN"] = "寶藏"
 
 -- Node types
 L["Herbalism"] = "採藥"
@@ -146,7 +145,7 @@ L["|cffffd200     %d|r node(s) are between |cffffd200%d|r-|cffffd200%d|r yards o
 L["|cffffd200     %d|r node(s) are at |cffffd2000|r yards of a cluster point"] = "資源點群內有 |cffffd200     %d|r 個資源點相距 |cffffd2000|r 碼"
 L["The cluster radius of this route is |cffffd200%d|r yards."] = "群集資源點的半徑是 |cffffd200%d|r 碼."
 
-L["Line settings"] = "劃線設定"
+L["Line Settings"] = "劃線設定"
 L["These settings control the visibility and look of the drawn route."] = "這設定路線的外觀"
 L["Width (Map)"] = "闊度 (地圖)"
 L["Width of the line in the map"] = "在地圖裡線的闊度"
@@ -165,7 +164,7 @@ L["You may not delete a route that is being optimized in the background."] = "�
 L["Reset"] = "重置"
 L["Reset the line settings to defaults"] = "重置劃線設定"
 
-L["Optimize route"] = "優化路線"
+L["Optimize Route"] = "優化路線"
 L["Route Optimizing"] = "路線的優化"
 L["Extra optimization"] = "加強優化"
 L["ExtraOptDesc"] = "開啟這選項會令優化所需的時間加長約40%, 但是可做出'稍為'優良的路線. 建議設定為 OFF."

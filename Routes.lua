@@ -1791,7 +1791,6 @@ function Routes:CreateAceOptRouteTable(zone, route)
 			info_group = {
 				type = "group",
 				name = L["Information"],
-				desc = L["Information"],
 				order = 0,
 				args = {
 					desc1 = {
@@ -1828,13 +1827,11 @@ function Routes:CreateAceOptRouteTable(zone, route)
 						order = 100,
 						disabled = "IsBeingManualEdited",
 					},
-					edit = Routes:CreateAceOptRouteEditTable(zone_route_table),
 				},
 			},
 			setting_group = {
 				type = "group",
-				name = L["Line settings"],
-				desc = L["Line settings"],
+				name = L["Line Settings"],
 				order = 100,
 				disabled = "IsBeingManualEdited",
 				arg = zone_route_table,
@@ -1896,7 +1893,7 @@ function Routes:CreateAceOptRouteTable(zone, route)
 			optimize_group = {
 				type = "group",
 				order = 200,
-				name = L["Optimize route"],
+				name = L["Optimize Route"],
 				disabled = "IsBeingManualEdited",
 				arg = zone_route_table,
 				args = {
@@ -1989,7 +1986,7 @@ function Routes:CreateAceOptRouteTable(zone, route)
 			},
 			taboo_group = {
 				type = "group",
-				order = 200,
+				order = 300,
 				name = L["Taboos"],
 				disabled = "IsBeingManualEdited",
 				arg = zone_route_table,
@@ -2006,6 +2003,7 @@ function Routes:CreateAceOptRouteTable(zone, route)
 					},
 				},
 			},
+			edit_group = Routes:CreateAceOptRouteEditTable(zone_route_table),
 		},
 	}
 end
@@ -2117,6 +2115,7 @@ do
 					values = get_source_values,
 					get = get_source_value,
 					set = set_source_value,
+					width = "full",
 					disabled = not plugin_table.IsActive(),
 					guiHidden = not plugin_table.IsActive(),
 				}
@@ -2142,7 +2141,7 @@ do
 		zone_choice = {
 			name = L["Select Zone"], type = "select",
 			desc = L["Zone to create route in"],
-			order = 200,
+			order = 150,
 			values = function()
 				if not next(create_zones) then
 					for k, v in pairs(Routes.zoneNames) do
@@ -2159,7 +2158,79 @@ do
 			set = function(info, key) create_zone = key end,
 			style = "radio",
 		},
-		header1 = {
+		header_bare = {
+			type = "header",
+			name = L["Create Bare Route"],
+			order = 200,
+		},
+		info_bare = {
+			type = "description",
+			name = L["CREATE_BARE_ROUTE_DESC"],
+			order = 201,
+		},
+		add_route_bare = {
+			name = L["Create Bare Route"], type = "execute",
+			desc = L["CREATE_BARE_ROUTE_DESC"],
+			order = 202,
+			func = function()
+				create_name = strtrim(create_name)
+				if not create_name or create_name == "" then
+					Routes:Print(L["No name given for new route"])
+					return
+				end
+				local new_route = { route = {71117111, 12357823, 11171123}, selection = {}, db_type = {} }
+
+				-- Perform a deep copy instead so that db defaults apply
+				local mapfile = Routes.zoneData[create_zone][4]
+				db.routes[mapfile][create_name] = nil -- overwrite old route
+				new_route.route = Routes.TSP:DecrossRoute(new_route.route)
+				deep_copy_table(db.routes[mapfile][create_name], new_route)
+
+				db.routes[mapfile][create_name].length = Routes.TSP:PathLength(new_route.route, create_zone)
+
+				-- Create the aceopts table entry for our new route
+				local opts = options.args.routes_group.args
+				if not opts[mapfile] then
+					opts[mapfile] = { -- use a 3 digit string which is alphabetically sorted zone names by continent
+						type = "group",
+						name = create_zone,
+						desc = L["Routes in %s"]:format(create_zone),
+						args = {},
+					}
+					opts[mapfile].args.desc = {
+						type = "description",
+						name = GetZoneDescText,
+						arg = mapfile,
+						order = 0,
+					}
+				end
+				local routekey = create_name:gsub("%s", "\255") -- can't have spaces in the key
+				opts[mapfile].args[routekey] = Routes:CreateAceOptRouteTable(mapfile, create_name)
+
+				-- Draw it
+				local AutoShow = Routes:GetModule("AutoShow", true)
+				if AutoShow and db.defaults.use_auto_showhide then
+					AutoShow:ApplyVisibility()
+				end
+				Routes:DrawWorldmapLines()
+				Routes:DrawMinimapLines(true)
+
+				-- clear stored name
+				create_name = ""
+				create_zone = nil
+			end,
+			disabled = function()
+				return not create_name or strtrim(create_name) == ""
+			end,
+			confirm = function()
+				if #db.routes[ Routes.zoneData[create_zone][4] ][create_name].route > 0 then
+					return true
+				end
+				return false
+			end,
+			confirmText = L["A route with that name already exists. Overwrite?"],
+		},
+		header_normal = {
 			type = "header",
 			name = L["Create Route from Data Sources"],
 			order = 225,
@@ -2276,79 +2347,15 @@ do
 			end,
 			confirmText = L["A route with that name already exists. Overwrite?"],
 		},
-		header2 = {
-			type = "header",
-			name = L["Create Bare Route"],
-			order = 500,
-		},
-		info2 = {
-			type = "description",
-			name = L["CREATE_BARE_ROUTE_DESC"],
-			order = 501,
-		},
-		add_route2 = {
-			name = L["Create Bare Route"], type = "execute",
-			desc = L["CREATE_BARE_ROUTE_DESC"],
-			order = 502,
-			func = function()
-				create_name = strtrim(create_name)
-				if not create_name or create_name == "" then
-					Routes:Print(L["No name given for new route"])
-					return
-				end
-				local new_route = { route = {71117111, 12357823, 11171123}, selection = {}, db_type = {} }
-
-				-- Perform a deep copy instead so that db defaults apply
-				local mapfile = Routes.zoneData[create_zone][4]
-				db.routes[mapfile][create_name] = nil -- overwrite old route
-				new_route.route = Routes.TSP:DecrossRoute(new_route.route)
-				deep_copy_table(db.routes[mapfile][create_name], new_route)
-
-				db.routes[mapfile][create_name].length = Routes.TSP:PathLength(new_route.route, create_zone)
-
-				-- Create the aceopts table entry for our new route
-				local opts = options.args.routes_group.args
-				if not opts[mapfile] then
-					opts[mapfile] = { -- use a 3 digit string which is alphabetically sorted zone names by continent
-						type = "group",
-						name = create_zone,
-						desc = L["Routes in %s"]:format(create_zone),
-						args = {},
-					}
-					opts[mapfile].args.desc = {
-						type = "description",
-						name = GetZoneDescText,
-						arg = mapfile,
-						order = 0,
-					}
-				end
-				local routekey = create_name:gsub("%s", "\255") -- can't have spaces in the key
-				opts[mapfile].args[routekey] = Routes:CreateAceOptRouteTable(mapfile, create_name)
-
-				-- Draw it
-				local AutoShow = Routes:GetModule("AutoShow", true)
-				if AutoShow and db.defaults.use_auto_showhide then
-					AutoShow:ApplyVisibility()
-				end
-				Routes:DrawWorldmapLines()
-				Routes:DrawMinimapLines(true)
-
-				-- clear stored name
-				create_name = ""
-				create_zone = nil
-			end,
-			disabled = function()
-				return not create_name or strtrim(create_name) == ""
-			end,
-			confirm = function()
-				if #db.routes[ Routes.zoneData[create_zone][4] ][create_name].route > 0 then
-					return true
-				end
-				return false
-			end,
-			confirmText = L["A route with that name already exists. Overwrite?"],
-		},
 	}
+
+	-- Add another 'Create button'
+	options.args.add_group.args.add_route_copy = {}
+	for k,v in pairs(options.args.add_group.args.add_route) do
+		options.args.add_group.args.add_route_copy[k] = v
+	end
+	options.args.add_group.args.add_route_copy.order
+		= options.args.add_group.args.source_choices.order + 1
 end
 
 ------------------------------------------------------------------------------------------------------
@@ -2984,10 +2991,8 @@ do
 		zone_route_table.isroute = true
 		return {
 			type = "group",
-			inline = true,
-			order = 200,
+			order = 400,
 			name = L["Edit Route Manually"],
-			desc = L["Edit Route Manually"],
 			handler = TabooHandler,
 			args = {
 				desc = route_edit_desc_table,

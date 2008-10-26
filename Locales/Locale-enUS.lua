@@ -108,21 +108,20 @@ L["Create Route from Data Sources"] = true
 L["Create Bare Route"] = true
 L["CREATE_BARE_ROUTE_DESC"] = "This will create a route with just 3 initial points in it, and does not use any data from any source. You may then manually edit this route to insert and move nodes."
 
--- DB prefix abbreviations 
--- M for Mining, H for Herbs, F for fishing, G for Gas, T for Treasure
-L["CartographerHerbalism"] = "H"
-L["CartographerMining"] = "M"
-L["CartographerFishing"] = "F"
-L["CartographerTreasure"] = "T"
-L["CartographerExtractGas"] = "G"
-L["GatherMateHerb Gathering"] = "H"
-L["GatherMateMining"] = "M"
-L["GatherMateFishing"] = "F"
-L["GatherMateExtract Gas"] = "G"
-L["GatherMateTreasure"] = "T"
-L["GathererMINE"] = "M"
-L["GathererHERB"] = "H"
-L["GathererOPEN"] = "T"
+-- DB prefixes
+L["CartographerHerbalism"] = "Herbalism"
+L["CartographerMining"] = "Mining"
+L["CartographerFishing"] = "Fishing"
+L["CartographerTreasure"] = "Treasure"
+L["CartographerExtractGas"] = "Extract Gas"
+L["GatherMateHerb Gathering"] = "Herbalism"
+L["GatherMateMining"] = "Mining"
+L["GatherMateFishing"] = "Fishing"
+L["GatherMateExtract Gas"] = "Extract Gas"
+L["GatherMateTreasure"] = "Treasure"
+L["GathererMINE"] = "Mining"
+L["GathererHERB"] = "Herbalism"
+L["GathererOPEN"] = "Treasure"
 
 -- Node types
 L["Herbalism"] = true
@@ -146,7 +145,7 @@ L["|cffffd200     %d|r node(s) are between |cffffd200%d|r-|cffffd200%d|r yards o
 L["|cffffd200     %d|r node(s) are at |cffffd2000|r yards of a cluster point"] = true
 L["The cluster radius of this route is |cffffd200%d|r yards."] = true
 
-L["Line settings"] = true
+L["Line Settings"] = true
 L["These settings control the visibility and look of the drawn route."] = true
 L["Width (Map)"] = true
 L["Width of the line in the map"] = true
@@ -165,7 +164,7 @@ L["You may not delete a route that is being optimized in the background."] = tru
 L["Reset"] = true
 L["Reset the line settings to defaults"] = true
 
-L["Optimize route"] = true
+L["Optimize Route"] = true
 L["Route Optimizing"] = true
 L["Extra optimization"] = true
 L["ExtraOptDesc"] = "Turning on this option will make optimizing the route take approximately 40% longer, but will generate -slightly- better routes. Recommended setting is OFF."

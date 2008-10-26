@@ -41,7 +41,7 @@ local function Summarize(data, zone)
 		amount_of[title] = (amount_of[title] or 0) + 1
 	end
 	for node, count in pairs(amount_of) do
-		data[ ("%s;%s;%s;%s"):format(SourceName, "Note", node, count) ] = ("%s - %d"):format(node, count)
+		data[ ("%s;%s;%s;%s"):format(SourceName, "Note", node, count) ] = ("%s (%d)"):format(node, count)
 	end
 	return data
 end

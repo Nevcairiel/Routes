@@ -1001,6 +1001,9 @@ function Routes:ADDON_LOADED(event, addon)
 	if self.plugins[addon] then
 		options.args.add_group.args[addon].disabled = false
 		options.args.add_group.args[addon].guiHidden = false
+		if db.defaults.callbacks[addon] and self.plugins[addon].IsActive() then
+			self.plugins[addon].AddCallbacks()
+		end
 	end
 end
 

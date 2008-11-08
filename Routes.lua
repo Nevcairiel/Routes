@@ -393,10 +393,12 @@ function Routes:DrawMinimapLines(forceUpdate)
 	local scale_x = minimap_w / (radius*2)
 	local scale_y = minimap_h / (radius*2)
 
+	local minimapScale = Minimap:GetScale()
+	
 	for route_name, route_data in pairs( db.routes[ self.zoneData[zone][4] ] ) do
 		if type(route_data) == "table" and type(route_data.route) == "table" and #route_data.route > 1 then
 			-- store color/width
-			local width = route_data.width_minimap or defaults.width_minimap
+			local width = (route_data.width_minimap or defaults.width_minimap) / (minimapScale)
 			local color = route_data.color or defaults.color
 
 			-- unless we show hidden
@@ -651,13 +653,14 @@ function Routes:DrawMinimapLines(forceUpdate)
 							draw_ex =			 (draw_ex - minX) * scale_x
 							draw_ey = minimap_h - (draw_ey - minY) * scale_y
 
+							local gapConst = 5 / minimapScale
 							if defaults.line_gaps then
 								-- shorten the line by 5 pixels on endpoints inside the Minimap
 								local dx = draw_sx - draw_ex
 								local dy = draw_sy - draw_ey
 								local l = (dx*dx + dy*dy)^0.5
-								local x = 5 * dx / l
-								local y = 5 * dy / l
+								local x = gapConst * dx / l
+								local y = gapConst * dy / l
 								local shorten1, shorten2
 								if last_inside then shorten1 = true else shorten1 = false end
 								if cur_inside then shorten2 = true else shorten2 = false end
@@ -667,11 +670,11 @@ function Routes:DrawMinimapLines(forceUpdate)
 								if shorten1 and route_data.metadata and defaults.line_gaps_skip_cluster and #route_data.metadata[(i-1 == 0) and #route_data.route or i-1] > 1 then
 									shorten1 = false
 								end
-								if shorten1 and shorten2 and l > 10 then -- draw if line is 10 or more pixels
+								if shorten1 and shorten2 and l > (gapConst*2) then -- draw if line is 10 or more pixels (scaled)
 									G:DrawLine( Minimap, draw_sx-x, draw_sy-y, draw_ex+x, draw_ey+y, width, color, "ARTWORK")
-								elseif shorten1 and not shorten2 and l > 5 then
+								elseif shorten1 and not shorten2 and l > gapConst then
 									G:DrawLine( Minimap, draw_sx-x, draw_sy-y, draw_ex, draw_ey, width, color, "ARTWORK")
-								elseif shorten2 and not shorten1 and l > 5 then
+								elseif shorten2 and not shorten1 and l > gapConst then
 									G:DrawLine( Minimap, draw_sx, draw_sy, draw_ex+x, draw_ey+y, width, color, "ARTWORK")
 								elseif not shorten1 and not shorten2 then
 									G:DrawLine( Minimap, draw_sx, draw_sy, draw_ex, draw_ey, width, color, "ARTWORK")
@@ -3242,6 +3245,13 @@ function G:HideLines(C)
 			tinsert(C.Routes_Lines,tremove(C.Routes_Lines_Used))
 		end
 	end
+end
+
+
+function Routes:ReparentMinimap(minimap)
+	self.G:HideLines(Minimap)
+	Minimap = minimap
+	throttleFrame:Show()
 end
 
 -- vim: ts=4 noexpandtab

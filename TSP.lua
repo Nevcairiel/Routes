@@ -119,6 +119,7 @@ end
 
 -----------------------------------------------------
 -- Function to get the intersection point of 2 lines (x1,y1)-(x2,y2) and (sx,sy)-(ex,ey)
+--[[ Unused function, its inlined in SolveTSP()
 function TSP:GetIntersection(x1, y1, x2, y2, sx, sy, ex, ey)
 	local dx = x2-x1
 	local dy = y2-y1
@@ -134,7 +135,7 @@ function TSP:GetIntersection(x1, y1, x2, y2, sx, sy, ex, ey)
 			return true
 		end
 	end
-end
+end]]
 
 
 -----------------------------------------------------

@@ -116,17 +116,6 @@ local function delTable(t)
 	return nil -- return nil to assign input reference
 end
 
--- Empties a table of everything -- Non-recursive
-local function clearTable(t)
-	if type(t) == "table" then
-		for k, v in pairs(t) do
-			t[k] = nil
-		end
-		t[true] = true
-		t[true] = nil
-		setmetatable(t, nil)
-	end
-end
 
 -----------------------------------------------------
 -- Function to get the intersection point of 2 lines (x1,y1)-(x2,y2) and (sx,sy)-(ex,ey)
@@ -241,7 +230,7 @@ function TSP:SolveTSP(nodes, metadata, taboos, zonename, parameters, path, nonbl
 	assert(type(taboos) == "table", "SolveTSP() expected table in 3rd argument, got "..type(taboos).." instead.")
 	assert(type(parameters) == "table", "SolveTSP() expected table in 5th argument, got "..type(parameters).." instead.")
 	if type(path) == "table" then
-		clearTable(path)
+		wipe(path)
 	else
 		path = newTable()
 	end

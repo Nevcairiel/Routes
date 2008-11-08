@@ -310,7 +310,7 @@ function TSP:SolveTSP(nodes, metadata, taboos, zonename, parameters, path, nonbl
 	-- If BETA = 0, only pheromone amplifications is at work.
 	-- The number of ants will directly determine the speed of the algorithm proportionally. More ants will get more optimal results, but don't use more ants than the number of nodes.
 	-- You need more ants when there are more nodes to have more chances to find a good path quickly. The usual default is numAnts = numNodes, but this takes too long in WoW.
-	local PRUNEDIST         = zoneW * 0.20                          -- Another constant for our own pruning
+	local PRUNEDIST         = zoneW * 0.30                          -- Another constant for our own pruning
 
 	local shortestPathLength = math.huge
 	local shortestPath = newTable()

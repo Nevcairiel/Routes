@@ -1,9 +1,9 @@
 ﻿--[[
 ********************************************************************************
 Routes
-v1.2.1
-26 October 2008
-(Written for Live Servers v3.0.2.9056 or WotLK Beta Servers v3.0.3.9095)
+v1.2.2
+8 November 2008
+(Written for Live Servers v3.0.3.9183)
 
 Author: Xaros @ EU Doomhammer Alliance & Xinhuan @ US Blackrock Alliance
 ********************************************************************************
@@ -35,6 +35,7 @@ Features:
 	  meaning your routes will ignore nodes in those areas and avoid cross them
 	- Fubar plugin available to quickly access your routes
 	- Cartographer_Waypoints and TomTom support for quickly following a route
+	- Works with Chinchilla's Expander minimap and SexyMap's HudMap!
 	- Full in-game help file and FAQ, guiding you step by step on what to do! 
 
 Download:
@@ -653,9 +654,9 @@ function Routes:DrawMinimapLines(forceUpdate)
 							draw_ex =			 (draw_ex - minX) * scale_x
 							draw_ey = minimap_h - (draw_ey - minY) * scale_y
 
-							local gapConst = 5 / minimapScale
 							if defaults.line_gaps then
-								-- shorten the line by 5 pixels on endpoints inside the Minimap
+								-- shorten the line by 5 pixels (scaled) on endpoints inside the Minimap
+								local gapConst = 5 / minimapScale
 								local dx = draw_sx - draw_ex
 								local dy = draw_sy - draw_ey
 								local l = (dx*dx + dy*dy)^0.5

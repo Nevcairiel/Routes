@@ -455,6 +455,11 @@ function TSP:SolveTSP(nodes, metadata, taboos, zonename, parameters, path, nonbl
 				end
 			end]]
 			while TSP:TwoOpt(antpath, weight, prune, TWOPOINTFIVEOPT, nonblocking) > 0 do
+				-- Cycle the last 3 nodes so that the 2-opt algorithm will work on the last
+				-- 3 nodes in the path that got missed (the loop goes from 1 to N-3)
+				tinsert(antpath, tremove(antpath, 1))
+				tinsert(antpath, tremove(antpath, 1))
+				tinsert(antpath, tremove(antpath, 1))
 				if nonblocking then
 					coroutine.yield()
 				end
@@ -487,6 +492,37 @@ function TSP:SolveTSP(nodes, metadata, taboos, zonename, parameters, path, nonbl
 			local u = curnode*numNodes-nextnode
 			phero[u] = (1 - GLOBALDECAY) * phero[u] + tempConstant
 			antprob[u] = phero[u] ^ ALPHA / weight[u] ^ BETA -- Update the probability
+			curnode = nextnode
+		end
+	end
+
+	do
+		-- Perform a non-pruned 2-opt on the final path so that there is absolutely no criss-cross
+		local noprune = newTable()
+		for i = 1, numNodes do
+			noprune[i] = newTable()
+		end
+		for i = 1, numNodes do
+			for j = i+1, numNodes do
+				tinsert(noprune[i], j)
+				tinsert(noprune[j], i)
+			end
+		end
+		while TSP:TwoOpt(shortestPath, weight, noprune, TWOPOINTFIVEOPT, nonblocking) > 0 do
+			tinsert(shortestPath, tremove(shortestPath, 1))
+			tinsert(shortestPath, tremove(shortestPath, 1))
+			tinsert(shortestPath, tremove(shortestPath, 1))
+			if nonblocking then
+				coroutine.yield()
+			end
+		end
+		delTable(noprune)
+		-- Recompute the path length
+		shortestPathLength = 0
+		local curnode = shortestPath[numNodes]
+		for i = 1, numNodes do
+			local nextnode = shortestPath[i]
+			shortestPathLength = shortestPathLength + weight[curnode*numNodes-nextnode]
 			curnode = nextnode
 		end
 	end

@@ -5,7 +5,7 @@ v1.2.2
 8 November 2008
 (Written for Live Servers v3.0.3.9183)
 
-Author: Xaros @ EU Doomhammer Alliance & Xinhuan @ US Blackrock Alliance
+Author: Xaroz @ EU Emerald Dream Alliance & Xinhuan @ US Blackrock Alliance
 ********************************************************************************
 
 Description:

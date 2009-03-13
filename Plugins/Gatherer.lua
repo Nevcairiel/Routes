@@ -34,13 +34,7 @@ local function Summarize(data, zone)
 	continent, zone = floor(continent / 100), continent % 100
 
 	for node, db_type, count in Gatherer.Storage.ZoneGatherNames(continent, zone) do
-		local translatednode
-		for k, v in pairs(Gatherer.Nodes.Names) do
-			if v == node then
-				translatednode = k
-				break
-			end
-		end
+		local translatednode = Gatherer.Util.GetNodeName(node)
 		data[ ("%s;%s;%s;%s"):format(SourceName, db_type, node, count) ] = ("%s - %s (%d)"):format(L[SourceName..db_type], translatednode, count)
 	end
 
@@ -65,13 +59,7 @@ local function AppendNodes(node_list, zone, db_type, node_type)
 	end
 
 	-- return the node_type for auto-adding
-	local translatednode
-	for k, v in pairs(Gatherer.Nodes.Names) do
-		if v == node_type then
-			translatednode = k
-			break
-		end
-	end
+	local translatednode = Gatherer.Util.GetNodeName(node_type)
 	return translatednode, translatednode, translate_db_type[db_type]
 end
 source.AppendNodes = AppendNodes

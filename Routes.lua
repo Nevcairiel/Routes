@@ -1,9 +1,9 @@
 ﻿--[[
 ********************************************************************************
 Routes
-v1.2.2
-8 November 2008
-(Written for Live Servers v3.0.3.9183)
+v1.2.3
+18 April 2009
+(Written for Live Servers v3.1.0.9767)
 
 Author: Xaroz @ EU Emerald Dream Alliance & Xinhuan @ US Blackrock Alliance
 ********************************************************************************
@@ -43,6 +43,10 @@ Download:
 	- http://www.wowace.com/projects/routes/
 	- http://wow.curse.com/downloads/wow-addons/details/routes.aspx
 	- http://www.wowinterface.com/downloads/info11401-Routes.html
+
+Localization:
+	You can contribute by updating/adding localizations using the system on
+	- http://www.wowace.com/projects/routes/localization/
 
 Contact:
 	If you find any bugs or have any suggestions, you can contact us on:

@@ -1,4 +1,4 @@
-﻿## Interface: 30000
+﻿## Interface: 30100
 ## Title: Routes
 ## Notes: Routes on your worldmap and minimap!
 ## Notes-frFR: Routes sur votre carte du monde et minicarte !
@@ -7,7 +7,7 @@
 ## Version: 1.2.2
 ## DefaultState: enabled
 ## X-Category: Map
-## X-eMail: cartographer_routes @ grum DOT nl & xinhuan @ gmail DOT com
+## X-eMail: routes @ grum DOT nl & xinhuan @ gmail DOT com
 ## X-Name: Routes
 ## OptionalDeps: Ace3, Cartographer, Cartographer_Notes, GatherMate, Gatherer, HandyNotes
 ## SavedVariables: RoutesDB

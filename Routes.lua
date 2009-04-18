@@ -155,6 +155,7 @@ local math_sin = math.sin
 local math_cos = math.cos
 local WorldMapButton = WorldMapButton
 local Minimap = Minimap
+local GetPlayerFacing = GetPlayerFacing
 
 
 ------------------------------------------------------------------------------------------------------
@@ -298,6 +299,11 @@ local function is_inside( sx, sy, cx, cy, radius )
 	end
 end
 
+local function GetFacing()
+	if GetPlayerFacing then return GetPlayerFacing() end
+	return -MiniMapCompassRing:GetFacing()
+end
+
 local last_X, last_Y, last_facing = 1/0, 1/0, 1/0
 
 -- implementation of cache - use zone in the key for an unique identifier
@@ -349,7 +355,7 @@ function Routes:DrawMinimapLines(forceUpdate)
 
 	local facing, sin, cos
 	if minimap_rotate then
-		facing = -MiniMapCompassRing:GetFacing()
+		facing = GetFacing()
 	end
 
 	if (not forceUpdate) and facing == last_facing and (last_X-cx)^2 + (last_Y-cy)^2 < defaults.update_distance^2 then

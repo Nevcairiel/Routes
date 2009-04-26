@@ -3243,23 +3243,14 @@ function G:DrawLine(C, sx, sy, ex, ey, w, color, layer)
 	-- Thanks Blizzard for adding (-)10000 as a hard-cap and throwing errors!
 	-- The cap was added in 3.1.0 and I think it was upped in 3.1.1
 	--  (way less chance to get the error)
-	-- TODO Properly check which of these variables can actually get these extreme values.
-	if TLx >  10000 then TLx =  10000 end
-	if TLy >  10000 then TLy =  10000 end
-	if BLx >  10000 then BLx =  10000 end
-	if BLy >  10000 then BLy =  10000 end
-	if TRx >  10000 then TRx =  10000 end
-	if TRy >  10000 then TRy =  10000 end
-	if BRx >  10000 then BRx =  10000 end
-	if BRy >  10000 then BRy =  10000 end
-	if TLx < -10000 then TLx = -10000 end
-	if TLy < -10000 then TLy = -10000 end
-	if BLx < -10000 then BLx = -10000 end
-	if BLy < -10000 then BLy = -10000 end
-	if TRx < -10000 then TRx = -10000 end
-	if TRy < -10000 then TRy = -10000 end
-	if BRx < -10000 then BRx = -10000 end
-	if BRy < -10000 then BRy = -10000 end
+	if TLx > 10000 then TLx = 10000 elseif TLx < -10000 then TLx = -10000 end
+	if TLy > 10000 then TLy = 10000 elseif TLy < -10000 then TLy = -10000 end
+	if BLx > 10000 then BLx = 10000 elseif BLx < -10000 then BLx = -10000 end
+	if BLy > 10000 then BLy = 10000 elseif BLy < -10000 then BLy = -10000 end
+	if TRx > 10000 then TRx = 10000 elseif TRx < -10000 then TRx = -10000 end
+	if TRy > 10000 then TRy = 10000 elseif TRy < -10000 then TRy = -10000 end
+	if BRx > 10000 then BRx = 10000 elseif BRx < -10000 then BRx = -10000 end
+	if BRy > 10000 then BRy = 10000 elseif BRy < -10000 then BRy = -10000 end
 
 	-- Set texture coordinates and anchors
 	T:ClearAllPoints();

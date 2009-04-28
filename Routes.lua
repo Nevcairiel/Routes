@@ -1,8 +1,8 @@
 ﻿--[[
 ********************************************************************************
 Routes
-v1.2.4
-26 April 2009
+@project-version@
+28 April 2009
 (Written for Live Servers v3.1.1.9806)
 
 Author: Xaroz @ EU Emerald Dream Alliance & Xinhuan @ US Blackrock Alliance

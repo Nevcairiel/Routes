@@ -4,7 +4,7 @@
 ## Notes-frFR: Routes sur votre carte du monde et minicarte !
 ## Notes-zhCN:Routes可以在已有采集相关数据的基础上形成采集路线，并可以优化路线，提高采集效率。
 ## Author: Grum, Xinhuan
-## Version: 1.2.2
+## Version: 1.2.4
 ## DefaultState: enabled
 ## X-Category: Map
 ## X-eMail: routes @ grum DOT nl & xinhuan @ gmail DOT com

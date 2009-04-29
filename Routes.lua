@@ -3208,8 +3208,19 @@ function G:DrawLine(C, sx, sy, ex, ey, w, color, layer)
 	T:SetDrawLayer(layer or "ARTWORK")
 
 	T:SetVertexColor(color[1],color[2],color[3],color[4]);
+
 	-- Determine dimensions and center point of line
 	local dx,dy = ex - sx, ey - sy;
+
+	-- Quick escape if it's zero length
+	if dx == 0 and dy == 0 then
+		T:ClearAllPoints();
+		T:SetTexCoord(0,0,0,0,0,0,0,0);
+		T:SetPoint("BOTTOMLEFT", C, relPoint, cx, cy);
+		T:SetPoint("TOPRIGHT",   C, relPoint, cx, cy);
+		return T;
+	end
+
 	local cx,cy = (sx + ex) / 2, (sy + ey) / 2;
 
 	-- Normalize direction if necessary

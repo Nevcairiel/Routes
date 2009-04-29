@@ -160,7 +160,7 @@ local math_cos = math.cos
 local WorldMapButton = WorldMapButton
 local Minimap = Minimap
 local GetPlayerFacing = GetPlayerFacing
-
+local pcall = pcall
 
 ------------------------------------------------------------------------------------------------------
 -- Core Routes functions
@@ -3254,7 +3254,13 @@ function G:DrawLine(C, sx, sy, ex, ey, w, color, layer)
 
 	-- Set texture coordinates and anchors
 	T:ClearAllPoints();
-	T:SetTexCoord(TLx, TLy, BLx, BLy, TRx, TRy, BRx, BRy);
+
+	local status, err = pcall( T.SetTexCoord, T, TLx, TLy, BLx, BLy, TRx, TRy, BRx, BRy )
+	if not status then
+		error( ("SetTexCoord tossed an error, please report on http://wowace.com/projects/routes >> Error: %s TLx: %s TLy: %s BLx: %s BLy: %s TRx: %s TRy: %s BRx: %s BRy: %s"):format(
+			err or "nil", TLx or "nil", TLy or "nil", BLx or "nil", BLy or "nil", TRx or "nil", TRy or "nil", BRx or "nil", BRy or "nil"
+		));
+	end
 	T:SetPoint("BOTTOMLEFT", C, relPoint, cx - Bwid, cy - Bhgt);
 	T:SetPoint("TOPRIGHT",   C, relPoint, cx + Bwid, cy + Bhgt);
 	T:Show()

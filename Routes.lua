@@ -3212,8 +3212,11 @@ function G:DrawLine(C, sx, sy, ex, ey, w, color, layer)
 	-- Determine dimensions and center point of line
 	local dx,dy = ex - sx, ey - sy;
 
+	-- Calculate actual length of line
+	local l = ((dx * dx) + (dy * dy)) ^ 0.5;
+
 	-- Quick escape if it's zero length
-	if dx == 0 and dy == 0 then
+	if l == 0 then
 		T:ClearAllPoints();
 		T:SetTexCoord(0,0,0,0,0,0,0,0);
 		T:SetPoint("BOTTOMLEFT", C, relPoint, cx, cy);
@@ -3227,9 +3230,6 @@ function G:DrawLine(C, sx, sy, ex, ey, w, color, layer)
 	if (dx < 0) then
 		dx,dy = -dx,-dy;
 	end
-
-	-- Calculate actual length of line
-	local l = ((dx * dx) + (dy * dy)) ^ 0.5;
 
 	-- Sin and Cosine of rotation, and combination (for later)
 	local s,c = -dy / l, dx / l;

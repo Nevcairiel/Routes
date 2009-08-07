@@ -91,6 +91,8 @@ local zone_data = { -- {width, height, zoneID}
 	LakeWintergrasp = {2974.99987792969,1983.33325195312,78,},
 	StrandoftheAncients = {1743.74993896484,1162.49993896484,79,},
 	Dalaran = {667,768,80,},
+	-- Temporarely because Kagaro slacks
+	HrothgarsLanding = {3677.084, 2452.084, 81,},
 }
 -- meta table to return 0 for all unknown zones, instances, and what not
 local emptyZoneTbl = {0,0,0,""}

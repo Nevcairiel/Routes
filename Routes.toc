@@ -30,7 +30,6 @@ Libs\AceConfig-3.0\AceConfig-3.0.xml
 Locales\Locale-enUS.lua
 Locales\Locale-deDE.lua
 Locales\Locale-esES.lua
-Locales\Locale-esMX.lua
 Locales\Locale-frFR.lua
 Locales\Locale-koKR.lua
 Locales\Locale-ruRU.lua

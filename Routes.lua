@@ -883,7 +883,11 @@ function Routes:OnInitialize()
 
 	-- Initialize the ace options table
 	LibStub("AceConfigRegistry-3.0"):RegisterOptionsTable("Routes", options)
-	self:RegisterChatCommand(L["routes"], function() LibStub("AceConfigDialog-3.0"):Open("Routes") end)
+	local f = function() LibStub("AceConfigDialog-3.0"):Open("Routes") end
+	self:RegisterChatCommand(L["routes"], f)
+	if L["routes"] ~= "routes" then
+		self:RegisterChatCommand("routes", f)
+	end
 
 	-- Upgrade old storage format (which was dependant on LibBabble-Zone-3.0
 	-- to the new format that doesn't require it

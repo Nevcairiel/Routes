@@ -29,8 +29,12 @@ local function round(num, digits) -- copied from various Cartographer modules
 	return norm_f/mantissa
 end
 
+local function hasActiveCartographerWaypoints()
+	return Cartographer and Cartographer.HasModule and Cartographer:HasModule("Waypoints") and Cartographer:IsModuleActive("Waypoints")
+end
+
 function Waypoints:FindClosestVisibleRoute()
-	if not (Cartographer and Cartographer:HasModule("Waypoints") and Cartographer:IsModuleActive("Waypoints")) then
+	if not hasActiveCartographerWaypoints() then
 		Routes:Print(L["Cartographer_Waypoints module is missing or disabled"])
 		return
 	end
@@ -58,7 +62,7 @@ function Waypoints:FindClosestVisibleRoute()
 end
 
 function Waypoints:QueueFirstNode()
-	if not (Cartographer and Cartographer:HasModule("Waypoints") and Cartographer:IsModuleActive("Waypoints")) then
+	if not hasActiveCartographerWaypoints() then
 		Routes:Print(L["Cartographer_Waypoints module is missing or disabled"])
 		return
 	end
@@ -117,7 +121,7 @@ function Waypoints:WaypointHit(event, waypoint)
 end
 
 function Waypoints:RemoveQueuedNode()
-	if not (Cartographer and Cartographer:HasModule("Waypoints") and Cartographer:IsModuleActive("Waypoints")) then
+	if not hasActiveCartographerWaypoints() then
 		Routes:Print(L["Cartographer_Waypoints module is missing or disabled"])
 		return
 	end
@@ -149,7 +153,7 @@ end
 options = {
 	name = L["Waypoints (Carto)"], type = "group",
 	desc = L["Integrated support options for Cartographer_Waypoints"],
-	disabled = function() return not (Cartographer and Cartographer:HasModule("Waypoints") and Cartographer:IsModuleActive("Waypoints")) end,
+	disabled = function() return not hasActiveCartographerWaypoints() end,
 	order = 300,
 	args = {
 		desc = {

@@ -2101,6 +2101,12 @@ do
 			create_data[ db.defaults.fake_data ..";;;" ] = L["No data found"]
 		end
 		last_zone[info.arg] = create_zone
+		-- Remove invalid entries due to updated data so we don't pairs over it during route creation
+		if create_choices[create_zone] then
+			for k in pairs(create_choices[create_zone]) do
+				if not create_data[k] then create_choices[create_zone][k] = nil end
+			end
+		end
 		return create_data
 	end
 

@@ -148,6 +148,9 @@ local defaults = {
 local options
 -- Plugins table
 Routes.plugins = {}
+-- Lookup table for aceoptkey-route/taboo conversion
+Routes.routekeys = {}
+Routes.tabookeys = {}
 
 -- localize some globals
 local pairs, next = pairs, next
@@ -852,24 +855,36 @@ function Routes:UpgradeStorageFormat1()
 	end
 end
 
-local function GetZoneDescText(info)
-	local count = 0
-	for route_name, route_table in pairs(db.routes[info.arg]) do
-		if #route_table.route > 0 then
-			count = count + 1
+
+-- Common subtables for zone and table description
+local route_zone_args_desc_table = {
+	type = "description",
+	name = function(info)
+		local zone = info[2]
+		local count = 0
+		for route_name, route_table in pairs(db.routes[zone]) do
+			if #route_table.route > 0 then
+				count = count + 1
+			end
 		end
-	end
-	return L["You have |cffffd200%d|r route(s) in |cffffd200%s|r."]:format(count, Routes.zoneMapFile[info.arg])
-end
-local function GetZoneTabooDescText(info)
-	local count = 0
-	for taboo_name, taboo_table in pairs(db.taboo[info.arg]) do
-		if #taboo_table.route > 0 then
-			count = count + 1
+		return L["You have |cffffd200%d|r route(s) in |cffffd200%s|r."]:format(count, Routes.zoneMapFile[zone])
+	end,
+	order = 0,
+}
+local taboo_zone_args_desc_table = {
+	type = "description",
+	name = function(info)
+		local zone = info[2]
+		local count = 0
+		for taboo_name, taboo_table in pairs(db.taboo[zone]) do
+			if #taboo_table.route > 0 then
+				count = count + 1
+			end
 		end
-	end
-	return L["You have |cffffd200%d|r taboo region(s) in |cffffd200%s|r."]:format(count, Routes.zoneMapFile[info.arg])
-end
+		return L["You have |cffffd200%d|r taboo region(s) in |cffffd200%s|r."]:format(count, Routes.zoneMapFile[zone])
+	end,
+	order = 0,
+}
 
 
 ------------------------------------------------------------------------------------------------------
@@ -906,19 +921,17 @@ function Routes:OnInitialize()
 				type = "group",
 				name = localizedZoneName,
 				desc = L["Routes in %s"]:format(localizedZoneName),
-				args = {},
+				args = {
+					desc = route_zone_args_desc_table,
+				},
 			}
+			self.routekeys[zone] = {}
 			for route, route_table in pairs(zone_table) do
 				local routekey = route:gsub("%s", "\255") -- can't have spaces in the key
-				opts[zone].args[routekey] = self:CreateAceOptRouteTable(zone, route)
+				self.routekeys[zone][routekey] = route
+				opts[zone].args[routekey] = self:GetAceOptRouteTable()
 				route_table.editing = nil -- in case server crashes during edit.
 			end
-			opts[zone].args.desc = {
-				type = "description",
-				name = GetZoneDescText,
-				arg = zone,
-				order = 0,
-			}
 		end
 	end
 
@@ -934,18 +947,16 @@ function Routes:OnInitialize()
 				type = "group",
 				name = localizedZoneName,
 				desc = L["Taboos in %s"]:format(localizedZoneName),
-				args = {},
+				args = {
+					desc = taboo_zone_args_desc_table,
+				},
 			}
+			self.tabookeys[zone] = {}
 			for taboo in pairs(zone_table) do
 				local tabookey = taboo:gsub("%s", "\255") -- can't have spaces in the key
-				opts[zone].args[tabookey] = self:CreateAceOptTabooTable(zone, taboo)
+				self.tabookeys[zone][tabookey] = taboo
+				opts[zone].args[tabookey] = self:GetAceOptTabooTable()
 			end
-			opts[zone].args.desc = {
-				type = "description",
-				name = GetZoneTabooDescText,
-				arg = zone,
-				order = 0,
-			}
 		end
 	end
 	self:SetupSourcesOptTables()
@@ -1034,7 +1045,7 @@ do
 
 	local t = {}
 	function KeybindHelper:MakeKeyBindingTable(...)
-		for k in pairs(t) do t[k] = nil end
+		wipe(t)
 		for i = 1, select("#", ...) do
 			local key = select(i, ...)
 			if key ~= "" then
@@ -1096,14 +1107,14 @@ options = {
 			name = L["Routes"],
 			desc = L["Routes"],
 			order = 200,
-			args = {},
+			args = {}, -- populated in Routes:OnInitialize()
 		},
 		taboo_group = {
 			type = "group",
 			name = L["Taboos"],
 			desc = L["Taboos"],
 			order = 250,
-			args = {},
+			args = {}, -- populated in Routes:OnInitialize()
 		},
 		faq_group = {
 			type = "group",
@@ -1422,10 +1433,14 @@ options.args.options_group.args = {
 local ConfigHandler = {}
 
 function ConfigHandler:GetColor(info)
-	return unpack(db.routes[info.arg.zone][info.arg.route].color or db.defaults.color)
+	local zone = info[2]
+	local route = Routes.routekeys[zone][ info[3] ]
+	return unpack(db.routes[zone][route].color or db.defaults.color)
 end
 function ConfigHandler:SetColor(info, r, g, b, a)
-	local t = db.routes[info.arg.zone][info.arg.route]
+	local zone = info[2]
+	local route = Routes.routekeys[zone][ info[3] ]
+	local t = db.routes[zone][route]
 	t.color = t.color or {}
 	t = t.color
 	t[1] = r; t[2] = g; t[3] = b; t[4] = a;
@@ -1434,58 +1449,79 @@ function ConfigHandler:SetColor(info, r, g, b, a)
 end
 
 function ConfigHandler:GetHidden(info)
-	return db.routes[info.arg.zone][info.arg.route].hidden
+	local zone = info[2]
+	local route = Routes.routekeys[zone][ info[3] ]
+	return db.routes[zone][route].hidden
 end
 function ConfigHandler:SetHidden(info, v)
-	db.routes[info.arg.zone][info.arg.route].hidden = v
+	local zone = info[2]
+	local route = Routes.routekeys[zone][ info[3] ]
+	db.routes[zone][route].hidden = v
 	Routes:DrawWorldmapLines()
 	Routes:DrawMinimapLines(true)
 end
 
 function ConfigHandler:GetWidth(info)
-	return db.routes[info.arg.zone][info.arg.route].width or db.defaults.width
+	local zone = info[2]
+	local route = Routes.routekeys[zone][ info[3] ]
+	return db.routes[zone][route].width or db.defaults.width
 end
 function ConfigHandler:SetWidth(info, v)
-	db.routes[info.arg.zone][info.arg.route].width = v
+	local zone = info[2]
+	local route = Routes.routekeys[zone][ info[3] ]
+	db.routes[zone][route].width = v
 	Routes:DrawWorldmapLines()
 end
 
 function ConfigHandler:GetWidthMinimap(info)
-	return db.routes[info.arg.zone][info.arg.route].width_minimap or db.defaults.width_minimap
+	local zone = info[2]
+	local route = Routes.routekeys[zone][ info[3] ]
+	return db.routes[zone][route].width_minimap or db.defaults.width_minimap
 end
 function ConfigHandler:SetWidthMinimap(info, v)
-	db.routes[info.arg.zone][info.arg.route].width_minimap = v
+	local zone = info[2]
+	local route = Routes.routekeys[zone][ info[3] ]
+	db.routes[zone][route].width_minimap = v
 	Routes:DrawMinimapLines(true)
 end
 
 function ConfigHandler:GetWidthBattleMap(info)
-	return db.routes[info.arg.zone][info.arg.route].width_battlemap or db.defaults.width_battlemap
+	local zone = info[2]
+	local route = Routes.routekeys[zone][ info[3] ]
+	return db.routes[zone][route].width_battlemap or db.defaults.width_battlemap
 end
 function ConfigHandler:SetWidthBattleMap(info, v)
-	db.routes[info.arg.zone][info.arg.route].width_battlemap = v
+	local zone = info[2]
+	local route = Routes.routekeys[zone][ info[3] ]
+	db.routes[zone][route].width_battlemap = v
 	Routes:DrawWorldmapLines()
 end
 
 function ConfigHandler:DeleteRoute(info)
-	local zone, route = info.arg.zone, info.arg.route
+	local zone = info[2]
+	local routekey = info[3]
+	local route = Routes.routekeys[zone][routekey]
 	local is_running, route_table = Routes.TSP:IsTSPRunning()
 	if is_running and route_table == db.routes[zone][route].route then
 		Routes:Print(L["You may not delete a route that is being optimized in the background."])
 		return
 	end
 	db.routes[zone][route] = nil
-	local routekey = route:gsub("%s", "\255") -- can't have spaces in the key
+	--local routekey = route:gsub("%s", "\255") -- can't have spaces in the key
 	options.args.routes_group.args[zone].args[routekey] = nil -- delete route from aceopt
+	Routes.routekeys[zone][routekey] = nil
 	if next(db.routes[zone]) == nil then
 		db.routes[zone] = nil
 		options.args.routes_group.args[zone] = nil -- delete zone from aceopt if no routes remaining
+		Routes.routekeys[zone] = nil
 	end
 	Routes:DrawWorldmapLines()
 	Routes:DrawMinimapLines(true)
 end
 
 function ConfigHandler:ClusterRoute(info)
-	local zone, route = info.arg.zone, info.arg.route
+	local zone = info[2]
+	local route = Routes.routekeys[zone][ info[3] ]
 	local t = db.routes[zone][route]
 	t.route, t.metadata, t.length = Routes.TSP:ClusterRoute(db.routes[zone][route].route, Routes.zoneMapFile[zone], db.defaults.cluster_dist)
 	t.cluster_dist = db.defaults.cluster_dist
@@ -1494,7 +1530,8 @@ function ConfigHandler:ClusterRoute(info)
 end
 
 function ConfigHandler:UnClusterRoute(info)
-	local zone, route = info.arg.zone, info.arg.route
+	local zone = info[2]
+	local route = Routes.routekeys[zone][ info[3] ]
 	local t = db.routes[zone][route]
 	local num = 0
 	for i = 1, #t.metadata do
@@ -1511,7 +1548,9 @@ function ConfigHandler:UnClusterRoute(info)
 end
 
 function ConfigHandler:IsCluster(info)
-	local t = db.routes[info.arg.zone][info.arg.route]
+	local zone = info[2]
+	local route = Routes.routekeys[zone][ info[3] ]
+	local t = db.routes[zone][route]
 	if t.metadata then
 		return true
 	else
@@ -1530,7 +1569,9 @@ function ConfigHandler:SetDefaultClusterDist(info, v)
 end
 
 function ConfigHandler:ResetLineSettings(info)
-	local t = db.routes[info.arg.zone][info.arg.route]
+	local zone = info[2]
+	local route = Routes.routekeys[zone][ info[3] ]
+	local t = db.routes[zone][route]
 	t.color = nil
 	t.width = nil
 	t.width_minimap = nil
@@ -1540,12 +1581,16 @@ function ConfigHandler:ResetLineSettings(info)
 end
 
 function ConfigHandler.GetRouteDesc(info)
-	local t = db.routes[info.arg.zone][info.arg.route]
+	local zone = info[2]
+	local route = Routes.routekeys[zone][ info[3] ]
+	local t = db.routes[zone][route]
 	return L["This route has |cffffd200%d|r nodes and is |cffffd200%d|r yards long."]:format(#t.route, t.length)
 end
 
 function ConfigHandler.GetShortClusterDesc(info)
-	local t = db.routes[info.arg.zone][info.arg.route]
+	local zone = info[2]
+	local route = Routes.routekeys[zone][ info[3] ]
+	local t = db.routes[zone][route]
 	if not t.metadata then
 		return L["This route is not a clustered route."]
 	end
@@ -1557,7 +1602,9 @@ function ConfigHandler.GetShortClusterDesc(info)
 end
 
 function ConfigHandler.GetRouteClusterRadiusDesc(info)
-	local t = db.routes[info.arg.zone][info.arg.route]
+	local zone = info[2]
+	local route = Routes.routekeys[zone][ info[3] ]
+	local t = db.routes[zone][route]
 	if t.metadata then
 		return L["The cluster radius of this route is |cffffd200%d|r yards."]:format(t.cluster_dist or 65) -- 65 was an old default
 	end
@@ -1566,8 +1613,10 @@ end
 do
 	local str = {}
 	function ConfigHandler.GetDataDesc(info)
-		for k in pairs(str) do str[k] = nil end
-		local t = db.routes[info.arg.zone][info.arg.route]
+		wipe(str)
+		local zone = info[2]
+		local route = Routes.routekeys[zone][ info[3] ]
+		local t = db.routes[zone][route]
 		local num = 1
 		str[num] = L["This route has nodes that belong to the following categories:"]
 		for k in pairs(t.db_type) do
@@ -1586,16 +1635,18 @@ do
 
 	local data = {}
 	function ConfigHandler.GetClusterDesc(info)
-		for k in pairs(str) do str[k] = nil end
-		for k in pairs(data) do data[k] = nil end
-		local t = db.routes[info.arg.zone][info.arg.route]
+		wipe(str)
+		wipe(data)
+		local zone = info[2]
+		local route = Routes.routekeys[zone][ info[3] ]
+		local t = db.routes[zone][route]
 		if not t.metadata then
 			return L["This route is not a clustered route."]
 		end
 
 		local numNodes = 0
 		local maxt = 0
-		local zone = Routes.zoneMapFile[info.arg.zone]
+		local zone = Routes.zoneMapFile[zone]
 		local zoneW, zoneH = Routes.zoneData[zone][1], Routes.zoneData[zone][2]
 		for i = 1, #t.metadata do
 			local numData = #t.metadata[i]
@@ -1619,8 +1670,10 @@ do
 	end
 
 	function ConfigHandler.GetTabooDesc(info)
-		for k in pairs(str) do str[k] = nil end
-		local t = db.routes[info.arg.zone][info.arg.route]
+		wipe(str)
+		local zone = info[2]
+		local route = Routes.routekeys[zone][ info[3] ]
+		local t = db.routes[zone][route]
 		local num = 1
 		str[num] = L["This route has the following taboo regions:"]
 		for k, v in pairs(t.taboos) do
@@ -1648,20 +1701,22 @@ function ConfigHandler:SetTwoPointFiveOpt(info, v)
 end
 
 function ConfigHandler:DoForeground(info)
-	local t = db.routes[info.arg.zone][info.arg.route]
+	local zone = info[2]
+	local route = Routes.routekeys[zone][ info[3] ]
+	local t = db.routes[zone][route]
 	if #t.route > 724 then
 		-- Lua has 4mb limit on table size. 725x725 will result in a table of size 525625
-		-- 524288 (or 2^19) is the max as 8 bytes per entry (4 bytes for key, 4 bytes for value) will give exactly 4 Mb
+		-- 524288 (or 2^19) is the max as 8 bytes per entry will give exactly 4 Mb
 		Routes:Print(L["TOO_MANY_NODES_ERROR"])
 		return
 	end
 	local taboos = {}
 	for tabooname, used in pairs(t.taboos) do
 		if used then
-			tinsert(taboos, db.taboo[info.arg.zone][tabooname])
+			tinsert(taboos, db.taboo[zone][tabooname])
 		end
 	end
-	local output, meta, length, iter, timetaken = Routes.TSP:SolveTSP(t.route, t.metadata, taboos, Routes.zoneMapFile[info.arg.zone], db.defaults.tsp)
+	local output, meta, length, iter, timetaken = Routes.TSP:SolveTSP(t.route, t.metadata, taboos, Routes.zoneMapFile[zone], db.defaults.tsp)
 	t.route = output
 	t.length = length
 	t.metadata = meta
@@ -1677,7 +1732,9 @@ function ConfigHandler:DoForeground(info)
 end
 
 function ConfigHandler:DoBackground(info)
-	local t = db.routes[info.arg.zone][info.arg.route]
+	local zone = info[2]
+	local route = Routes.routekeys[zone][ info[3] ]
+	local t = db.routes[zone][route]
 	if #t.route > 724 then
 		Routes:Print(L["TOO_MANY_NODES_ERROR"])
 		return
@@ -1685,10 +1742,10 @@ function ConfigHandler:DoBackground(info)
 	local taboos = {}
 	for tabooname, used in pairs(t.taboos) do
 		if used then
-			tinsert(taboos, db.taboo[info.arg.zone][tabooname])
+			tinsert(taboos, db.taboo[zone][tabooname])
 		end
 	end
-	local running, errormsg = Routes.TSP:SolveTSPBackground(t.route, t.metadata, taboos, Routes.zoneMapFile[info.arg.zone], db.defaults.tsp)
+	local running, errormsg = Routes.TSP:SolveTSPBackground(t.route, t.metadata, taboos, Routes.zoneMapFile[zone], db.defaults.tsp)
 	if (running == 1) then
 		Routes:Print(L["Now running TSP in the background..."])
 		Routes.TSP:SetFinishFunction(function(output, meta, length, iter, timetaken)
@@ -1717,19 +1774,22 @@ do
 	local t = {}
 	function ConfigHandler:GetTabooRegions(info)
 		for k, v in pairs(t) do t[k] = nil end
-		for k, v in pairs(db.taboo[info.arg.zone]) do
+		for k, v in pairs(db.taboo[ info[2] ]) do
 			t[k] = k
 		end
 		return t
 	end
 end
 function ConfigHandler:GetTabooRegionStatus(info, k)
-	return db.routes[info.arg.zone][info.arg.route].taboos[k]
+	local zone = info[2]
+	local route = Routes.routekeys[zone][ info[3] ]
+	return db.routes[zone][route].taboos[k]
 end
 function ConfigHandler:SetTabooRegionStatus(info, k, v)
+	local zone = info[2]
+	local route = Routes.routekeys[zone][ info[3] ]
 	if v == false then v = nil end
-	local zone = info.arg.zone
-	local route_data = db.routes[zone][info.arg.route]
+	local route_data = db.routes[zone][route]
 	local taboo_data = db.taboo[zone][k]
 	if route_data.taboos[k] ~= v then
 		-- toggle it
@@ -1742,72 +1802,20 @@ function ConfigHandler:SetTabooRegionStatus(info, k, v)
 	end
 end
 function ConfigHandler:IsBeingManualEdited(info)
-	return db.routes[info.arg.zone][info.arg.route].editing
+	local zone = info[2]
+	local route = Routes.routekeys[zone][ info[3] ]
+	return db.routes[zone][route].editing
+end
+function ConfigHandler.GetRouteName(info)
+	local zone = info[2]
+	return Routes.routekeys[zone][ info[3] ]
 end
 
--- These tables are referenced inside CreateAceOptRouteTable() defined right below this
-local blank_line_table = {
-	name = "", type = "description",
-	order = 325,
-}
-local two_point_five_group_table = {
-	type = "group",
-	order = 150,
-	name = L["Extra optimization"],
-	inline = true,
-	args = {
-		two_point_five_opt_disc = {
-			name = L["ExtraOptDesc"], type = "description",
-			order = 0,
-		},
-		two_point_five_opt = {
-			name = L["Extra optimization"], type = "toggle",
-			desc = L["ExtraOptDesc"],
-			get = "GetTwoPointFiveOpt", set = "SetTwoPointFiveOpt",
-			disabled = false, -- to avoid inheriting from parent, so we don't have to use an arg= field
-			order = 100,
-		},
-	},
-}
-local foreground_table = {
-	type  = "description",
-	name  = L["Foreground Disclaimer"],
-	order = 0,
-}
-local background_table = {
-	type  = "description",
-	name  = L["Background Disclaimer"],
-	order = 0,
-}
-local cluster_header_table = {
-	type = "header",
-	name = L["Route Clustering"],
-	order = 40,
-}
-local cluster_table = {
-	type  = "description",
-	name  = L["CLUSTER_DESC"],
-	order = 50,
-}
-local optimize_header_table = {
-	type = "header",
-	name = L["Route Optimizing"],
-	order = 100,
-}
-local taboo_desc_table = {
-	type  = "description",
-	name  = L["TABOO_DESC2"],
-	order = 0,
-}
-
-function Routes:CreateAceOptRouteTable(zone, route)
-	local zone_route_table = {zone = zone, route = route}
-
-	-- Yes, return this huge table for given zone/route
-	return {
+do
+	local routeTable = {
 		type = "group",
-		name = route,
-		desc = route,
+		name = ConfigHandler.GetRouteName,
+		desc = ConfigHandler.GetRouteName,
 		childGroups = "tab",
 		handler = ConfigHandler,
 		args = {
@@ -1819,32 +1827,27 @@ function Routes:CreateAceOptRouteTable(zone, route)
 					desc1 = {
 						type = "description",
 						name = ConfigHandler.GetRouteDesc,
-						arg = zone_route_table,
 						order = 0,
 					},
 					desc2 = {
 						type = "description",
 						name = ConfigHandler.GetDataDesc,
-						arg = zone_route_table,
 						order = 10,
 					},
 					desc3 = {
 						type = "description",
 						name = ConfigHandler.GetClusterDesc,
-						arg = zone_route_table,
 						order = 20,
 					},
 					desc4 = {
 						type = "description",
 						name = ConfigHandler.GetTabooDesc,
-						arg = zone_route_table,
 						order = 30,
 					},
 					delete = {
 						name = L["Delete"], type = "execute",
 						desc = L["Permanently delete a route"],
 						func = "DeleteRoute",
-						arg = zone_route_table,
 						confirm = true,
 						confirmText = L["Are you sure you want to delete this route?"],
 						order = 100,
@@ -1857,7 +1860,6 @@ function Routes:CreateAceOptRouteTable(zone, route)
 				name = L["Line Settings"],
 				order = 100,
 				disabled = "IsBeingManualEdited",
-				arg = zone_route_table,
 				args = {
 					desc = {
 						type = "description",
@@ -1868,7 +1870,6 @@ function Routes:CreateAceOptRouteTable(zone, route)
 						name = L["Line Color"], type = "color",
 						desc = L["Change the line color"],
 						get = "GetColor", set = "SetColor",
-						arg = zone_route_table,
 						order = 100,
 						hasAlpha = true,
 					},
@@ -1876,7 +1877,6 @@ function Routes:CreateAceOptRouteTable(zone, route)
 						name = L["Hide Route"], type = "toggle",
 						desc = L["Hide the route from being shown on the maps"],
 						get = "GetHidden", set = "SetHidden",
-						arg = zone_route_table,
 						order = 200,
 					},
 					width = {
@@ -1884,7 +1884,6 @@ function Routes:CreateAceOptRouteTable(zone, route)
 						desc = L["Width of the line in the map"],
 						min = 10, max = 100, step = 1,
 						get = "GetWidth", set = "SetWidth",
-						arg = zone_route_table,
 						order = 300,
 					},
 					width_minimap = {
@@ -1892,7 +1891,6 @@ function Routes:CreateAceOptRouteTable(zone, route)
 						desc = L["Width of the line in the Minimap"],
 						min = 10, max = 100, step = 1,
 						get = "GetWidthMinimap", set = "SetWidthMinimap",
-						arg = zone_route_table,
 						order = 310,
 					},
 					width_battlemap = {
@@ -1900,15 +1898,16 @@ function Routes:CreateAceOptRouteTable(zone, route)
 						desc = L["Width of the line in the Zone Map"],
 						min = 10, max = 100, step  = 1,
 						get = "GetWidthBattleMap", set = "SetWidthBattleMap",
-						arg = zone_route_table,
 						order = 320,
 					},
-					blankline = blank_line_table,
+					blankline = {
+						name = "", type = "description",
+						order = 325,
+					},
 					reset_all = {
 						name = L["Reset"], type = "execute",
 						desc = L["Reset the line settings to defaults"],
 						func = "ResetLineSettings",
-						arg = zone_route_table,
 						order = 500,
 					},
 				},
@@ -1918,37 +1917,40 @@ function Routes:CreateAceOptRouteTable(zone, route)
 				order = 200,
 				name = L["Optimize Route"],
 				disabled = "IsBeingManualEdited",
-				arg = zone_route_table,
 				args = {
 					desc = {
 						type = "description",
 						name = ConfigHandler.GetRouteDesc,
-						arg = zone_route_table,
 						order = 0,
 					},
 					desc2 = {
 						type = "description",
 						name = ConfigHandler.GetShortClusterDesc,
-						arg = zone_route_table,
 						order = 1,
 					},
 					desc3 = {
 						type = "description",
 						name = ConfigHandler.GetRouteClusterRadiusDesc,
-						arg = zone_route_table,
 						hidden = "IsNotCluster",
 						disabled = "IsNotCluster",
 						order = 2,
 					},
-					cluster_header = cluster_header_table,
-					desc_cluster = cluster_table,
+					cluster_header = {
+						type = "header",
+						name = L["Route Clustering"],
+						order = 40,
+					},
+					desc_cluster = {
+						type  = "description",
+						name  = L["CLUSTER_DESC"],
+						order = 50,
+					},
 					cluster_dist = {
 						name = L["Cluster Radius"], type = "range",
 						desc = L["CLUSTER_RADIUS_DESC"],
 						min = 10, max = 200, step = 1,
 						get = "GetDefaultClusterDist",
 						set = "SetDefaultClusterDist",
-						arg = zone_route_table,
 						hidden = "IsCluster",
 						disabled = "IsCluster",
 						order = 60,
@@ -1957,7 +1959,6 @@ function Routes:CreateAceOptRouteTable(zone, route)
 						name = L["Cluster"], type = "execute",
 						desc = L["Cluster this route"],
 						func = "ClusterRoute",
-						arg = zone_route_table,
 						hidden = "IsCluster",
 						disabled = "IsCluster",
 						order = 70,
@@ -1966,25 +1967,49 @@ function Routes:CreateAceOptRouteTable(zone, route)
 						name = L["Uncluster"], type = "execute",
 						desc = L["Uncluster this route"],
 						func = "UnClusterRoute",
-						arg = zone_route_table,
 						hidden = "IsNotCluster",
 						disabled = "IsNotCluster",
 						order = 80,
 					},
-					optimize_header = optimize_header_table,
-					two_point_five_group = two_point_five_group_table,
+					optimize_header = {
+						type = "header",
+						name = L["Route Optimizing"],
+						order = 100,
+					},
+					two_point_five_group = {
+						type = "group",
+						order = 150,
+						name = L["Extra optimization"],
+						inline = true,
+						args = {
+							two_point_five_opt_disc = {
+								name = L["ExtraOptDesc"], type = "description",
+								order = 0,
+							},
+							two_point_five_opt = {
+								name = L["Extra optimization"], type = "toggle",
+								desc = L["ExtraOptDesc"],
+								get = "GetTwoPointFiveOpt", set = "SetTwoPointFiveOpt",
+								disabled = false, -- to avoid inheriting from parent, so we don't have to use an arg= field
+								order = 100,
+							},
+						},
+					},
 					foreground_group = {
 						type = "group",
 						order = 200,
 						name = L["Foreground"],
 						inline = true,
 						args = {
-							foreground_disc = foreground_table,
+							foreground_disc = {
+								type  = "description",
+								name  = L["Foreground Disclaimer"],
+								order = 0,
+							},
 							foreground = {
 								name = L["Foreground"], type = "execute",
 								desc = L["Foreground Disclaimer"],
 								func = "DoForeground",
-								arg = zone_route_table,
 								order = 100,
 							},
 						},
@@ -1995,12 +2020,15 @@ function Routes:CreateAceOptRouteTable(zone, route)
 						name = L["Background"],
 						inline = true,
 						args = {
-							background_disc = background_table,
+							background_disc = {
+								type  = "description",
+								name  = L["Background Disclaimer"],
+								order = 0,
+							},
 							background = {
 								name = L["Background"], type = "execute",
 								desc = L["Background Disclaimer"],
 								func = "DoBackground",
-								arg = zone_route_table,
 								order = 100,
 							},
 						},
@@ -2012,9 +2040,12 @@ function Routes:CreateAceOptRouteTable(zone, route)
 				order = 300,
 				name = L["Taboos"],
 				disabled = "IsBeingManualEdited",
-				arg = zone_route_table,
 				args = {
-					desc = taboo_desc_table,
+					desc = {
+						type  = "description",
+						name  = L["TABOO_DESC2"],
+						order = 0,
+					},
 					taboos = {
 						name = L["Select taboo regions to apply:"],
 						type = "multiselect",
@@ -2022,14 +2053,18 @@ function Routes:CreateAceOptRouteTable(zone, route)
 						values = "GetTabooRegions",
 						get = "GetTabooRegionStatus",
 						set = "SetTabooRegionStatus",
-						arg = zone_route_table,
 					},
 				},
 			},
-			edit_group = Routes:CreateAceOptRouteEditTable(zone_route_table),
+			--edit_group = Routes:GetAceOptRouteEditTable(),
 		},
 	}
+	function Routes:GetAceOptRouteTable()
+		routeTable.args.edit_group = Routes:GetAceOptRouteEditTable()
+		return routeTable
+	end
 end
+
 
 local source_data = {}
 options.args.routes_group.args.desc = {
@@ -2091,7 +2126,7 @@ do
 		local create_data = create_data[info.arg]
 		if last_zone[info.arg] == create_zone then return create_data end
 		-- reuse table
-		for k in pairs(create_data) do create_data[k] = nil end
+		wipe(create_data)
 		-- extract data from plugin
 		if Routes.plugins[info.arg].IsActive() then
 			Routes.plugins[info.arg].Summarize(create_data, create_zone)
@@ -2128,7 +2163,7 @@ do
 
 	function Routes:SetupSourcesOptTables()
 		-- reuse table
-		for k in pairs(source_data) do source_data[k] = nil end
+		wipe(source_data)
 		-- create a checkbox for each plugin, then setup the aceopt table
 		local order = 300
 		for addon, plugin_table in pairs(Routes.plugins) do
@@ -2224,17 +2259,15 @@ do
 						type = "group",
 						name = create_zone,
 						desc = L["Routes in %s"]:format(create_zone),
-						args = {},
+						args = {
+							desc = route_zone_args_desc_table,
+						},
 					}
-					opts[mapfile].args.desc = {
-						type = "description",
-						name = GetZoneDescText,
-						arg = mapfile,
-						order = 0,
-					}
+					Routes.routekeys[mapfile] = {}
 				end
 				local routekey = create_name:gsub("%s", "\255") -- can't have spaces in the key
-				opts[mapfile].args[routekey] = Routes:CreateAceOptRouteTable(mapfile, create_name)
+				Routes.routekeys[mapfile][routekey] = create_name
+				opts[mapfile].args[routekey] = Routes:GetAceOptRouteTable()
 
 				-- Draw it
 				local AutoShow = Routes:GetModule("AutoShow", true)
@@ -2341,17 +2374,15 @@ do
 						type = "group",
 						name = create_zone,
 						desc = L["Routes in %s"]:format(create_zone),
-						args = {},
+						args = {
+							desc = route_zone_args_desc_table,
+						},
 					}
-					opts[mapfile].args.desc = {
-						type = "description",
-						name = GetZoneDescText,
-						arg = mapfile,
-						order = 0,
-					}
+					Routes.routekeys[mapfile] = {}
 				end
 				local routekey = create_name:gsub("%s", "\255") -- can't have spaces in the key
-				opts[mapfile].args[routekey] = Routes:CreateAceOptRouteTable(mapfile, create_name)
+				Routes.routekeys[mapfile][routekey] = create_name
+				opts[mapfile].args[routekey] = Routes:GetAceOptRouteTable()
 
 				-- Draw it
 				local AutoShow = Routes:GetModule("AutoShow", true)
@@ -2700,15 +2731,21 @@ do
 
 	local TabooHandler = {}
 	function TabooHandler:EditTaboo(info)
-		-- open the WorldMapFlame on the right zone
-		local zone_id = Routes.zoneData[ Routes.zoneMapFile[info.arg.zone] ][3]
+		local zone = info[2]
 
 		-- make a copy of the taboo for editing
-		local taboo_data = info.arg.isroute and db.routes[info.arg.zone][info.arg.route] or db.taboo[info.arg.zone][info.arg.taboo]
+		local taboo_data
+		if info[1] == "routes_group" then
+			local routeName = Routes.routekeys[zone][ info[3] ]
+			taboo_data = db.routes[zone][routeName]
+		else
+			local tabooName = Routes.tabookeys[zone][ info[3] ]
+			taboo_data = db.taboo[zone][tabooName]
+		end
 		local copy_of_taboo_data = {route = {}, nodes = {}, fakenodes = {}}
-		if info.arg.isroute then
+		if info[1] == "routes_group" then
 			local is_running, route_table = Routes.TSP:IsTSPRunning()
-			if is_running and route_table == taboo_data then return end
+			if is_running and route_table == taboo_data.route then return end
 			if ConfigHandler:IsCluster(info) then return end
 			copy_of_taboo_data.isroute = true
 			taboo_data.editing = true
@@ -2750,12 +2787,15 @@ do
 			node:SetAlpha(0.75)
 		end
 		Routes:DrawTaboos()
+		-- open the WorldMapFlame on the right zone
+		local zone_id = Routes.zoneData[ Routes.zoneMapFile[zone] ][3]
 		WorldMapFrame:Show()
 		SetMapZoom( floor( zone_id / 100 ), zone_id % 100 )
 	end
 	function TabooHandler:SaveEditTaboo(info)
-		if info.arg.isroute then
-			local zone, route = info.arg.zone, info.arg.route
+		local zone = info[2]
+		if info[1] == "routes_group" then
+			local route = Routes.routekeys[zone][ info[3] ]
 			local route_data = db.routes[zone][route]
 			local copy_of_taboo = self:CancelEditTaboo(info)
 			for i = 1, #copy_of_taboo.route do
@@ -2771,7 +2811,7 @@ do
 				end
 			end
 		else
-			local zone, taboo = info.arg.zone, info.arg.taboo
+			local taboo = Routes.tabookeys[zone][ info[3] ]
 			local taboo_data = db.taboo[zone][taboo]
 			local copy_of_taboo = self:CancelEditTaboo(info)
 			taboo_data.route = copy_of_taboo.route
@@ -2789,8 +2829,17 @@ do
 		throttleFrame:Show()  -- Redraw the changes
 	end
 	function TabooHandler:CancelEditTaboo(info)
-		local taboo = info.arg.isroute and db.routes[info.arg.zone][info.arg.route] or db.taboo[info.arg.zone][info.arg.taboo]
-		if info.arg.isroute then
+		local zone = info[2]
+		local taboo
+		if info[1] == "routes_group" then
+			local routeName = Routes.routekeys[zone][ info[3] ]
+			taboo = db.routes[zone][routeName]
+		else
+			local tabooName = Routes.tabookeys[zone][ info[3] ]
+			taboo = db.taboo[zone][tabooName]
+		end
+
+		if info[1] == "routes_group" then
 			taboo.editing = nil
 			throttleFrame:Show()  -- Redraw the route
 		end
@@ -2819,13 +2868,17 @@ do
 			Routes:Print(L["You may not delete a taboo that is being edited."])
 			return
 		end
-		local zone, taboo = info.arg.zone, info.arg.taboo
+		local zone = info[2]
+		local tabookey = info[3]
+		local taboo = Routes.tabookeys[zone][tabookey]
 		db.taboo[zone][taboo] = nil
-		local tabookey = taboo:gsub("%s", "\255") -- can't have spaces in the key
+		--local tabookey = taboo:gsub("%s", "\255") -- can't have spaces in the key
 		options.args.taboo_group.args[zone].args[tabookey] = nil -- delete taboo from aceopt
+		Routes.tabookeys[zone][tabookey] = nil
 		if next(db.taboo[zone]) == nil then
 			db.taboo[zone] = nil
 			options.args.taboo_group.args[zone] = nil -- delete zone from aceopt if no routes remaining
+			Routes.tabookeys[zone] = nil
 		end
 		-- Now delete the taboo region from all routes in the zone that had it
 		for route_name, route_data in pairs(db.routes[zone]) do
@@ -2839,34 +2892,42 @@ do
 		end
 	end
 	function TabooHandler:IsBeingEdited(info)
-		local taboo = info.arg.isroute and db.routes[info.arg.zone][info.arg.route] or db.taboo[info.arg.zone][info.arg.taboo]
+		local zone = info[2]
+		local taboo
+		if info[1] == "routes_group" then
+			local routeName = Routes.routekeys[zone][ info[3] ]
+			taboo = db.routes[zone][routeName]
+		else
+			local tabooName = Routes.tabookeys[zone][ info[3] ]
+			taboo = db.taboo[zone][tabooName]
+		end
 		if taboo_edit_list[taboo] then return true end
 		return false
 	end
 	function TabooHandler:IsNotBeingEdited(info)
 		return not self:IsBeingEdited(info)
 	end
+	function TabooHandler.GetTabooName(info)
+		local zone = info[2]
+		return Routes.tabookeys[zone][ info[3] ]
+	end
 
-	local taboo_desc_table = {
-		type = "description",
-		order = 0,
-		name = L["TABOO_EDIT_DESC"],
-	}
-	function Routes:CreateAceOptTabooTable(zone, taboo)
-		local zone_taboo_table = {zone = zone, taboo = taboo}
-
-		return {
+	do
+		local tabooTable = {
 			type = "group",
-			name = taboo,
-			desc = taboo,
+			name = TabooHandler.GetTabooName,
+			desc = TabooHandler.GetTabooName,
 			handler = TabooHandler,
 			args = {
-				desc = taboo_desc_table,
+				desc = {
+					type = "description",
+					order = 0,
+					name = L["TABOO_EDIT_DESC"],
+				},
 				edit_taboo = {
 					type = "execute",
 					name = L["Edit taboo region"],
 					desc = L["Edit this taboo region on the world map"],
-					arg = zone_taboo_table,
 					order = 1,
 					func = "EditTaboo",
 					disabled = "IsBeingEdited",
@@ -2875,7 +2936,6 @@ do
 					type = "execute",
 					name = L["Save taboo edit"],
 					desc = L["Stop editing this taboo region on the world map and save the edits"],
-					arg = zone_taboo_table,
 					order = 2,
 					func = "SaveEditTaboo",
 					disabled = "IsNotBeingEdited",
@@ -2884,7 +2944,6 @@ do
 					type = "execute",
 					name = L["Cancel taboo edit"],
 					desc = L["Stop editing this taboo region on the world map and abandon changes made"],
-					arg = zone_taboo_table,
 					order = 3,
 					func = "CancelEditTaboo",
 					disabled = "IsNotBeingEdited",
@@ -2893,7 +2952,6 @@ do
 					type = "execute",
 					name = L["Delete Taboo"],
 					desc = L["Delete this taboo region permanently. This will also remove it from all routes that use it."],
-					arg = zone_taboo_table,
 					order = 4,
 					func = "DeleteTaboo",
 					disabled = "IsBeingEdited",
@@ -2902,6 +2960,9 @@ do
 				},
 			},
 		}
+		function Routes:GetAceOptTabooTable()
+			return tabooTable
+		end
 	end
 
 	local taboo_name = ""
@@ -2970,17 +3031,15 @@ do
 						type = "group",
 						name = create_zone,
 						desc = L["Taboos in %s"]:format(create_zone),
-						args = {},
+						args = {
+							desc = taboo_zone_args_desc_table,
+						},
 					}
-					opts[mapfile].args.desc = {
-						type = "description",
-						name = GetZoneTabooDescText,
-						arg = mapfile,
-						order = 0,
-					}
+					Routes.tabookeys[mapfile] = {}
 				end
 				local tabookey = taboo_name:gsub("%s", "\255") -- can't have spaces in the key
-				opts[mapfile].args[tabookey] = Routes:CreateAceOptTabooTable(mapfile, taboo_name)
+				Routes.tabookeys[mapfile][tabookey] = taboo_name
+				opts[mapfile].args[tabookey] = Routes:GetAceOptTabooTable()
 
 				-- clear stored name
 				taboo_name = ""
@@ -3000,10 +3059,12 @@ do
 	}
 
 	function TabooHandler:IsNotEditAllowed(info)
-		local route_table = db.routes[info.arg.zone][info.arg.route]
+		local zone = info[2]
+		local route = Routes.routekeys[zone][ info[3] ]
+		local route_table = db.routes[zone][route]
 		if taboo_edit_list[route_table] then return true end
 		local is_running, route_table2 = Routes.TSP:IsTSPRunning()
-		if is_running and route_table2 == route_table then
+		if is_running and route_table2 == route_table.route then
 			return true
 		end
 		if ConfigHandler:IsCluster(info) then
@@ -3011,25 +3072,23 @@ do
 		end
 		return false
 	end
-	local route_edit_desc_table = {
-		type = "description",
-		order = 0,
-		name = L["ROUTE_EDIT_DESC"],
-	}
-	function Routes:CreateAceOptRouteEditTable(zone_route_table)
-		zone_route_table.isroute = true
-		return {
+
+	do
+		local routeEditTable = {
 			type = "group",
 			order = 400,
 			name = L["Edit Route Manually"],
 			handler = TabooHandler,
 			args = {
-				desc = route_edit_desc_table,
+				desc = {
+					type = "description",
+					order = 0,
+					name = L["ROUTE_EDIT_DESC"],
+				},
 				edit_route = {
 					type = "execute",
 					name = L["Edit route"],
 					desc = L["Edit this route on the world map"],
-					arg = zone_route_table,
 					order = 1,
 					func = "EditTaboo",
 					disabled = "IsNotEditAllowed",
@@ -3038,7 +3097,6 @@ do
 					type = "execute",
 					name = L["Save route edit"],
 					desc = L["Stop editing this route on the world map and save the edits"],
-					arg = zone_route_table,
 					order = 2,
 					func = "SaveEditTaboo",
 					disabled = "IsNotBeingEdited",
@@ -3047,13 +3105,15 @@ do
 					type = "execute",
 					name = L["Cancel route edit"],
 					desc = L["Stop editing this route on the world map and abandon changes made"],
-					arg = zone_route_table,
 					order = 3,
 					func = "CancelEditTaboo",
 					disabled = "IsNotBeingEdited",
 				},
 			},
 		}
+		function Routes:GetAceOptRouteEditTable()
+			return routeEditTable
+		end
 	end
 
 	--/run Routes:TestFunc()

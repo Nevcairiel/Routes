@@ -49,5 +49,6 @@ Modules\TomTom.lua
 # Addons we can draw data from
 Plugins\Cartographer.lua
 Plugins\GatherMate.lua
+Plugins\GatherMate2.lua
 Plugins\Gatherer.lua
 Plugins\HandyNotes.lua

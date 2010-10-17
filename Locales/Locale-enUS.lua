@@ -52,6 +52,7 @@ L["Routes with Gas"] = true
 L["Routes with Herbs"] = true
 L["Routes with Ore"] = true
 L["Routes with Treasure"] = true
+L["Routes with Archaeology"] = true
 L["Routes with Notes"] = true
 L["Always show"] = true
 L["Only with profession"] = true
@@ -129,6 +130,7 @@ L["Mining"] = true
 L["Fishing"] = true
 L["Treasure"] = true
 L["ExtractGas"] = "Gas"
+L["Archaeology"] = true
 L["Note"] = true
 
 -- Route Config

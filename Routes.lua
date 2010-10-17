@@ -2,8 +2,8 @@
 ********************************************************************************
 Routes
 @project-version@
-23 December 2009
-(Written for Live Servers v3.3.0.11159)
+18 October 2010
+(Written for Live Servers v4.0.1.13164)
 
 Author: Xaroz @ EU Emerald Dream Alliance & Xinhuan @ US Blackrock Alliance
 ********************************************************************************
@@ -21,6 +21,7 @@ Features:
 	   * Cartographer_ExtractGas
 	   * Cartographer_Treasure
 	   * GatherMate
+	   * GatherMate2
 	   * Gatherer
 	   * HandyNotes
 	- Optimize your route using the traveling salesmen problem (TSP) ant
@@ -130,6 +131,7 @@ local defaults = {
 				Fishing    = "Always",
 				Treasure   = "Always",
 				ExtractGas = "Always",
+				Archaeology= "Always",
 				Note       = "Always",
 			},
 			use_auto_showhide = false,

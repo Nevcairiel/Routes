@@ -12,36 +12,47 @@ local have_prof = {
 	Mining     = false,
 	Fishing    = false,
 	ExtractGas = false, -- Engineering
+	Archaeology= false,
 }
-local texture_to_profession = {
-	["Interface\\Icons\\Spell_Nature_Earthquake"] = "Mining",
-	["Interface\\Icons\\INV_Misc_Flower_02"] = "Herbalism",
-	["Interface\\Icons\\INV_Misc_Fish_02"] = "Fishing",
-	["Interface\\Icons\\Racial_Dwarf_FindTreasure"] = "Treasure",
-}
-local active_tracking
+local active_tracking = {}
+local profession_to_skill = {}
+profession_to_skill[GetSpellInfo(9134)] = "Herbalism"
+profession_to_skill[GetSpellInfo(2575)] = "Mining"
+profession_to_skill[GetSpellInfo(7620)] = "Fishing"
+profession_to_skill[GetSpellInfo(4036)] = "ExtractGas"
+if GetSpellInfo(78670) then
+	profession_to_skill[GetSpellInfo(78670)] = "Archaeology"
+end
+local tracking_spells = {}
+tracking_spells[(GetSpellInfo(2580))] = "Mining"
+tracking_spells[(GetSpellInfo(2383))] = "Herbalism"
+tracking_spells[(GetSpellInfo(43308))] = "Fishing"
+tracking_spells[(GetSpellInfo(2481))] = "Treasure"
 
 function AutoShow:SKILL_LINES_CHANGED()
-	local skillname, isHeader
-	for i = 1, GetNumSkillLines() do
-		skillname, isHeader = GetSkillLineInfo(i)
-		if not isHeader and skillname then
-			if strfind(skillname, GetSpellInfo(7620), 1, true) then
-				have_prof.Fishing = true
-			elseif strfind(skillname, GetSpellInfo(9134), 1, true) then
-				have_prof.Herbalism = true
-			elseif strfind(skillname, GetSpellInfo(2575), 1, true) then
-				have_prof.Mining = true
-			elseif strfind(skillname, GetSpellInfo(4036), 1, true) then
-				have_prof.ExtractGas = true
-			end
+	for k, v in pairs(have_prof) do
+		have_prof[k] = false
+	end
+	for index, key in pairs({GetProfessions()}) do
+		local name, icon, rank, maxrank, numspells, spelloffset, skillline = GetProfessionInfo(key)
+		if profession_to_skill[name] then
+			have_prof[profession_to_skill[name]] = true
 		end
 	end
 	self:ApplyVisibility()
 end
 
 function AutoShow:MINIMAP_UPDATE_TRACKING()
-	active_tracking = texture_to_profession[GetTrackingTexture()]
+	for i = 1, GetNumTrackingTypes() do
+		local name, texture, active, category  = GetTrackingInfo(i)
+		if tracking_spells[name] then
+			if active then
+				active_tracking[tracking_spells[name]] = true
+			else
+				active_tracking[tracking_spells[name]] = false
+			end
+		end
+	end
 	self:ApplyVisibility()
 end
 
@@ -58,7 +69,7 @@ function AutoShow:ApplyVisibility()
 							visible = true
 						elseif status == "With Profession" and have_prof[db_type] then
 							visible = true
-						elseif status == "When active" and active_tracking == db_type then
+						elseif status == "When active" and active_tracking[db_type] then
 							visible = true
 						--elseif status == "Never" then
 						--	visible = false
@@ -109,12 +120,12 @@ local prof_options2 = { -- For Treasure, which isn't a profession
 	["When active"]     = L["Only while tracking"],
 	["Never"]           = L["Never show"],
 }
-local prof_options3 = { -- For Gas, which doesn't have tracking as a skill
+local prof_options3 = { -- For Gas/Archaeology, which doesn't have tracking as a skill
 	["Always"]          = L["Always show"],
 	["With Profession"] = L["Only with profession"],
 	["Never"]           = L["Never show"],
 }
-local prof_options4 = { -- For Note, which isn't a profession or tracging skill
+local prof_options4 = { -- For Note, which isn't a profession or tracking skill
 	["Always"]          = L["Always show"],
 	["Never"]           = L["Never show"],
 }
@@ -185,10 +196,17 @@ options = {
 					values = prof_options2,
 					arg = "Treasure",
 				},
+				archaeology = {
+					name = L["Archaeology"], type = "select",
+					desc = L["Routes with Archaeology"],
+					order = 600,
+					values = prof_options3,
+					arg = "Archaeology",
+				},
 				note = {
 					name = L["Note"], type = "select",
 					desc = L["Routes with Notes"],
-					order = 600,
+					order = 700,
 					values = prof_options4,
 					arg = "Note",
 				},

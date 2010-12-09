@@ -322,8 +322,9 @@ local Y_cache = {}
 local XY_cache_mt = {
 	__index = function(t, key)
 		local zone, coord = (';'):split( key )
-		local X = Routes.zoneData[zone][1] * floor(coord / 10000) / 10000
-		local Y = Routes.zoneData[zone][2] * (coord % 10000) / 10000
+		local zoneW, zoneH = Routes.mapData:MapArea(Routes.LZName[zone][1])
+		local X = zoneW * floor(coord / 10000) / 10000
+		local Y = zoneH * (coord % 10000) / 10000
 		X_cache[key] = X
 		Y_cache[key] = Y
 
@@ -352,14 +353,15 @@ function Routes:DrawMinimapLines(forceUpdate)
 	local zone = GetRealZoneText()
 
 	-- if we are indoors, or the zone we are in is not defined in our tables ... no routes
-	if not zone or self.zoneData[zone][4] == "" or (not db.defaults.draw_indoors and indoors == "indoor") then
+	if not zone or self.LZName[zone][1] == "" or (not db.defaults.draw_indoors and indoors == "indoor") then
 		G:HideLines(Minimap)
 		return
 	end
 
 	local defaults = db.defaults
-	local zoneW, zoneH = self.zoneData[zone][1], self.zoneData[zone][2]
-	if not zoneW then return end
+	local currentZoneID = self.LZName[zone][2]
+	local zoneW, zoneH = self.mapData:MapArea(currentZoneID)
+	if not zoneW or zoneW == 0 then return end
 	local cx, cy = zoneW * _x, zoneH * _y
 
 	local facing, sin, cos
@@ -372,14 +374,10 @@ function Routes:DrawMinimapLines(forceUpdate)
 		return
 	end
 
-	do
-		local currentZoneID = self.zoneData[zone][3]
-		local mapZoneID = GetCurrentMapContinent()*100 + GetCurrentMapZone()
-		if currentZoneID ~= mapZoneID then
-			-- we are viewing a map that isn't the current zone (usually a continent
-			-- map), so the coordinates are wrong, unless we translate them
-			return
-		end
+	if currentZoneID ~= GetCurrentMapAreaID() then
+		-- we are viewing a map that isn't the current zone (usually a continent
+		-- map), so the coordinates are wrong, unless we translate them
+		return
 	end
 
 	G:HideLines(Minimap)
@@ -411,7 +409,7 @@ function Routes:DrawMinimapLines(forceUpdate)
 
 	local minimapScale = Minimap:GetScale()
 	
-	for route_name, route_data in pairs( db.routes[ self.zoneData[zone][4] ] ) do
+	for route_name, route_data in pairs( db.routes[ self.LZName[zone][1] ] ) do
 		if type(route_data) == "table" and type(route_data.route) == "table" and #route_data.route > 1 then
 			-- store color/width
 			local width = (route_data.width_minimap or defaults.width_minimap) / (minimapScale)
@@ -2211,14 +2209,8 @@ do
 			order = 150,
 			values = function()
 				if not next(create_zones) then
-					local t = {}
-					for i = 1, 5 do
-						wipe(t)
-						Routes.mapData:GetZonesForContinent(i, t)
-						for j = 1, #t do
-							local zoneName = Routes.mapData:MapLocalize(t[j])
-							create_zones[zoneName] = zoneName
-						end
+					for zoneName in pairs(Routes.LZName) do
+						create_zones[zoneName] = zoneName
 					end
 				end
 				return create_zones
@@ -2231,7 +2223,6 @@ do
 				return create_zone
 			end,
 			set = function(info, key) create_zone = key end,
-			style = "radio",
 		},
 		header_bare = {
 			type = "header",
@@ -2256,7 +2247,7 @@ do
 				local new_route = { route = {71117111, 12357823, 11171123}, selection = {}, db_type = {} }
 
 				-- Perform a deep copy instead so that db defaults apply
-				local mapfile = Routes.zoneData[create_zone][4]
+				local mapfile = Routes.LZName[create_zone][1]
 				db.routes[mapfile][create_name] = nil -- overwrite old route
 				new_route.route = Routes.TSP:DecrossRoute(new_route.route)
 				deep_copy_table(db.routes[mapfile][create_name], new_route)
@@ -2296,7 +2287,7 @@ do
 				return not create_name or strtrim(create_name) == ""
 			end,
 			confirm = function()
-				if #db.routes[ Routes.zoneData[create_zone][4] ][create_name].route > 0 then
+				if #db.routes[ Routes.LZName[create_zone][1] ][create_name].route > 0 then
 					return true
 				end
 				return false
@@ -2371,7 +2362,7 @@ do
 				end
 
 				-- Perform a deep copy instead so that db defaults apply
-				local mapfile = Routes.zoneData[create_zone][4]
+				local mapfile = Routes.LZName[create_zone][1]
 				db.routes[mapfile][create_name] = nil -- overwrite old route
 				new_route.route = Routes.TSP:DecrossRoute(new_route.route)
 				deep_copy_table(db.routes[mapfile][create_name], new_route)
@@ -2411,7 +2402,7 @@ do
 				return not create_name or strtrim(create_name) == ""
 			end,
 			confirm = function()
-				if #db.routes[ Routes.zoneData[create_zone][4] ][create_name].route > 0 then
+				if #db.routes[ Routes.LZName[create_zone][1] ][create_name].route > 0 then
 					return true
 				end
 				return false
@@ -3005,14 +2996,8 @@ do
 			order = 200,
 			values = function()
 				if not next(create_zones) then
-					local t = {}
-					for i = 1, 5 do
-						wipe(t)
-						Routes.mapData:GetZonesForContinent(i, t)
-						for j = 1, #t do
-							local zoneName = Routes.mapData:MapLocalize(t[j])
-							create_zones[zoneName] = zoneName
-						end
+					for zoneName in pairs(Routes.LZName) do
+						create_zones[zoneName] = zoneName
 					end
 				end
 				return create_zones
@@ -3025,7 +3010,6 @@ do
 				return create_zone
 			end,
 			set = function(info, key) create_zone = key end,
-			style = "radio",
 		},
 		add_taboo = {
 			name = L["Create Taboo"], type = "execute",
@@ -3038,7 +3022,7 @@ do
 					return
 				end
 
-				local mapfile = Routes.zoneData[create_zone][4]
+				local mapfile = Routes.LZName[create_zone][1]
 				db.taboo[mapfile][taboo_name].route[1] = 71117111
 				db.taboo[mapfile][taboo_name].route[2] = 12357823
 				db.taboo[mapfile][taboo_name].route[3] = 11171123
@@ -3068,7 +3052,7 @@ do
 				return not taboo_name or strtrim(taboo_name) == ""
 			end,
 			confirm = function()
-				if #db.taboo[ Routes.zoneData[create_zone][4] ][taboo_name].route > 0 then
+				if #db.taboo[ Routes.LZName[create_zone][1] ][taboo_name].route > 0 then
 					return true
 				end
 				return false
@@ -3138,7 +3122,7 @@ do
 	--/run Routes:TestFunc()
 	--/run Routes:ClearTestFunc()
 	--[[function Routes:TestFunc(taboo)
-		taboo = taboo or Routes.db.global.taboo[ Routes.zoneData["Shattrath City"][4] ]["abc"]
+		taboo = taboo or Routes.db.global.taboo[ Routes.LZName["Shattrath City"][1] ]["abc"]
 		local fw, fh = RoutesTabooFrame:GetWidth(), RoutesTabooFrame:GetHeight()
 
 		for i = 0, 1, 0.02 do

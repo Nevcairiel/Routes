@@ -140,4 +140,14 @@ then
 Note that in all the above, "Dun Morogh" is a localized string
 ]]
 
+local noData = {"", -1, 0}
+local LZName = setmetatable({}, { __index = function() return noData end})
+for cID = 1, #{GetMapContinents()} do
+	for zID, zname in ipairs({GetMapZones(cID)}) do
+		SetMapZoom(cID, zID)
+		LZName[zname] = {GetMapInfo(), GetCurrentMapAreaID(), cID}
+	end
+end
+Routes.LZName = LZName
+
 -- vim: ts=4 noexpandtab

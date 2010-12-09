@@ -173,13 +173,13 @@ function TSP:IsTSPRunning()
 end
 
 -- Same arguments as TSP:SolveTSP(), without the "nonblocking" argument
-function TSP:SolveTSPBackground(nodes, metadata, taboos, zonename, parameters, path)
+function TSP:SolveTSPBackground(nodes, metadata, taboos, zoneID, parameters, path)
 	if not TSPUpdateFrame.running then
 		TSPUpdateFrame.co = coroutine.create(TSP.SolveTSP)
 		TSPUpdateFrame:SetScript("OnUpdate", TSPUpdateFrame.OnUpdate)
 		TSPUpdateFrame.running = true
 		TSPUpdateFrame.nodes = nodes
-		local status = coroutine.resume(TSPUpdateFrame.co, TSP, nodes, metadata, taboos, zonename, parameters, path, true)
+		local status = coroutine.resume(TSPUpdateFrame.co, TSP, nodes, metadata, taboos, zoneID, parameters, path, true)
 		if status then
 			-- Do nothing, path isn't complete because at least 1 yield() is called.
 			return 1
@@ -202,15 +202,14 @@ function TSP:SetFinishFunction(func)
 end
 
 -----------------------------------
--- TSP:SolveTSP(nodes, metadata, zonename, parameters, path, nonblocking)
+-- TSP:SolveTSP(nodes, metadata, zoneID, parameters, path, nonblocking)
 -- Arguments
 --   nodes       - The table containing a list of Routes node IDs to path
 --                 This list should only contain nodes on the same map. This
 --                 table should be indexed numerically from nodes[1] to nodes[n].
 --   metadata    - The table containing the cluster metadata, if available
 --   taboos      - A table containing a table of taboo regions to use.
---   zonename    - The localized zone name of the map that the route to be
---                 generated is on.
+--   zoneID      - The map area ID of the map that the route is to be generated on.
 --   parameters  - The table containing the ACO parameters to use.
 --   path        - An optional input table that is used to supply the result
 --                 table. If this is nil, the function returns a new table.
@@ -224,7 +223,7 @@ end
 --   timeTaken   - Number of seconds used.
 -- Notes: A new nodes[] and metadata[] table is returned. The original tables
 --        sent in are unmodified.
-function TSP:SolveTSP(nodes, metadata, taboos, zonename, parameters, path, nonblocking)
+function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonblocking)
 	-- Notes: Some of these code might look convoluted, with seemingly unnecessary use of too many locals
 	-- and make the code look longer. But they are for speed optimization.
 	assert(type(nodes) == "table", "SolveTSP() expected table in 1st argument, got "..type(nodes).." instead.")
@@ -259,7 +258,7 @@ function TSP:SolveTSP(nodes, metadata, taboos, zonename, parameters, path, nonbl
 				end
 			end
 		end
-		return path, metadata2, TSP:PathLength(path, zonename), 0, 0
+		return path, metadata2, TSP:PathLength(path, zoneID), 0, 0
 	end
 
 	-- Create a copy of the nodes[] table and use this instead of the original because data could get changed
@@ -283,7 +282,7 @@ function TSP:SolveTSP(nodes, metadata, taboos, zonename, parameters, path, nonbl
 	
 	-- Setup ACO parameters
 	local startTime		= GetTime()
-	local zoneW, zoneH	= Routes.zoneData[zonename][1], Routes.zoneData[zonename][2]
+	local zoneW, zoneH	= Routes.mapData:MapArea(zoneID)
 
 	local INITIAL_PHEROMONE = parameters.initial_pheromone or 0.1   -- Parameter: Initial pheromone trail value
 	local ALPHA             = parameters.alpha or 1                 -- Parameter: Likelihood of ants to follow pheromone trails (larger value == more likely)
@@ -557,7 +556,7 @@ function TSP:SolveTSP(nodes, metadata, taboos, zonename, parameters, path, nonbl
 	lastpath = nil
 
 	-- This step is necessary because our pathlength above is calculated from biased data from taboos
-	shortestPathLength = TSP:PathLength(path, zonename)
+	shortestPathLength = TSP:PathLength(path, zoneID)
 
 	startTime = GetTime() - startTime
 	return path, metadata, shortestPathLength, count, startTime
@@ -689,21 +688,20 @@ local function tryInsert(nodes, metadata, insertPoint, nodeID, radius, zoneW, zo
 	return true
 end
 
--- TSP:InsertNode(nodes, zonename, nodeID, twoOpt, path)
+-- TSP:InsertNode(nodes, zoneID, nodeID, twoOpt, path)
 --   Inserts a node into an existing route.
 -- Arguments
 --   nodes       - The table containing a list of Routes node IDs to path
---              This list should only contain nodes on the same map. This
---              table should be indexed numerically from nodes[1] to nodes[n].
+--                 This list should only contain nodes on the same map. This
+--                 table should be indexed numerically from nodes[1] to nodes[n].
 --   metadata    - The table containing the cluster metadata, if available
---   zonename    - The localized zone name of the map that the route to be
---              generated is on.
+--   zoneID      - The map area ID of the map that the route is on.
 --   nodeID      - The Routes node ID to insert into the route.
 -- Returns
 --   pathLength  - The length of the route in yards.
 -- Notes: This function modifies the original nodes[] and metadata[] tables
 --        directly
-function TSP:InsertNode(nodes, metadata, zonename, nodeID, radius)
+function TSP:InsertNode(nodes, metadata, zoneID, nodeID, radius)
 	assert(type(nodes) == "table", "InsertNode() expected table in 1st argument, got "..type(nodes).." instead.")
 
 	-- Check for trivial problem of 2 or less nodes
@@ -714,7 +712,7 @@ function TSP:InsertNode(nodes, metadata, zonename, nodeID, radius)
 		if metadata then
 			metadata[numNodes+1] = {nodeID}
 		end
-		return TSP:PathLength(nodes, zonename)
+		return TSP:PathLength(nodes, zoneID)
 	end
 
 	-- Insert the node to be added at the end of the list.
@@ -722,7 +720,7 @@ function TSP:InsertNode(nodes, metadata, zonename, nodeID, radius)
 	numNodes = #nodes
 
 	-- Step 1	- Initialize and generate the weight matrix, and prune matrix if doing 2-opt
-	local zoneW, zoneH = Routes.zoneData[zonename][1], Routes.zoneData[zonename][2]
+	local zoneW, zoneH = Routes.mapData:MapArea(zoneID)
 	local weight = newTable()
 
 	-- Not doing a twoopt means we only need to generate O(2n) entries in the weight table
@@ -797,23 +795,22 @@ function TSP:InsertNode(nodes, metadata, zonename, nodeID, radius)
 	-- Cleanup our used tables by recycling them
 	delTable(weight)
 
-	return TSP:PathLength(nodes, zonename)
+	return TSP:PathLength(nodes, zoneID)
 end
 
 
--- TSP:PathLength(nodes, zonename)
+-- TSP:PathLength(nodes, zoneID)
 --   Returns how long a given route is in yards.
 -- Arguments
 --   nodes      - The table containing a list of Routes node IDs to path
 --                This list should only contain nodes on the same map. This
 --                table should be indexed numerically from nodes[1] to nodes[n].
---   zonename   - The localized zone name of the map that the route to be
---                generated is on.
+--   zoneID     - The map area ID of the map that the route is on.
 -- Returns
 --   pathLength - The length of the route in yards.
-function TSP:PathLength(nodes, zonename)
+function TSP:PathLength(nodes, zoneID)
 	assert(type(nodes) == "table", "PathLength() expected table in 1st argument, got "..type(nodes).." instead.")
-	local zoneW, zoneH = Routes.zoneData[zonename][1], Routes.zoneData[zonename][2]
+	local zoneW, zoneH = Routes.mapData:MapArea(zoneID)
 	local numNodes = #nodes
 	local pathLength = 0
 
@@ -833,12 +830,12 @@ function TSP:PathLength(nodes, zonename)
 	return pathLength
 end
 
--- TSP:ClusterRoute(nodes, zonename, radius)
+-- TSP:ClusterRoute(nodes, zoneID, radius)
 -- Arguments
 --   nodes    - The table containing a list of Routes node IDs to path
 --              This list should only contain nodes on the same map. This
 --              table should be indexed numerically from nodes[1] to nodes[n].
---   zonename - The localized zone name of the route
+--   zoneID   - The map area ID the route is in
 --   radius   - The radius in yards to cluster
 -- Returns
 --   path     - The result TSP path is a table indexed numerically from path[1]
@@ -875,12 +872,12 @@ between clusters.
 -- http://en.wikipedia.org/wiki/Cluster_analysis
 -- 25 January 2008
 ]]
-function TSP:ClusterRoute(nodes, zonename, radius)
+function TSP:ClusterRoute(nodes, zoneID, radius)
 	local weight = newTable() -- weight matrix
 	local metadata = newTable() -- metadata after clustering
 
 	local numNodes = #nodes
-	local zoneW, zoneH = Routes.zoneData[zonename][1], Routes.zoneData[zonename][2]
+	local zoneW, zoneH = Routes.mapData:MapArea(zoneID)
 	local diameter = radius * 2
 	--local taboo = 0
 

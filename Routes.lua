@@ -64,6 +64,7 @@ local Routes = Routes
 local L   = LibStub("AceLocale-3.0"):GetLocale("Routes", false)
 local G = {} -- was Graph-1.0, but we removed the dependency
 Routes.G = G
+Routes.mapData = LibStub("LibMapData-1.0")
 
 -- database defaults
 local db
@@ -184,7 +185,7 @@ end
 
 function Routes:DrawWorldmapLines()
 	-- setup locals
-	local zone = self.zoneNames[GetCurrentMapContinent()*100 + GetCurrentMapZone()]
+	local mapID = GetCurrentMapAreaID()
 	local BattlefieldMinimap = BattlefieldMinimap  -- local reference if it exists
 	local fh, fw = WorldMapButton:GetHeight(), WorldMapButton:GetWidth()
 	local bfh, bfw  -- BattlefieldMinimap height and width
@@ -199,12 +200,12 @@ function Routes:DrawWorldmapLines()
 	end
 
 	-- check for conditions not to draw the world map lines
-	if not zone then return end -- player is not viewing a zone map of a continent
+	if self.mapData:GetContinentFromMap(mapID) <= 0 then return end -- player is not viewing a zone map of a continent
 	local flag1 = defaults.draw_worldmap and WorldMapFrame:IsShown() -- Draw worldmap lines?
 	local flag2 = defaults.draw_battlemap and BattlefieldMinimap and BattlefieldMinimap:IsShown() -- Draw battlemap lines?
 	if (not flag1) and (not flag2) then	return end 	-- Nothing to draw
 
-	for route_name, route_data in pairs( db.routes[ self.zoneData[zone][4] ] ) do
+	for route_name, route_data in pairs( db.routes[GetMapInfo()] ) do
 		if type(route_data) == "table" and type(route_data.route) == "table" and #route_data.route > 1 then
 			local width = route_data.width or defaults.width
 			local halfwidth = route_data.width_battlemap or defaults.width_battlemap
@@ -1525,7 +1526,7 @@ function ConfigHandler:ClusterRoute(info)
 	local zone = info[2]
 	local route = Routes.routekeys[zone][ info[3] ]
 	local t = db.routes[zone][route]
-	t.route, t.metadata, t.length = Routes.TSP:ClusterRoute(db.routes[zone][route].route, Routes.zoneMapFile[zone], db.defaults.cluster_dist)
+	t.route, t.metadata, t.length = Routes.TSP:ClusterRoute(db.routes[zone][route].route, Routes.mapData:MapAreaId(zone), db.defaults.cluster_dist)
 	t.cluster_dist = db.defaults.cluster_dist
 	Routes:DrawWorldmapLines()
 	Routes:DrawMinimapLines(true)
@@ -1544,7 +1545,7 @@ function ConfigHandler:UnClusterRoute(info)
 	end
 	t.metadata = nil
 	t.cluster_dist = nil
-	t.length = Routes.TSP:PathLength(t.route, Routes.zoneMapFile[zone])
+	t.length = Routes.TSP:PathLength(t.route, Routes.mapData:MapAreaId(zone))
 	Routes:DrawWorldmapLines()
 	Routes:DrawMinimapLines(true)
 end
@@ -1718,7 +1719,7 @@ function ConfigHandler:DoForeground(info)
 			tinsert(taboos, db.taboo[zone][tabooname])
 		end
 	end
-	local output, meta, length, iter, timetaken = Routes.TSP:SolveTSP(t.route, t.metadata, taboos, Routes.zoneMapFile[zone], db.defaults.tsp)
+	local output, meta, length, iter, timetaken = Routes.TSP:SolveTSP(t.route, t.metadata, taboos, Routes.mapData:MapAreaId(zone), db.defaults.tsp)
 	t.route = output
 	t.length = length
 	t.metadata = meta
@@ -1747,7 +1748,7 @@ function ConfigHandler:DoBackground(info)
 			tinsert(taboos, db.taboo[zone][tabooname])
 		end
 	end
-	local running, errormsg = Routes.TSP:SolveTSPBackground(t.route, t.metadata, taboos, Routes.zoneMapFile[zone], db.defaults.tsp)
+	local running, errormsg = Routes.TSP:SolveTSPBackground(t.route, t.metadata, taboos, Routes.mapData:MapAreaId(zone), db.defaults.tsp)
 	if (running == 1) then
 		Routes:Print(L["Now running TSP in the background..."])
 		Routes.TSP:SetFinishFunction(function(output, meta, length, iter, timetaken)
@@ -2210,15 +2211,23 @@ do
 			order = 150,
 			values = function()
 				if not next(create_zones) then
-					for k, v in pairs(Routes.zoneNames) do
-						create_zones[v] = v
+					local t = {}
+					for i = 1, 5 do
+						wipe(t)
+						Routes.mapData:GetZonesForContinent(i, t)
+						for j = 1, #t do
+							local zoneName = Routes.mapData:MapLocalize(t[j])
+							create_zones[zoneName] = zoneName
+						end
 					end
 				end
 				return create_zones
 			end,
 			get = function()
 				-- Use currently viewed map on first view.
-				create_zone = create_zone or Routes.zoneNames[GetCurrentMapContinent()*100 + GetCurrentMapZone()]
+				local mapID = GetCurrentMapAreaID()
+				if mapID == -1 then return nil end
+				create_zone = create_zone or Routes.mapData:MapLocalize(mapID)
 				return create_zone
 			end,
 			set = function(info, key) create_zone = key end,
@@ -2252,7 +2261,7 @@ do
 				new_route.route = Routes.TSP:DecrossRoute(new_route.route)
 				deep_copy_table(db.routes[mapfile][create_name], new_route)
 
-				db.routes[mapfile][create_name].length = Routes.TSP:PathLength(new_route.route, create_zone)
+				db.routes[mapfile][create_name].length = Routes.TSP:PathLength(new_route.route, Routes.mapData:MapAreaId(mapfile))
 
 				-- Create the aceopts table entry for our new route
 				local opts = options.args.routes_group.args
@@ -2367,7 +2376,7 @@ do
 				new_route.route = Routes.TSP:DecrossRoute(new_route.route)
 				deep_copy_table(db.routes[mapfile][create_name], new_route)
 
-				db.routes[mapfile][create_name].length = Routes.TSP:PathLength(new_route.route, create_zone)
+				db.routes[mapfile][create_name].length = Routes.TSP:PathLength(new_route.route, Routes.mapData:MapAreaId(mapfile))
 
 				-- Create the aceopts table entry for our new route
 				local opts = options.args.routes_group.args
@@ -2996,15 +3005,23 @@ do
 			order = 200,
 			values = function()
 				if not next(create_zones) then
-					for k, v in pairs(Routes.zoneNames) do
-						create_zones[v] = v
+					local t = {}
+					for i = 1, 5 do
+						wipe(t)
+						Routes.mapData:GetZonesForContinent(i, t)
+						for j = 1, #t do
+							local zoneName = Routes.mapData:MapLocalize(t[j])
+							create_zones[zoneName] = zoneName
+						end
 					end
 				end
 				return create_zones
 			end,
 			get = function()
 				-- Use currently viewed map on first view.
-				create_zone = create_zone or Routes.zoneNames[GetCurrentMapContinent()*100 + GetCurrentMapZone()]
+				local mapID = GetCurrentMapAreaID()
+				if mapID == -1 then return nil end
+				create_zone = create_zone or Routes.mapData:MapLocalize(mapID)
 				return create_zone
 			end,
 			set = function(info, key) create_zone = key end,
@@ -3212,7 +3229,7 @@ do
 							tremove(route_data.route, i)
 						end
 						tinsert(route_data.taboolist, coord)
-						route_data.length = Routes.TSP:PathLength(route_data.route, Routes.zoneMapFile[zone])
+						route_data.length = Routes.TSP:PathLength(route_data.route, Routes.mapData:MapAreaId(zone))
 						throttleFrame:Show()
 					end
 				end
@@ -3242,7 +3259,7 @@ do
 				end
 			end
 			if flag == false then
-				route_data.length = Routes.TSP:InsertNode(route_data.route, route_data.metadata, Routes.zoneMapFile[zone], coord, route_data.cluster_dist or 65) -- 65 is the old default
+				route_data.length = Routes.TSP:InsertNode(route_data.route, route_data.metadata, Routes.mapData:MapAreaId(zone), coord, route_data.cluster_dist or 65) -- 65 is the old default
 				tremove(route_data.taboolist, i)
 				throttleFrame:Show()
 			end

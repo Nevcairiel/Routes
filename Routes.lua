@@ -724,7 +724,7 @@ end)
 -- for inserting into relevant routes
 -- Zone name must be localized, node_name can be english or localized
 function Routes:InsertNode(zone, coord, node_name)
-	for route_name, route_data in pairs( db.routes[ self.zoneData[zone][4] ] ) do
+	for route_name, route_data in pairs( db.routes[ self.LZName[zone][1] ] ) do
 		-- for every route check if the route is created with this node
 		if route_data.selection then
 			for k, v in pairs(route_data.selection) do
@@ -733,14 +733,14 @@ function Routes:InsertNode(zone, coord, node_name)
 					local x, y = self:getXY(coord)
 					local flag = false
 					for tabooname, used in pairs(route_data.taboos) do
-						if used and self:IsNodeInTaboo(x, y, db.taboo[ self.zoneData[zone][4] ][tabooname]) then
+						if used and self:IsNodeInTaboo(x, y, db.taboo[ self.LZName[zone][1] ][tabooname]) then
 							flag = true
 						end
 					end
 					if flag then
 						tinsert(route_data.taboolist, coord)
 					else
-						route_data.length = self.TSP:InsertNode(route_data.route, route_data.metadata, zone, coord, route_data.cluster_dist or 65) -- 65 is the old default
+						route_data.length = self.TSP:InsertNode(route_data.route, route_data.metadata, self.LZName[zone][2], coord, route_data.cluster_dist or 65) -- 65 is the old default
 						throttleFrame:Show()
 					end
 					break
@@ -754,7 +754,7 @@ end
 -- for deleting into relevant routes
 -- Zone name must be localized, node_name can be english or localized
 function Routes:DeleteNode(zone, coord, node_name)
-	for route_name, route_data in pairs( db.routes[ self.zoneData[zone][4] ] ) do
+	for route_name, route_data in pairs( db.routes[ self.LZName[zone][1] ] ) do
 		-- for every route check if the route is created with this node
 		if route_data.selection then
 			local flag = false
@@ -780,7 +780,7 @@ function Routes:DeleteNode(zone, coord, node_name)
 										tremove(route_data.metadata, i)
 										tremove(route_data.route, i)
 									end
-									route_data.length = self.TSP:PathLength(route_data.route, zone)
+									route_data.length = self.TSP:PathLength(route_data.route, self.LZName[zone][2])
 									throttleFrame:Show()
 									flag = true
 									break
@@ -793,7 +793,7 @@ function Routes:DeleteNode(zone, coord, node_name)
 						for i = 1, #route_data.route do
 							if coord == route_data.route[i] then
 								tremove(route_data.route, i)
-								route_data.length = self.TSP:PathLength(route_data.route, zone)
+								route_data.length = self.TSP:PathLength(route_data.route, self.LZName[zone][2])
 								throttleFrame:Show()
 								flag = true
 								break
@@ -822,12 +822,18 @@ end
 -- this upgrade function only works on enUS or enGB clients because the old
 -- format uses English strings, the new format uses mapfile names.
 function Routes:UpgradeStorageFormat1()
+	-- Build a table of all mapfiles we are interested in
+	local mapfiles = {}
+	for zoneName, data in pairs(self.LZName) do
+		mapfiles[data[1]] = true
+	end
+
 	local t = {}
 	for zone, zone_table in pairs(db.routes) do
-		if self.zoneMapFile[zone] == nil then
+		if mapfiles[zone] == nil then
 			-- This zone is a string that doesn't correspond to any of the
 			-- mapfile names. So we try to obtain the mapfile name
-			local mapfile = self.zoneData[zone][4]
+			local mapfile = self.LZName[zone][1]
 			if mapfile == "" then
 				-- invalid zones return "" due to a metatable, delete the
 				-- whole zone
@@ -846,14 +852,16 @@ function Routes:UpgradeStorageFormat1()
 		db.routes[mapfile] = zone_table
 		t[mapfile] = nil
 	end
-	t = nil
 
 	-- Delete invalid zones from the taboo table
 	for zone, zone_table in pairs(db.taboo) do
-		if self.zoneMapFile[zone] == nil then
+		if mapfiles[zone] == nil then
 			db.taboo[zone] = nil
 		end
 	end
+
+	-- Reclaim memory for this function
+	self.UpgradeStorageFormat1 = nil
 end
 
 
@@ -868,7 +876,7 @@ local route_zone_args_desc_table = {
 				count = count + 1
 			end
 		end
-		return L["You have |cffffd200%d|r route(s) in |cffffd200%s|r."]:format(count, Routes.zoneMapFile[zone])
+		return L["You have |cffffd200%d|r route(s) in |cffffd200%s|r."]:format(count, Routes.mapData:MapLocalize(zone))
 	end,
 	order = 0,
 }
@@ -882,7 +890,7 @@ local taboo_zone_args_desc_table = {
 				count = count + 1
 			end
 		end
-		return L["You have |cffffd200%d|r taboo region(s) in |cffffd200%s|r."]:format(count, Routes.zoneMapFile[zone])
+		return L["You have |cffffd200%d|r taboo region(s) in |cffffd200%s|r."]:format(count, Routes.mapData:MapLocalize(zone))
 	end,
 	order = 0,
 }
@@ -917,7 +925,7 @@ function Routes:OnInitialize()
 			-- cleanup the empty zone
 			db.routes[zone] = nil
 		else
-			local localizedZoneName = self.zoneMapFile[zone]
+			local localizedZoneName = self.mapData:MapLocalize(zone)
 			opts[zone] = {
 				type = "group",
 				name = localizedZoneName,
@@ -943,7 +951,7 @@ function Routes:OnInitialize()
 			-- cleanup the empty zone
 			db.taboo[zone] = nil
 		else
-			local localizedZoneName = self.zoneMapFile[zone]
+			local localizedZoneName = self.mapData:MapLocalize(zone)
 			opts[zone] = {
 				type = "group",
 				name = localizedZoneName,
@@ -962,6 +970,9 @@ function Routes:OnInitialize()
 	end
 	self:SetupSourcesOptTables()
 	self:RegisterEvent("ADDON_LOADED")
+
+	-- Reclaim memory for this function
+	self.OnInitialize = nil
 end
 
 local timerFrame = CreateFrame("Frame")
@@ -1647,8 +1658,7 @@ do
 
 		local numNodes = 0
 		local maxt = 0
-		local zone = Routes.zoneMapFile[zone]
-		local zoneW, zoneH = Routes.zoneData[zone][1], Routes.zoneData[zone][2]
+		local zoneW, zoneH = Routes.mapData:MapArea(zone)
 		for i = 1, #t.metadata do
 			local numData = #t.metadata[i]
 			numNodes = numNodes + numData
@@ -2186,6 +2196,9 @@ do
 				}
 			end
 		end
+
+		-- Reclaim memory for this function
+		self.SetupSourcesOptTables = nil
 	end
 
 	options.args.add_group.args = {
@@ -2790,9 +2803,8 @@ do
 		end
 		Routes:DrawTaboos()
 		-- open the WorldMapFlame on the right zone
-		local zone_id = Routes.zoneData[ Routes.zoneMapFile[zone] ][3]
 		WorldMapFrame:Show()
-		SetMapZoom( floor( zone_id / 100 ), zone_id % 100 )
+		SetMapByID(Routes.mapData:MapAreaId(zone))
 	end
 	function TabooHandler:SaveEditTaboo(info)
 		local zone = info[2]
@@ -3226,7 +3238,7 @@ do
 				if Routes:IsNodeInTaboo(x, y, taboo_data) then -- remove node
 					tremove(route_data.route, i)
 					tinsert(route_data.taboolist, coord)
-					route_data.length = self.TSP:PathLength(route_data.route, Routes.zoneMapFile[zone])
+					route_data.length = self.TSP:PathLength(route_data.route, Routes.mapData:MapAreaId(zone))
 					throttleFrame:Show()
 				end
 			end

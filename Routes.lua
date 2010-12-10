@@ -175,7 +175,7 @@ Routes.LZName = setmetatable({}, { __index = function() return noData end})
 for cID = 1, #{GetMapContinents()} do
 	for zID, zname in ipairs({GetMapZones(cID)}) do
 		SetMapZoom(cID, zID)
-		Routes.LZName[zname] = {GetMapInfo(), GetCurrentMapAreaID(), cID}
+		Routes.LZName[zname] = {GetMapInfo(), GetCurrentMapAreaID(), cID, zID}
 	end
 end
 

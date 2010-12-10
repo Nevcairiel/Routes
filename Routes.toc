@@ -40,7 +40,6 @@ Locales\Locale-zhTW.lua
 # Core Routes files
 Routes.lua
 TSP.lua
-Data.lua
 
 # Routes Module files
 Modules\AutoShow.lua

@@ -167,6 +167,19 @@ local WorldMapButton = WorldMapButton
 local Minimap = Minimap
 local GetPlayerFacing = GetPlayerFacing
 
+
+------------------------------------------------------------------------------------------------------
+-- Data for Localized Zone Names
+local noData = {"", -1, 0}
+Routes.LZName = setmetatable({}, { __index = function() return noData end})
+for cID = 1, #{GetMapContinents()} do
+	for zID, zname in ipairs({GetMapZones(cID)}) do
+		SetMapZoom(cID, zID)
+		Routes.LZName[zname] = {GetMapInfo(), GetCurrentMapAreaID(), cID}
+	end
+end
+
+
 ------------------------------------------------------------------------------------------------------
 -- Core Routes functions
 

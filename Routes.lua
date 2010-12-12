@@ -169,13 +169,29 @@ local GetPlayerFacing = GetPlayerFacing
 
 
 ------------------------------------------------------------------------------------------------------
+-- Remap mapfiles due to phasing
+local remapMapFile = {
+	["Uldum_terrain1"] = "Uldum",
+	["TwilightHighlands_terrain1"] = "TwilightHighlands",
+	["Gilneas_terrain1"] = "Gilneas",
+	["Gilneas_terrain2"] = "Gilneas",
+	["BattleforGilneas"] = "GilneasCity",
+	["TheLostIsles_terrain1"] = "TheLostIsles",
+	["TheLostIsles_terrain2"] = "TheLostIsles",
+	["Hyjal_terrain1"] = "Hyjal",
+}
+
+
+------------------------------------------------------------------------------------------------------
 -- Data for Localized Zone Names
 local noData = {"", -1, 0}
 Routes.LZName = setmetatable({}, { __index = function() return noData end})
 for cID = 1, #{GetMapContinents()} do
 	for zID, zname in ipairs({GetMapZones(cID)}) do
 		SetMapZoom(cID, zID)
-		Routes.LZName[zname] = {GetMapInfo(), GetCurrentMapAreaID(), cID, zID}
+		local mapFile = GetMapInfo()
+		mapFile = remapMapFile[mapFile] or mapFile
+		Routes.LZName[zname] = {mapFile, GetCurrentMapAreaID(), cID, zID}
 	end
 end
 
@@ -218,7 +234,9 @@ function Routes:DrawWorldmapLines()
 	local flag2 = defaults.draw_battlemap and BattlefieldMinimap and BattlefieldMinimap:IsShown() -- Draw battlemap lines?
 	if (not flag1) and (not flag2) then	return end 	-- Nothing to draw
 
-	for route_name, route_data in pairs( db.routes[GetMapInfo()] ) do
+	local mapFile = GetMapInfo()
+	mapFile = remapMapFile[mapFile] or mapFile
+	for route_name, route_data in pairs( db.routes[mapFile] ) do
 		if type(route_data) == "table" and type(route_data.route) == "table" and #route_data.route > 1 then
 			local width = route_data.width or defaults.width
 			local halfwidth = route_data.width_battlemap or defaults.width_battlemap

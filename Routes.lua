@@ -2,8 +2,8 @@
 ********************************************************************************
 Routes
 @project-version@
-18 October 2010
-(Written for Live Servers v4.0.1.13164)
+13 December 2010
+(Written for Live Servers v4.0.3.13329)
 
 Author: Xaroz @ EU Emerald Dream Alliance & Xinhuan @ US Blackrock Alliance
 ********************************************************************************
@@ -348,14 +348,18 @@ local last_X, last_Y, last_facing = 1/0, 1/0, 1/0
 
 -- implementation of cache - use zone in the key for an unique identifier
 -- because every zone has a different X/Y location and possible yardsizes
+local cache_zone, cache_zoneW, cache_zoneH
 local X_cache = {}
 local Y_cache = {}
 local XY_cache_mt = {
 	__index = function(t, key)
 		local zone, coord = (';'):split( key )
-		local zoneW, zoneH = Routes.mapData:MapArea(Routes.LZName[zone][1])
-		local X = zoneW * floor(coord / 10000) / 10000
-		local Y = zoneH * (coord % 10000) / 10000
+		if cache_zone ~= zone then
+			cache_zoneW, cache_zoneH = Routes.mapData:MapArea(tonumber(zone))
+			cache_zone = zone
+		end
+		local X = cache_zoneW * floor(coord / 10000) / 10000
+		local Y = cache_zoneH * (coord % 10000) / 10000
 		X_cache[key] = X
 		Y_cache[key] = Y
 
@@ -460,7 +464,7 @@ function Routes:DrawMinimapLines(forceUpdate)
 
 				-- if we loop - make sure the 'last' gets filled with the right info
 				if route_data.looped and route_data.route[ #route_data.route ] ~= defaults.fake_point then
-					local key = format("%s;%s", zone, route_data.route[ #route_data.route ])
+					local key = format("%s;%s", currentZoneID, route_data.route[ #route_data.route ])
 					last_x, last_y = X_cache[key], Y_cache[key]
 					if minimap_rotate then
 						local dx = last_x - cx
@@ -482,7 +486,7 @@ function Routes:DrawMinimapLines(forceUpdate)
 						cur_y = nil
 						cur_inside = false
 					else
-						local key = format("%s;%s", zone, point)
+						local key = format("%s;%s", currentZoneID, point)
 						cur_x, cur_y = X_cache[key], Y_cache[key]
 						if minimap_rotate then
 							local dx = cur_x - cx

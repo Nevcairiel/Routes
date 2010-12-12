@@ -36,8 +36,7 @@ local function Summarize(data, zone)
 		-- reuse table
 		wipe(amount_of)
 		-- only look for data for this currentzone
-		local mapFile = Routes.LZName[zone][1]
-		local zoneID = Routes.mapData:MapAreaId(mapFile)
+		local zoneID = Routes.LZName[zone][2]
 		if db_data[zoneID] then
 			-- count the unique values (structure is: location => itemID)
 			for _,node in pairs(db_data[zoneID]) do
@@ -70,8 +69,7 @@ local function AppendNodes(node_list, zone, db_type, node_type)
 		node_type = tonumber(node_type)
 
 		-- Find all of the notes
-		local mapFile = Routes.LZName[zone][1]
-		local zoneID = GatherMate2.mapData:MapAreaId(mapFile)
+		local zoneID = Routes.LZName[zone][2]
 		for loc, t in pairs(GatherMate2.gmdbs[db_type][zoneID]) do
 			-- And are of a selected type - store
 			if t == node_type then

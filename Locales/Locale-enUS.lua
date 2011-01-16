@@ -185,6 +185,8 @@ L["Now running TSP in the background..."] = true
 L["There is already a TSP running in background. Wait for it to complete first."] = true
 L["The following error occured in the background path generation coroutine, please report to Grum or Xinhuan:"] = true
 L["TOO_MANY_NODES_ERROR"] = "This route has more than 724 nodes. Please reduce it by removing some nodes or by clustering otherwise memory allocation errors will occur."
+L["Pass %d: %d%% - %d yards"] = true
+L["Pass %d: %d%%"] = true
 
 L["Route Clustering"] = true
 L["CLUSTER_DESC"] = "Clustering a route makes Routes take all the nodes that are near each other and combine then into a single node as a travel point. This process takes a while, but is reasonably fast."

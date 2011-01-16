@@ -2,7 +2,7 @@
 ********************************************************************************
 Routes
 @project-version@
-13 December 2010
+16 January 2011
 (Written for Live Servers v4.0.3.13329)
 
 Author: Xaroz @ EU Emerald Dream Alliance & Xinhuan @ US Blackrock Alliance
@@ -1794,11 +1794,30 @@ function ConfigHandler:DoBackground(info)
 	local running, errormsg = Routes.TSP:SolveTSPBackground(t.route, t.metadata, taboos, Routes.mapData:MapAreaId(zone), db.defaults.tsp)
 	if (running == 1) then
 		Routes:Print(L["Now running TSP in the background..."])
+		local dispLength;
+		Routes.TSP:SetStatusFunction(function(pass, progress, length)
+			local frame = LibStub("AceConfigDialog-3.0").OpenFrames["Routes"]
+			if frame then
+				if length then
+					dispLength = length
+				end
+				if dispLength then
+					frame:SetStatusText(L["Pass %d: %d%% - %d yards"]:format(pass, progress*100, dispLength))
+				else
+					frame:SetStatusText(L["Pass %d: %d%%"]:format(pass, progress*100))
+				end
+			end
+		end)
 		Routes.TSP:SetFinishFunction(function(output, meta, length, iter, timetaken)
 			t.route = output
 			t.length = length
 			t.metadata = meta
-			Routes:Print(L["Path with %d nodes found with length %.2f yards after %d iterations in %.2f seconds."]:format(#output, length, iter, timetaken))
+			local msg = L["Path with %d nodes found with length %.2f yards after %d iterations in %.2f seconds."]:format(#output, length, iter, timetaken)
+			Routes:Print(msg)
+			local frame = LibStub("AceConfigDialog-3.0").OpenFrames["Routes"]
+			if frame then
+				frame:SetStatusText(msg)
+			end
 			-- redraw lines
 			local AutoShow = Routes:GetModule("AutoShow", true)
 			if AutoShow and db.defaults.use_auto_showhide then

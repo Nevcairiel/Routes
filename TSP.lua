@@ -3,7 +3,7 @@
 Ant Colony Optimization (ACO) for Travelling Salesman Problem (TSP)
 for Routes (a World of Warcraft addon)
 
-Copyright (C) 2008 Xinhuan
+Copyright (C) 2011 Xinhuan
 
 This program is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
@@ -75,11 +75,12 @@ are: m = n, a = 1, b = 5, p = 0.5, t(0) = 1e-6.
 
 ----------------------------------
 -- Localize some globals
-local pairs = pairs
+local ipairs, pairs, type = ipairs, pairs, type
 local random = random
-local floor = floor
+local floor, ceil = floor, ceil
 local coroutine = coroutine
 local tinsert, tremove = tinsert, tremove
+local GetTime = GetTime
 
 local pathR = {}
 local lastpath
@@ -87,33 +88,17 @@ local Routes = LibStub("AceAddon-3.0"):GetAddon("Routes")
 local TSP = {}
 Routes.TSP = TSP
 
-----------------------------------
--- Table Pool for recycling tables
-local tablePool = {}
-setmetatable(tablePool, {__mode = "kv"}) -- Weak table
 
--- Get a new table
-local function newTable()
-	local t = next(tablePool) or {}
-	tablePool[t] = nil
-	return t
-end
+--------------------------------
+-- Background execution
 
--- Delete table and return to pool -- Recursive!! -- Use with care!!
-local function delTable(t)
-	if type(t) == "table" then
-		for k, v in pairs(t) do
-			if type(v) == "table" then
-				delTable(v) -- child tables get put into the pool
-			end
-			t[k] = nil
-		end
-		t[true] = true -- resize table to 1 item
-		t[true] = nil
-		setmetatable(t, nil)
-		tablePool[t] = true
+local nextYield = 0
+local function yield()
+	local t = GetTime()
+	if t > nextYield then
+		coroutine.yield()
+		nextYield = t + 0.03
 	end
-	return nil -- return nil to assign input reference
 end
 
 
@@ -153,6 +138,7 @@ function TSPUpdateFrame:OnUpdate(elapsed)
 			self.running = false
 			self.finishFunc(path, meta, shortestPathLength, count, timetaken)
 			self.finishFunc = nil
+			self.statusFunc = nil
 			self.co = nil
 			self.nodes = nil
 		end
@@ -162,6 +148,7 @@ function TSPUpdateFrame:OnUpdate(elapsed)
 		self.running = false
 		self.co = nil
 		self.finishFunc = nil
+		self.statusFunc = nil
 		self.nodes = nil
 		Routes:Print(Routes.L["The following error occured in the background path generation coroutine, please report to Grum or Xinhuan:"])
 		Routes:Print(path)
@@ -201,6 +188,12 @@ function TSP:SetFinishFunction(func)
 	TSPUpdateFrame.finishFunc = func
 end
 
+function TSP:SetStatusFunction(func)
+	assert(type(func) == "function", "SetStatusFunction() expected function in 1st argument, got "..type(func).." instead.")
+	TSPUpdateFrame.statusFunc = func
+end
+
+
 -----------------------------------
 -- TSP:SolveTSP(nodes, metadata, zoneID, parameters, path, nonblocking)
 -- Arguments
@@ -232,7 +225,7 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 	if type(path) == "table" then
 		wipe(path)
 	else
-		path = newTable()
+		path = {}
 	end
 
 	if nonblocking then
@@ -250,9 +243,9 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 		-- Create a copy of the metadata[] table too, if there is one
 		local metadata2
 		if metadata then
-			metadata2 = newTable()
+			metadata2 = {}
 			for i = 1, numNodes do
-				metadata2[i] = newTable()
+				metadata2[i] = {}
 				for j = 1, #metadata[i] do
 					metadata2[i][j] = metadata[i][j]
 				end
@@ -262,7 +255,7 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 	end
 
 	-- Create a copy of the nodes[] table and use this instead of the original because data could get changed
-	local nodes2 = newTable()
+	local nodes2 = {}
 	for i = 1, numNodes do
 		nodes2[i] = nodes[i]
 	end
@@ -270,9 +263,9 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 	-- Create a copy of the metadata[] table too, if there is one
 	local metadata2
 	if metadata then
-		metadata2 = newTable()
+		metadata2 = {}
 		for i = 1, numNodes do
-			metadata2[i] = newTable()
+			metadata2[i] = {}
 			for j = 1, #metadata[i] do
 				metadata2[i][j] = metadata[i][j]
 			end
@@ -302,16 +295,16 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 	local PRUNEDIST         = zoneW * 0.30                          -- Another constant for our own pruning
 
 	local shortestPathLength = math.huge
-	local shortestPath = newTable()
+	local shortestPath = {}
 
 	-- Step 1	- Initialize and generate the weight matrix, the pheromone matrix and the ants
-	local weight = newTable()
-	local phero = newTable()
-	local ants = newTable()
-	local prune = newTable()
-	local antprob = newTable()
+	local weight = {}
+	local phero = {}
+	local ants = {}
+	local prune = {}
+	local antprob = {}
 	for i = 1, numNodes do
-		prune[i] = newTable()
+		prune[i] = {}
 	end
 
 	for i = 1, numNodes do
@@ -369,7 +362,7 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 		end
 	end
 	for k = 1, numAnts do
-		ants[k] = newTable()
+		ants[k] = {}
 		local antpath = ants[k] -- This table will stores both the partially constructed path (from 1 to j) and the remainder unvisited nodes (from j+1 to N)
 		for j = 1, numNodes do
 			antpath[j] = j
@@ -421,11 +414,15 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 				end
 			end
 			if nonblocking then
-				coroutine.yield()
+				yield()
 			end
 		end
 
 		for k = 1, numAnts do
+			-- Send out status update if requested  (this loop is the one that actually takes lots of time)
+			if nonblocking and TSPUpdateFrame.statusFunc then
+				TSPUpdateFrame.statusFunc(count, (k-1)/numAnts)
+			end
 			-- Step 8	-- Perform local pheromone update on the path from the last node to the first node for each ant k
 			local antpath = ants[k]
 			local curnode = antpath[numNodes]
@@ -437,7 +434,7 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 			-- Step 9	-- Perform 2-opt on the path to improve it
 			--[[for i = 1, TWOOPTPASSES do
 				if nonblocking then
-					coroutine.yield()
+					yield()
 				end
 				if TSP:TwoOpt(antpath, weight, prune) == 0 then
 					break
@@ -450,7 +447,7 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 				tinsert(antpath, tremove(antpath, 1))
 				tinsert(antpath, tremove(antpath, 1))
 				if nonblocking then
-					coroutine.yield()
+					yield()
 				end
 			end
 
@@ -471,6 +468,7 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 				end
 				nochanges = 0 -- There were changes, so reset nochanges counter to 0
 			end
+		
 		end
 			
 		-- Step 12	- Perform global pheromone trail update on the best known solution
@@ -483,13 +481,19 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 			antprob[u] = phero[u] ^ ALPHA / weight[u] ^ BETA -- Update the probability
 			curnode = nextnode
 		end
+		
+		-- report how long path this round found (with progress==1)
+		if nonblocking and TSPUpdateFrame.statusFunc then
+			TSPUpdateFrame.statusFunc(count, 1, shortestPathLength)
+			yield()
+		end
 	end
 
 	do
 		-- Perform a non-pruned 2-opt on the final path so that there is absolutely no criss-cross
-		local noprune = newTable()
+		local noprune = {}
 		for i = 1, numNodes do
-			noprune[i] = newTable()
+			noprune[i] = {}
 		end
 		for i = 1, numNodes do
 			for j = i+1, numNodes do
@@ -502,10 +506,10 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 			tinsert(shortestPath, tremove(shortestPath, 1))
 			tinsert(shortestPath, tremove(shortestPath, 1))
 			if nonblocking then
-				coroutine.yield()
+				yield()
 			end
 		end
-		delTable(noprune)
+		
 		-- Recompute the path length
 		shortestPathLength = 0
 		local curnode = shortestPath[numNodes]
@@ -534,7 +538,7 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 		-- TSP found a shorter path than the original, convert our shortest path to the output format wanted
 		local meta
 		if metadata then
-			meta = newTable()
+			meta = {}
 		end
 		for i = 1, numNodes do
 			path[i] = nodes[shortestPath[i]]
@@ -545,14 +549,6 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 		metadata = meta -- prev metadata[] not recycled here, will go out of scope at function end and get GCed
 	end
 
-	-- Cleanup our used tables by recycling them
-	delTable(weight)
-	delTable(phero)
-	delTable(ants)
-	delTable(shortestPath)
-	delTable(prune)
-	delTable(nodes2)
-	delTable(antprob)
 	lastpath = nil
 
 	-- This step is necessary because our pathlength above is calculated from biased data from taboos
@@ -615,8 +611,9 @@ function TSP:TwoOpt(path, weight, prune, twoPointFiveOpt, nonblocking)
 					local left = i+1
 					local right = j
 					while left < right do
-						path[left], path[right] = path[right], path[left]
-						pathR[path[left]], pathR[path[right]] = left, right
+						local L, R = path[right], path[left]
+						path[left], path[right] = L, R
+						pathR[L], pathR[R] = left, right
 						left = left + 1
 						right = right - 1
 					end
@@ -631,7 +628,7 @@ function TSP:TwoOpt(path, weight, prune, twoPointFiveOpt, nonblocking)
 	-- Then perform 2.5-opt
 	if twoPointFiveOpt then
 		if nonblocking then
-			coroutine.yield()
+			yield()
 		end
 		for i = 1, numNodes-4 do
 			local a, b, c = path[i], path[i+1], path[i+2]
@@ -721,7 +718,7 @@ function TSP:InsertNode(nodes, metadata, zoneID, nodeID, radius)
 
 	-- Step 1	- Initialize and generate the weight matrix, and prune matrix if doing 2-opt
 	local zoneW, zoneH = Routes.mapData:MapArea(zoneID)
-	local weight = newTable()
+	local weight = {}
 
 	-- Not doing a twoopt means we only need to generate O(2n) entries in the weight table
 	local x, y, x2, y2
@@ -791,9 +788,6 @@ function TSP:InsertNode(nodes, metadata, zoneID, nodeID, radius)
 			tinsert(nodes, insertPoint, nodeID)
 		end
 	end
-
-	-- Cleanup our used tables by recycling them
-	delTable(weight)
 
 	return TSP:PathLength(nodes, zoneID)
 end
@@ -873,8 +867,8 @@ between clusters.
 -- 25 January 2008
 ]]
 function TSP:ClusterRoute(nodes, zoneID, radius)
-	local weight = newTable() -- weight matrix
-	local metadata = newTable() -- metadata after clustering
+	local weight = {} -- weight matrix
+	local metadata = {} -- metadata after clustering
 
 	local numNodes = #nodes
 	local zoneW, zoneH = Routes.mapData:MapArea(zoneID)
@@ -882,10 +876,10 @@ function TSP:ClusterRoute(nodes, zoneID, radius)
 	--local taboo = 0
 
 	-- Create a copy of the nodes[] table and use this instead of the original because we want to modify this table
-	local nodes2 = newTable()
+	local nodes2 = {}
 	for i = 1, numNodes do
 		nodes2[i] = nodes[i]
-		weight[i] = newTable() -- make weight[] a 2-dimensional table
+		weight[i] = {} -- make weight[] a 2-dimensional table
 	end
 	local nodes = nodes2
 
@@ -905,7 +899,7 @@ function TSP:ClusterRoute(nodes, zoneID, radius)
 
 	-- Step 2: Generate the initial metadata tables
 	for i = 1, numNodes do
-		metadata[i] = newTable()
+		metadata[i] = {}
 		metadata[i][1] = nodes[i]
 	end
 
@@ -973,14 +967,14 @@ function TSP:ClusterRoute(nodes, zoneID, radius)
 				-- Set the new coord of node1
 				nodes[node1] = coord
 				-- Delete node2 from metadata[]
-				delTable(tremove(metadata, node2))
+				tremove(metadata, node2)
 				-- Delete node2 from nodes[]
 				tremove(nodes, node2)
 				-- Remove node2 from the weight table
 				for i = 1, numNodes do
 					tremove(weight[i], node2) -- remove column
 				end
-				delTable(tremove(weight, node2)) -- remove row
+				tremove(weight, node2) -- remove row
 				-- Update number of nodes
 				numNodes = numNodes - 1
 				-- Update the weight table for all nodes relating to node1, this can untaboo nodes
@@ -1007,9 +1001,6 @@ function TSP:ClusterRoute(nodes, zoneID, radius)
 		local w = weight[i][i+1]
 		pathLength = pathLength + (w == 1/0 and weight[i+1][i] or w) -- use the backup in the lower half of the triangle if it was tabooed
 	end
-
-	-- Cleanup our used tables by recycling them
-	delTable(weight)
 
 	--ChatFrame1:AddMessage(taboo.." tabooed")
 	return nodes, metadata, pathLength
@@ -1053,11 +1044,11 @@ function TSP:DecrossRoute(nodes)
 	end)
 
 	--[[
-	local weight = newTable()
-	local path = newTable()
-	local prune = newTable()
+	local weight = {}
+	local path = {}
+	local prune = {}
 	for i = 1, numNodes do
-		prune[i] = newTable()
+		prune[i] = {}
 	end
 
 	for i = 1, numNodes do
@@ -1079,13 +1070,10 @@ function TSP:DecrossRoute(nodes)
 
 	while TSP:TwoOpt(path, weight, prune, false, false) > 0 do end
 
-	local newpath = newTable()
+	local newpath = {}
 	for i = 1, numNodes do
 		newpath[i] = nodes[ path[i] ]
 	end
-	delTable(weight)
-	delTable(path)
-	delTable(prune)
 
 	return newpath]]
 

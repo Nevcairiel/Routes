@@ -18,6 +18,36 @@ local callbacks
 local stored_uid
 local stored_nodeID
 
+local function GetCZXYPosition()
+	local x, y = GetPlayerMapPosition("player")
+
+	if x and y and x > 0 and y > 0 then
+		local c = GetCurrentMapContinent()
+		local z = GetCurrentMapZone()
+
+		if c and z then
+			return c, z, x, y
+		end
+	else
+		-- Store original map settings
+		local oc = GetCurrentMapContinent()
+		local oz = GetCurrentMapZone()
+
+		-- We could not get the player's location, so flip the map
+		SetMapToCurrentZone()
+
+		local c = GetCurrentMapContinent()
+		local z = GetCurrentMapZone()
+		local x, y = GetPlayerMapPosition("player")
+
+		-- Flip the map back
+		SetMapZoom(oc, oz)
+
+		if c and z and x and y and x >= 0 and y >= 0 then
+			return c, z, x, y
+		end
+	end
+end
 
 function TT:FindClosestVisibleRoute()
 	if not TomTom then
@@ -28,7 +58,7 @@ function TT:FindClosestVisibleRoute()
 		Routes:Print(L["An updated copy of TomTom is required for TomTom integration to work"])
 		return
 	end
-	local c, z, x, y = TomTom.compat:GetCurrentPlayerPosition()
+	local c, z, x, y = GetCZXYPosition()
 	local zone = GetRealZoneText()
 	local closest_zone, closest_route, closest_node
 	local min_distance = 1/0
@@ -71,7 +101,7 @@ function TT:QueueFirstNode()
 		route_name = b
 		route_table = db.routes[ Routes.LZName[a][1] ][b]
 		node_num = c
-		local c, z, x, y = TomTom.compat:GetCurrentPlayerPosition()
+		local c, z, x, y = GetCZXYPosition()
 		local x2, y2 = Routes:getXY(route_table.route[node_num])
 		stored_nodeID = route_table.route[node_num]
 		--stored_uid = TomTom:SetWaypoint(c, z, x2, y2, callbacks, false, false)
@@ -90,7 +120,7 @@ function TT.WaypointHit(event, uid, distance, dist, lastdist)
 		for i = 1, #route do
 			if stored_nodeID == route[i] then
 				-- Match found, get the next node to waypoint
-				local c, z, x, y = TomTom.compat:GetCurrentPlayerPosition()
+				local c, z, x, y = GetCZXYPosition()
 				local zone = GetRealZoneText()
 				node_num = i
 

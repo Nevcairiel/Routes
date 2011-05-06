@@ -37,7 +37,7 @@ Features:
 	- Fubar plugin available to quickly access your routes
 	- Cartographer_Waypoints and TomTom support for quickly following a route
 	- Works with Chinchilla's Expander minimap and SexyMap's HudMap!
-	- Full in-game help file and FAQ, guiding you step by step on what to do! 
+	- Full in-game help file and FAQ, guiding you step by step on what to do!
 
 Download:
 	The latest version of Routes is always available on
@@ -463,7 +463,7 @@ function Routes:DrawMinimapLines(forceUpdate)
 	local scale_y = minimap_h / (radius*2)
 
 	local minimapScale = Minimap:GetScale()
-	
+
 	for route_name, route_data in pairs( db.routes[ self.LZName[zone][1] ] ) do
 		if type(route_data) == "table" and type(route_data.route) == "table" and #route_data.route > 1 then
 			-- store color/width
@@ -1586,6 +1586,20 @@ function ConfigHandler:DeleteRoute(info)
 	Routes:DrawMinimapLines(true)
 end
 
+function ConfigHandler:RecreateRoute(info)
+	local zone = info[2]
+	local routekey = info[3]
+	local route = Routes.routekeys[zone][routekey]
+	local is_running, route_table = Routes.TSP:IsTSPRunning()
+	if is_running and route_table == db.routes[zone][route].route then
+		Routes:Print(L["You may not delete a route that is being optimized in the background."])
+		return
+	end
+	Routes:RecreateRoute(zone, route)
+	Routes:DrawWorldmapLines()
+	Routes:DrawMinimapLines(true)
+end
+
 function ConfigHandler:ClusterRoute(info)
 	local zone = info[2]
 	local route = Routes.routekeys[zone][ info[3] ]
@@ -1895,6 +1909,17 @@ function ConfigHandler.GetRouteName(info)
 	local zone = info[2]
 	return Routes.routekeys[zone][ info[3] ]
 end
+function ConfigHandler:IsDisableRecreateRoute(info)
+	-- One of these 2 plugins must be active to recreate routes
+	local disableRecreate = true
+	if Routes.plugins["GatherMate2"] and Routes.plugins["GatherMate2"].IsActive() then
+		disableRecreate = false
+	end
+	if Routes.plugins["Gatherer"] and Routes.plugins["Gatherer"].IsActive() then
+		disableRecreate = false
+	end
+	return disableRecreate or self:IsBeingManualEdited(info)
+end
 
 do
 	local routeTable = {
@@ -1937,6 +1962,15 @@ do
 						confirmText = L["Are you sure you want to delete this route?"],
 						order = 100,
 						disabled = "IsBeingManualEdited",
+					},
+					recreate = {
+						name = L["Recreate Route"], type = "execute",
+						desc = L["Recreate this route with the same creation settings. NOTE: This only works for data from GatherMate2 and Gatherer."],
+						func = "RecreateRoute",
+						confirm = true,
+						confirmText = L["Are you sure you want to recreate this route? This will delete all customized settings for this route."],
+						order = 110,
+						disabled = "IsDisableRecreateRoute",
 					},
 				},
 			},
@@ -2505,6 +2539,52 @@ do
 	end
 	options.args.add_group.args.add_route_copy.order
 		= options.args.add_group.args.source_choices.order + 1
+
+	function Routes:RecreateRoute(mapFile, routeName)
+		create_name = routeName
+		create_zone = Routes.mapData:MapLocalize(mapFile)
+		if type(create_choices[create_zone]) == "table" then
+			wipe(create_choices[create_zone])
+		else
+			create_choices[create_zone] = {}
+		end
+
+		for k, v in pairs(source_data_choice) do
+			source_data_choice[k] = false
+		end
+
+		-- Load data for GatherMate2
+		if Routes.plugins["GatherMate2"] and Routes.plugins["GatherMate2"].IsActive() then
+			for englishName, translatedName in pairs(db.routes[mapFile][create_name].selection) do
+				local NL = LibStub("AceLocale-3.0"):GetLocale("GatherMate2Nodes",true)
+				translatedName = NL[englishName]
+				for db_type, db_data in pairs(GatherMate2.gmdbs) do
+					local nodeID = GatherMate2:GetIDForNode(db_type, translatedName)
+					if nodeID then
+						local key = ("%s;%s;%s;%s"):format("GatherMate2", db_type, nodeID, 0)
+						set_source_value(nil, key, true)
+						source_data_choice["GatherMate2"] = true
+					end
+				end
+			end
+		end
+
+		-- Load data for Gatherer
+		if Routes.plugins["Gatherer"] and Routes.plugins["Gatherer"].IsActive() then
+			for englishName, translatedName in pairs(db.routes[mapFile][create_name].selection) do
+				local nodeID = Gatherer.Nodes.Names[translatedName]
+				local db_type = Gatherer.Nodes.Objects[nodeID]
+				if nodeID and db_type then
+					local key = ("%s;%s;%s;%s"):format("Gatherer", db_type, nodeID, 0)
+					set_source_value(nil, key, true)
+					source_data_choice["Gatherer"] = true
+				end
+			end
+		end
+
+		-- Do it
+		options.args.add_group.args.add_route.func()
+	end
 end
 
 ------------------------------------------------------------------------------------------------------

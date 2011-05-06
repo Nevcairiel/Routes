@@ -169,7 +169,7 @@ local GetPlayerFacing = GetPlayerFacing
 
 
 ------------------------------------------------------------------------------------------------------
--- Remap mapfiles due to phasing
+-- Remap mapfiles internally due to phasing
 local remapMapFile = {
 	["Uldum_terrain1"] = "Uldum",
 	["TwilightHighlands_terrain1"] = "TwilightHighlands",
@@ -180,6 +180,29 @@ local remapMapFile = {
 	["TheLostIsles_terrain2"] = "TheLostIsles",
 	["Hyjal_terrain1"] = "Hyjal",
 }
+local remapMapID = {
+	[748] = 720,  --["Uldum_terrain1"] = "Uldum",
+	[770] = 700,  --["TwilightHighlands_terrain1"] = "TwilightHighlands",
+	[678] = 545,  --["Gilneas_terrain1"] = "Gilneas",
+	[679] = 545,  --["Gilneas_terrain2"] = "Gilneas",
+	[677] = 611,  --["BattleforGilneas"] = "GilneasCity",
+	[681] = 544,  --["TheLostIsles_terrain1"] = "TheLostIsles",
+	[682] = 544,  --["TheLostIsles_terrain2"] = "TheLostIsles",
+	[683] = 606,  --["Hyjal_terrain1"] = "Hyjal",
+}
+
+-- Use local remapped versions of these 2 functions
+local RealGetMapInfo = GetMapInfo
+local GetMapInfo = function()
+	local mapFile, x, y = RealGetMapInfo()
+	return remapMapFile[mapFile] or mapFile, x, y
+end
+
+local RealGetCurrentMapAreaID = GetCurrentMapAreaID
+local GetCurrentMapAreaID = function()
+	local id = RealGetCurrentMapAreaID()
+	return remapMapID[id] or id
+end
 
 
 ------------------------------------------------------------------------------------------------------
@@ -189,9 +212,7 @@ Routes.LZName = setmetatable({}, { __index = function() return noData end})
 for cID = 1, #{GetMapContinents()} do
 	for zID, zname in ipairs({GetMapZones(cID)}) do
 		SetMapZoom(cID, zID)
-		local mapFile = GetMapInfo()
-		mapFile = remapMapFile[mapFile] or mapFile
-		Routes.LZName[zname] = {mapFile, GetCurrentMapAreaID(), cID, zID}
+		Routes.LZName[zname] = {GetMapInfo(), GetCurrentMapAreaID(), cID, zID}
 	end
 end
 
@@ -235,7 +256,6 @@ function Routes:DrawWorldmapLines()
 	if (not flag1) and (not flag2) then	return end 	-- Nothing to draw
 
 	local mapFile = GetMapInfo()
-	mapFile = remapMapFile[mapFile] or mapFile
 	for route_name, route_data in pairs( db.routes[mapFile] ) do
 		if type(route_data) == "table" and type(route_data.route) == "table" and #route_data.route > 1 then
 			local width = route_data.width or defaults.width

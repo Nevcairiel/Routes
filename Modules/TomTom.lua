@@ -17,37 +17,18 @@ local node_num = 1
 local callbacks
 local stored_uid
 local stored_nodeID
+local waypoints_opts = {
+	title = "",
+	persistent = false,
+	minimap = false,
+	world = false,
+	callbacks = callbacks,
+	silent = true,
+	crazy = true,
+	--cleardistance = 0,
+	arrivaldistance = 0,
+}
 
-local function GetCZXYPosition()
-	local x, y = GetPlayerMapPosition("player")
-
-	if x and y and x > 0 and y > 0 then
-		local c = GetCurrentMapContinent()
-		local z = GetCurrentMapZone()
-
-		if c and z then
-			return c, z, x, y
-		end
-	else
-		-- Store original map settings
-		local oc = GetCurrentMapContinent()
-		local oz = GetCurrentMapZone()
-
-		-- We could not get the player's location, so flip the map
-		SetMapToCurrentZone()
-
-		local c = GetCurrentMapContinent()
-		local z = GetCurrentMapZone()
-		local x, y = GetPlayerMapPosition("player")
-
-		-- Flip the map back
-		SetMapZoom(oc, oz)
-
-		if c and z and x and y and x >= 0 and y >= 0 then
-			return c, z, x, y
-		end
-	end
-end
 
 function TT:FindClosestVisibleRoute()
 	if not TomTom then
@@ -58,7 +39,7 @@ function TT:FindClosestVisibleRoute()
 		Routes:Print(L["An updated copy of TomTom is required for TomTom integration to work"])
 		return
 	end
-	local c, z, x, y = GetCZXYPosition()
+	local m, f, x, y = TomTom:GetCurrentPlayerPosition()
 	local zone = GetRealZoneText()
 	local closest_zone, closest_route, closest_node
 	local min_distance = 1/0
@@ -69,7 +50,7 @@ function TT:FindClosestVisibleRoute()
 				for i = 1, #route_data.route do  -- for each node
 					local x2, y2 = Routes:getXY(route_data.route[i])
 					local mapID = Routes.LZName[zone][2]
-					local dist = DongleStub("Astrolabe-1.0"):ComputeDistance(mapID, 0, x, y, mapID, 0, x2, y2)
+					local dist = DongleStub("TTAstrolabe-1.0"):ComputeDistance(m, f, x, y, mapID, 0, x2, y2)
 					if dist < min_distance and dist > db.defaults.waypoint_hit_distance then
 						-- Only consider nodes further than the hit distance
 						min_distance = dist
@@ -101,12 +82,15 @@ function TT:QueueFirstNode()
 		route_name = b
 		route_table = db.routes[ Routes.LZName[a][1] ][b]
 		node_num = c
-		local c, z, x, y = GetCZXYPosition()
+		local m, f, x, y = TomTom:GetCurrentPlayerPosition()
 		local x2, y2 = Routes:getXY(route_table.route[node_num])
 		stored_nodeID = route_table.route[node_num]
 		--stored_uid = TomTom:SetWaypoint(c, z, x2, y2, callbacks, false, false)
-		stored_uid = TomTom:SetCustomWaypoint(c, z, x2*100, y2*100, callbacks, false, false)
-		TomTom:SetCrazyArrow(stored_uid, db.defaults.waypoint_hit_distance, L["%s - Node %d"]:format(route_name, node_num))
+		--stored_uid = TomTom:SetCustomWaypoint(c, z, x2*100, y2*100, callbacks, false, false)
+		waypoints_opts.callbacks = callbacks
+		waypoints_opts.title = L["%s - Node %d"]:format(route_name, node_num)
+		stored_uid = TomTom:SetCustomMFWaypoint(m, f, x2, y2, waypoints_opts)
+		--TomTom:SetCrazyArrow(stored_uid, db.defaults.waypoint_hit_distance, L["%s - Node %d"]:format(route_name, node_num))
 	end
 end
 
@@ -120,7 +104,7 @@ function TT.WaypointHit(event, uid, distance, dist, lastdist)
 		for i = 1, #route do
 			if stored_nodeID == route[i] then
 				-- Match found, get the next node to waypoint
-				local c, z, x, y = GetCZXYPosition()
+				local m, f, x, y = TomTom:GetCurrentPlayerPosition()
 				local zone = GetRealZoneText()
 				node_num = i
 
@@ -134,13 +118,16 @@ function TT.WaypointHit(event, uid, distance, dist, lastdist)
 					end
 					local x2, y2 = Routes:getXY(route[node_num])
 					local mapID = Routes.LZName[zone][2]
-					local dist = DongleStub("Astrolabe-1.0"):ComputeDistance(mapID, 0, x, y, mapID, 0, x2, y2)
+					local dist = DongleStub("TTAstrolabe-1.0"):ComputeDistance(m, f, x, y, mapID, 0, x2, y2)
 					if dist > db.defaults.waypoint_hit_distance then
 						--Routes:Print("Adding node "..node_num)
 						stored_nodeID = route[node_num]
 						--stored_uid = TomTom:SetWaypoint(c, z, x2, y2, callbacks, false, false)
-						stored_uid = TomTom:SetCustomWaypoint(c, z, x2*100, y2*100, callbacks, false, false)
-						TomTom:SetCrazyArrow(stored_uid, db.defaults.waypoint_hit_distance, L["%s - Node %d"]:format(route_name, node_num))
+						--stored_uid = TomTom:SetCustomWaypoint(c, z, x2*100, y2*100, callbacks, false, false)
+						waypoints_opts.callbacks = callbacks
+						waypoints_opts.title = L["%s - Node %d"]:format(route_name, node_num)
+						stored_uid = TomTom:SetCustomMFWaypoint(m, f, x2, y2, waypoints_opts)
+						--TomTom:SetCrazyArrow(stored_uid, db.defaults.waypoint_hit_distance, L["%s - Node %d"]:format(route_name, node_num))
 						return
 					end
 					if node_num == i then

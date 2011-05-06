@@ -108,6 +108,9 @@ L["A route with that name already exists. Overwrite?"] = true
 L["Create Route from Data Sources"] = true
 L["Create Bare Route"] = true
 L["CREATE_BARE_ROUTE_DESC"] = "This will create a route with just 3 initial points in it, and does not use any data from any source. You may then manually edit this route to insert and move nodes."
+L["Recreate Route"] = true
+L["Recreate this route with the same creation settings. NOTE: This only works for data from GatherMate2 and Gatherer."] = true
+L["Are you sure you want to recreate this route? This will delete all customized settings for this route."] = true
 
 -- DB prefixes
 L["CartographerHerbalism"] = "Herbalism"

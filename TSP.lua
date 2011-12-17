@@ -80,7 +80,7 @@ local random = random
 local floor, ceil = floor, ceil
 local coroutine = coroutine
 local tinsert, tremove = tinsert, tremove
-local GetTime = GetTime
+local debugprofilestop = debugprofilestop
 local inf = math.huge
 
 local pathR = {}
@@ -95,10 +95,14 @@ Routes.TSP = TSP
 
 local nextYield = 0
 local function yield()
-	local t = GetTime()
+	local t = debugprofilestop()
 	if t > nextYield then
+		nextYield = t + 30
 		coroutine.yield()
-		nextYield = t + 0.03
+	elseif t < nextYield then
+		-- Someone called debugprofilestart(), we need to reset our timer, yield anyway
+		nextYield = t + 30
+		coroutine.yield()
 	end
 end
 
@@ -275,7 +279,12 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 	local metadata = metadata2
 	
 	-- Setup ACO parameters
-	local startTime		= GetTime()
+	local startTime
+	if nonblocking then
+		startTime = GetTime()
+	else
+		startTime = debugprofilestop()
+	end
 	local zoneW, zoneH	= Routes.mapData:MapArea(zoneID)
 
 	local INITIAL_PHEROMONE = parameters.initial_pheromone or 0.1   -- Parameter: Initial pheromone trail value
@@ -555,7 +564,12 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 	-- This step is necessary because our pathlength above is calculated from biased data from taboos
 	shortestPathLength = TSP:PathLength(path, zoneID)
 
-	startTime = GetTime() - startTime
+	if nonblocking then
+		startTime = GetTime() - startTime
+	else
+		startTime = debugprofilestop() - startTime
+		startTime = startTime / 1000
+	end
 	return path, metadata, shortestPathLength, count, startTime
 end
 

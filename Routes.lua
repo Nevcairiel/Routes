@@ -364,7 +364,7 @@ local function GetFacing()
 	return -MiniMapCompassRing:GetFacing()
 end
 
-local last_X, last_Y, last_facing = 1/0, 1/0, 1/0
+local last_X, last_Y, last_facing = math.huge, math.huge, math.huge
 
 -- implementation of cache - use zone in the key for an unique identifier
 -- because every zone has a different X/Y location and possible yardsizes

@@ -81,6 +81,7 @@ local floor, ceil = floor, ceil
 local coroutine = coroutine
 local tinsert, tremove = tinsert, tremove
 local GetTime = GetTime
+local inf = math.huge
 
 local pathR = {}
 local lastpath
@@ -906,7 +907,7 @@ function TSP:ClusterRoute(nodes, zoneID, radius)
 	-- Step 5: ...and loop until there is no such pair of nodes
 	while true do
 		-- Step 3: Find the closest pair of nodes within the merge radius
-		local smallestDist = 1/0
+		local smallestDist = inf
 		local node1, node2
 		for i = 1, numNodes-1 do
 			local w = weight[i]
@@ -941,25 +942,25 @@ function TSP:ClusterRoute(nodes, zoneID, radius)
 					-- from an original point, so taboo it by making the weight infinity
 					-- And store a backup in the lower half of the table
 					weight[node2][node1] = weight[node1][node2]
-					weight[node1][node2] = 1/0
+					weight[node1][node2] = inf
 					--taboo = taboo + 1
 					break
 				end
 			end
-			if weight[node1][node2] ~= 1/0 then
+			if weight[node1][node2] ~= inf then
 				for i = 1, node2num do
 					local coord = m2[i]
 					local x, y = floor(coord / 10000) / 10000, (coord % 10000) / 10000
 					local t = (((node1x - x)*zoneW)^2 + ((node1y - y)*zoneH)^2)^0.5
 					if t > radius then
 						weight[node2][node1] = weight[node1][node2]
-						weight[node1][node2] = 1/0
+						weight[node1][node2] = inf
 						--taboo = taboo + 1
 						break
 					end
 				end
 			end
-			if weight[node1][node2] ~= 1/0 then
+			if weight[node1][node2] ~= inf then
 				-- Merge the metadata of node2 into node1
 				for i = 1, node2num do
 					tinsert(m1, m2[i])
@@ -996,10 +997,10 @@ function TSP:ClusterRoute(nodes, zoneID, radius)
 
 	-- Get the new pathLength
 	local pathLength = weight[1][numNodes]
-	pathLength = pathLength == 1/0 and weight[numNodes][1] or pathLength
+	pathLength = pathLength == inf and weight[numNodes][1] or pathLength
 	for i = 1, numNodes-1 do
 		local w = weight[i][i+1]
-		pathLength = pathLength + (w == 1/0 and weight[i+1][i] or w) -- use the backup in the lower half of the triangle if it was tabooed
+		pathLength = pathLength + (w == inf and weight[i+1][i] or w) -- use the backup in the lower half of the triangle if it was tabooed
 	end
 
 	--ChatFrame1:AddMessage(taboo.." tabooed")

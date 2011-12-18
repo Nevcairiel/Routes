@@ -41,7 +41,7 @@ function TT:FindClosestVisibleRoute()
 	end
 	local zone = GetRealZoneText()
 	local closest_zone, closest_route, closest_node
-	local min_distance = 1/0
+	local min_distance = math.huge
 	local defaults = db.defaults
 	for route_name, route_data in pairs(db.routes[ Routes.LZName[zone][1] ]) do  -- for each route in current zone
 		if type(route_data) == "table" and type(route_data.route) == "table" and #route_data.route > 1 then  -- if it is valid

@@ -18,7 +18,7 @@ local active_tracking = {}
 local profession_to_skill = {}
 profession_to_skill[GetSpellInfo(9134)] = "Herbalism"
 profession_to_skill[GetSpellInfo(2575)] = "Mining"
-profession_to_skill[GetSpellInfo(7620)] = "Fishing"
+profession_to_skill[GetSpellInfo(7620) or GetSpellInfo(131476)] = "Fishing"
 profession_to_skill[GetSpellInfo(4036)] = "ExtractGas"
 if GetSpellInfo(78670) then
 	profession_to_skill[GetSpellInfo(78670)] = "Archaeology"

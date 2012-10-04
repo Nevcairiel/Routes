@@ -2304,9 +2304,6 @@ do
 				}
 			end
 		end
-
-		-- Reclaim memory for this function
-		self.SetupSourcesOptTables = nil
 	end
 
 	options.args.add_group.args = {

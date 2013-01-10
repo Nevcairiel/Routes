@@ -256,6 +256,19 @@ function Routes:DrawWorldmapLines()
 	if (not flag1) and (not flag2) then	return end 	-- Nothing to draw
 
 	local mapFile = GetMapInfo()
+	-- microdungeon check
+	local mapName, textureWidth, textureHeight, isMicroDungeon, microDungeonName = RealGetMapInfo()
+	if isMicroDungeon then
+		if not WorldMapFrame:IsShown() then
+			-- return to the main map of this zone
+			ZoomOut()
+		else
+			-- can't do anything while in a micro dungeon and the main map is visible
+			return
+		end
+	end --end check
+
+
 	for route_name, route_data in pairs( db.routes[mapFile] ) do
 		if type(route_data) == "table" and type(route_data.route) == "table" and #route_data.route > 1 then
 			local width = route_data.width or defaults.width
@@ -404,10 +417,23 @@ function Routes:DrawMinimapLines(forceUpdate)
 		G:HideLines(Minimap)
 		return
 	end
-
+	-- microdungeon check
+	local mapName, textureWidth, textureHeight, isMicroDungeon, microDungeonName = RealGetMapInfo()
+	if isMicroDungeon then
+		if not WorldMapFrame:IsShown() then
+			-- return to the main map of this zone
+			ZoomOut()
+		else
+			-- can't do anything while in a micro dungeon and the main map is visible
+			G:HideLines(Minimap)
+			return
+		end
+	end	--end check
 	local zone = GetRealZoneText()
 
 	-- if we are indoors, or the zone we are in is not defined in our tables ... no routes
+	-- double check zoom as onload doesnt get you the map zoom
+	indoors = GetCVar("minimapZoom")+0 == Minimap:GetZoom() and "outdoor" or "indoor"
 	if not zone or self.LZName[zone][1] == "" or (not db.defaults.draw_indoors and indoors == "indoor") then
 		G:HideLines(Minimap)
 		return

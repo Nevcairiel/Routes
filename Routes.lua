@@ -2874,7 +2874,7 @@ do
 	end
 
 	GetOrCreateTabooNode = function( route_data, coord )
-		node = next( taboo_cache )
+		local node = next( taboo_cache )
 		if node then
 			taboo_cache[ node ] = nil
 		else

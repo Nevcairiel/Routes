@@ -179,6 +179,7 @@ local remapMapFile = {
 	["TheLostIsles_terrain1"] = "TheLostIsles",
 	["TheLostIsles_terrain2"] = "TheLostIsles",
 	["Hyjal_terrain1"] = "Hyjal",
+	["Krasarang_terrain1"] = "Krasarang",
 }
 local remapMapID = {
 	[748] = 720,  --["Uldum_terrain1"] = "Uldum",
@@ -189,6 +190,7 @@ local remapMapID = {
 	[681] = 544,  --["TheLostIsles_terrain1"] = "TheLostIsles",
 	[682] = 544,  --["TheLostIsles_terrain2"] = "TheLostIsles",
 	[683] = 606,  --["Hyjal_terrain1"] = "Hyjal",
+	[910] = 857,  --["Krasarang_terrain1"] = "Krasarang",
 }
 
 -- Use local remapped versions of these 2 functions

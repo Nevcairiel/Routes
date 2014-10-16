@@ -2,8 +2,9 @@
 ********************************************************************************
 Routes
 @project-version@
-17 December 2011
-(Written for Live Servers v4.3.0.15050)
+16 October 2014
+(Originally written for Live Servers v4.3.0.15050)
+(Hotfixed for v6.0.2.19034)
 
 Author: Xaroz @ EU Emerald Dream Alliance & Xinhuan @ US Blackrock Alliance
 ********************************************************************************
@@ -211,11 +212,17 @@ end
 -- Data for Localized Zone Names
 local noData = {"", -1, 0}
 Routes.LZName = setmetatable({}, { __index = function() return noData end})
-for cID = 1, #{GetMapContinents()} do
-	for zID, zname in ipairs({GetMapZones(cID)}) do
-		SetMapZoom(cID, zID)
-		Routes.LZName[zname] = {GetMapInfo(), GetCurrentMapAreaID(), cID, zID}
-	end
+for cID_new, cname in next, {GetMapContinents()} do
+    if type(cname) == "string" then
+        local cID = cID_new / 2
+        for zID_new, zname in next, {GetMapZones(cID)} do
+            if type(zname) == "string" then
+                local zID = zID_new / 2
+                SetMapZoom(cID, zID)
+                Routes.LZName[zname] = {GetMapInfo(), GetCurrentMapAreaID(), cID, zID}
+            end
+        end
+    end
 end
 
 

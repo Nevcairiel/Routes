@@ -207,24 +207,29 @@ local GetCurrentMapAreaID = function()
 	return remapMapID[id] or id
 end
 
+local function ZoneInfo(...)
+	local t = {}
+	for i=1, select("#", ...), 2 do
+		local MapID = select(i, ...)
+		local ZoneName = select(i+1, ...)
+		t[MapID] = ZoneName
+	end
+	return t
+end
 
 ------------------------------------------------------------------------------------------------------
 -- Data for Localized Zone Names
 local noData = {"", -1, 0}
 Routes.LZName = setmetatable({}, { __index = function() return noData end})
 for cID_new, cname in next, {GetMapContinents()} do
-    if type(cname) == "string" then
-        local cID = cID_new / 2
-        for zID_new, zname in next, {GetMapZones(cID)} do
-            if type(zname) == "string" then
-                local zID = zID_new / 2
-                SetMapZoom(cID, zID)
-                Routes.LZName[zname] = {GetMapInfo(), GetCurrentMapAreaID(), cID, zID}
-            end
-        end
-    end
+	if type(cname) == "string" then
+		local cID = cID_new / 2
+		for zID, zname in pairs(ZoneInfo(GetMapZones(cID))) do
+			SetMapByID(zID)
+			Routes.LZName[zname] = {GetMapInfo(), GetCurrentMapAreaID(), cID, zID}
+		end
+	end
 end
-
 
 ------------------------------------------------------------------------------------------------------
 -- Core Routes functions
@@ -2933,6 +2938,7 @@ do
 	local TabooHandler = {}
 	function TabooHandler:EditTaboo(info)
 		local zone = info[2]
+		WorldMapButton:SetParent(WorldMapFrame) --Moves WorldMapButton out of its current parent which is a scroll frame. This allows the point to be smoothly dragged.
 
 		-- make a copy of the taboo for editing
 		local taboo_data
@@ -2993,6 +2999,7 @@ do
 		SetMapByID(Routes.mapData:MapAreaId(zone))
 	end
 	function TabooHandler:SaveEditTaboo(info)
+		WorldMapButton:SetParent(WorldMapDetailFrame) --Returning the WorldMapButton to its original parent
 		local zone = info[2]
 		if info[1] == "routes_group" then
 			local route = Routes.routekeys[zone][ info[3] ]
@@ -3029,6 +3036,7 @@ do
 		throttleFrame:Show()  -- Redraw the changes
 	end
 	function TabooHandler:CancelEditTaboo(info)
+		WorldMapButton:SetParent(WorldMapDetailFrame) --Returning the WorldMapButton to its original parent
 		local zone = info[2]
 		local taboo
 		if info[1] == "routes_group" then

@@ -32,12 +32,11 @@ end
 local function Summarize(data, zone)
 	local amount_of = {}
 	local db_type_of = {}
-	local continent = Routes.LZName[zone][3]
-	zone = Routes.LZName[zone][4]
+	local zoneID = Routes.LZName[zone][2]
 
 	-- This loop works only because of a bug in Gatherer.
 	-- Gatherer may be fixed in the future and break this loop.
-	for _, node, db_type in Gatherer.Storage.ZoneGatherNames(continent, zone) do
+	for _, node, db_type in Gatherer.Storage.ZoneGatherNames(zoneID) do
 		amount_of[node] = (amount_of[node] or 0) + 1
 		db_type_of[node] = db_type
 	end
@@ -60,13 +59,12 @@ local translate_db_type = {
 	["ARCH"] = "Archaeology",
 }
 local function AppendNodes(node_list, zone, db_type, node_type)
-	local continent = Routes.LZName[zone][3]
-	zone = Routes.LZName[zone][4]
+	local zoneID = Routes.LZName[zone][2]
 	node_type = tonumber(node_type)
 
 	-- posX, posY, timesGathered, indoors, harvested, inspected, source = GetGatherInfo(C, Z, node_type, db_type, index)
-	for index, posX, posY, inspected, indoors in Gatherer.Storage.ZoneGatherNodes(continent, zone, db_type) do
-		if Gatherer.Storage.GetGatherInfo(continent, zone, node_type, db_type, index) then
+	for index, posX, posY, inspected, indoors in Gatherer.Storage.ZoneGatherNodes(zoneID, db_type) do
+		if Gatherer.Storage.GetGatherInfo(zoneID, node_type, db_type, index) then
 			tinsert( node_list, floor(posX * 10000 + 0.5) * 10000 + floor(posY * 10000 + 0.5) )
 		end
 	end

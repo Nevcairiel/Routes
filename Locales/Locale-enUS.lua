@@ -113,16 +113,6 @@ L["Recreate this route with the same creation settings. NOTE: This only works fo
 L["Are you sure you want to recreate this route? This will delete all customized settings for this route."] = true
 
 -- DB prefixes
-L["CartographerHerbalism"] = "Herbalism"
-L["CartographerMining"] = "Mining"
-L["CartographerFishing"] = "Fishing"
-L["CartographerTreasure"] = "Treasure"
-L["CartographerExtractGas"] = "Extract Gas"
-L["GatherMateHerb Gathering"] = "Herbalism"
-L["GatherMateMining"] = "Mining"
-L["GatherMateFishing"] = "Fishing"
-L["GatherMateExtract Gas"] = "Extract Gas"
-L["GatherMateTreasure"] = "Treasure"
 L["GatherMate2Herb Gathering"] = "Herbalism"
 L["GatherMate2Mining"] = "Mining"
 L["GatherMate2Fishing"] = "Fishing"

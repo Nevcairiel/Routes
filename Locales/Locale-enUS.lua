@@ -59,22 +59,6 @@ L["Only with profession"] = true
 L["Only while tracking"] = true
 L["Never show"] = true
 
--- Waypoints
-L["Waypoints (Carto)"] = true
-L["Integrated support options for Cartographer_Waypoints"] = true
-L["This section implements Cartographer_Waypoints support for Routes. Click Start to find the nearest node in a visible route in the current zone.\n"] = true
-L["Waypoint hit distance"] = true
-L["This is the distance in yards away from a waypoint to consider as having reached it so that the next node in the route can be added as the waypoint"] = true
-L["Change direction"] = true
-L["Change the direction of the nodes in the route being added as the next waypoint"] = true
-L["Start using Waypoints"] = true
-L["Start using Cartographer_Waypoints by finding the closest visible route/node in the current zone and using that as the waypoint"] = true
-L["Stop using Waypoints"] = true
-L["Stop using Cartographer_Waypoints by clearing the last queued node"] = true
-L["Start using Waypoints (Carto)"] = true
-L["Stop using Waypoints (Carto)"] = true
-L["Change direction (Carto)"] = true
-
 -- TomTom
 L["Waypoints (TomTom)"] = true
 L["Integrated support options for TomTom"] = true
@@ -88,6 +72,10 @@ L["Start using Waypoints (TomTom)"] = true
 L["Stop using Waypoints (TomTom)"] = true
 L["Change direction (TomTom)"] = true
 L["An updated copy of TomTom is required for TomTom integration to work"] = true
+L["Waypoint hit distance"] = true
+L["This is the distance in yards away from a waypoint to consider as having reached it so that the next node in the route can be added as the waypoint"] = true
+L["Change direction"] = true
+L["Change the direction of the nodes in the route being added as the next waypoint"] = true
 
 -- Add Route Config
 L["Add"] = true

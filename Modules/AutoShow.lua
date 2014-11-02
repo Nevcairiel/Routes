@@ -16,7 +16,7 @@ local have_prof = {
 }
 local active_tracking = {}
 local profession_to_skill = {}
-profession_to_skill[GetSpellInfo(9134)] = "Herbalism"
+profession_to_skill[GetSpellInfo(170691)] = "Herbalism"
 profession_to_skill[GetSpellInfo(2575)] = "Mining"
 profession_to_skill[GetSpellInfo(7620) or GetSpellInfo(131476)] = "Fishing"
 profession_to_skill[GetSpellInfo(4036)] = "ExtractGas"

@@ -2,10 +2,10 @@
 	<Binding name="ROUTESTTSTART" header="Routes" category="ADDONS">
 		LibStub("AceAddon-3.0"):GetAddon("Routes"):GetModule("TomTom"):QueueFirstNode()
 	</Binding>
-	<Binding name="ROUTESTTSTOP" header="Routes" category="ADDONS">
+	<Binding name="ROUTESTTSTOP" category="ADDONS">
 		LibStub("AceAddon-3.0"):GetAddon("Routes"):GetModule("TomTom"):RemoveQueuedNode()
 	</Binding>
-	<Binding name="ROUTESTTCHANGEDIR" header="Routes" category="ADDONS">
+	<Binding name="ROUTESTTCHANGEDIR" category="ADDONS">
 		LibStub("AceAddon-3.0"):GetAddon("Routes"):GetModule("TomTom"):ChangeWaypointDirection()
 	</Binding>
 </Bindings>

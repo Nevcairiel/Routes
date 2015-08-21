@@ -29,6 +29,15 @@ local waypoints_opts = {
 	arrivaldistance = 0,
 }
 
+local function GetDistance(mapID, x, y)
+	local xCoord, yCoord, instance = Routes.Dragons:GetWorldCoordinatesFromZone(x, y, mapID, 0)
+	if not xCoord then return 0 end
+
+	local xCoordPlayer, yCoordPlayer, instancePlayer = Routes.Dragons:GetPlayerWorldPosition()
+	if instancePlayer ~= instance then return 0 end
+
+	return Routes.Dragons:GetWorldDistance(instance, xCoordPlayer, yCoordPlayer, xCoord, yCoord)
+end
 
 function TT:FindClosestVisibleRoute()
 	if not TomTom then
@@ -49,7 +58,7 @@ function TT:FindClosestVisibleRoute()
 				for i = 1, #route_data.route do  -- for each node
 					local x2, y2 = Routes:getXY(route_data.route[i])
 					local mapID = Routes.LZName[zone][2]
-					local dist = Routes.mapData:DistanceAndDirection(mapID, 0, x2, y2)
+					local dist = GetDistance(mapID, x2, y2)
 					if dist < min_distance and dist > db.defaults.waypoint_hit_distance then
 						-- Only consider nodes further than the hit distance
 						min_distance = dist
@@ -111,7 +120,7 @@ function TT.WaypointHit(event, uid, distance, dist, lastdist)
 					end
 					local x2, y2 = Routes:getXY(route[node_num])
 					local mapID = Routes.LZName[zone][2]
-					local dist = Routes.mapData:DistanceAndDirection(mapID, 0, x2, y2)
+					local dist = GetDistance(mapID, x2, y2)
 					if dist > db.defaults.waypoint_hit_distance then
 						--Routes:Print("Adding node "..node_num)
 						stored_nodeID = route[node_num]

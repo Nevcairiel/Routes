@@ -285,7 +285,7 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 	else
 		startTime = debugprofilestop()
 	end
-	local zoneW, zoneH	= Routes.mapData:MapArea(zoneID)
+	local zoneW, zoneH	= Routes.Dragons:GetZoneSize(zoneID)
 
 	local INITIAL_PHEROMONE = parameters.initial_pheromone or 0.1   -- Parameter: Initial pheromone trail value
 	local ALPHA             = parameters.alpha or 1                 -- Parameter: Likelihood of ants to follow pheromone trails (larger value == more likely)
@@ -732,7 +732,7 @@ function TSP:InsertNode(nodes, metadata, zoneID, nodeID, radius)
 	numNodes = #nodes
 
 	-- Step 1	- Initialize and generate the weight matrix, and prune matrix if doing 2-opt
-	local zoneW, zoneH = Routes.mapData:MapArea(zoneID)
+	local zoneW, zoneH = Routes.Dragons:GetZoneSize(zoneID)
 	local weight = {}
 
 	-- Not doing a twoopt means we only need to generate O(2n) entries in the weight table
@@ -819,7 +819,7 @@ end
 --   pathLength - The length of the route in yards.
 function TSP:PathLength(nodes, zoneID)
 	assert(type(nodes) == "table", "PathLength() expected table in 1st argument, got "..type(nodes).." instead.")
-	local zoneW, zoneH = Routes.mapData:MapArea(zoneID)
+	local zoneW, zoneH = Routes.Dragons:GetZoneSize(zoneID)
 	local numNodes = #nodes
 	local pathLength = 0
 
@@ -886,7 +886,7 @@ function TSP:ClusterRoute(nodes, zoneID, radius)
 	local metadata = {} -- metadata after clustering
 
 	local numNodes = #nodes
-	local zoneW, zoneH = Routes.mapData:MapArea(zoneID)
+	local zoneW, zoneH = Routes.Dragons:GetZoneSize(zoneID)
 	local diameter = radius * 2
 	--local taboo = 0
 

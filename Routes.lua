@@ -65,7 +65,7 @@ local Routes = Routes
 local L   = LibStub("AceLocale-3.0"):GetLocale("Routes", false)
 local G = {} -- was Graph-1.0, but we removed the dependency
 Routes.G = G
-Routes.mapData = LibStub("LibMapData-1.0")
+Routes.Dragons = LibStub("HereBeDragons-1.0")
 
 -- database defaults
 local db
@@ -268,7 +268,7 @@ function Routes:DrawWorldmapLines()
 	end
 
 	-- check for conditions not to draw the world map lines
-	if self.mapData:GetContinentFromMap(mapID) <= 0 then return end -- player is not viewing a zone map of a continent
+	if GetCurrentMapContinent() <= 0 then return end -- player is not viewing a zone map of a continent
 	local flag1 = defaults.draw_worldmap and WorldMapFrame:IsShown() -- Draw worldmap lines?
 	local flag2 = defaults.draw_battlemap and BattlefieldMinimap and BattlefieldMinimap:IsShown() -- Draw battlemap lines?
 	if (not flag1) and (not flag2) then	return end 	-- Nothing to draw
@@ -406,7 +406,7 @@ local XY_cache_mt = {
 	__index = function(t, key)
 		local zone, coord = (';'):split( key )
 		if cache_zone ~= zone then
-			cache_zoneW, cache_zoneH = Routes.mapData:MapArea(tonumber(zone))
+			cache_zoneW, cache_zoneH = Routes.Dragons:GetZoneSize(tonumber(zone))
 			cache_zone = zone
 		end
 		local X = cache_zoneW * floor(coord / 10000) / 10000
@@ -459,7 +459,7 @@ function Routes:DrawMinimapLines(forceUpdate)
 
 	local defaults = db.defaults
 	local currentZoneID = self.LZName[zone][2]
-	local zoneW, zoneH = self.mapData:MapArea(currentZoneID)
+	local zoneW, zoneH = self.Dragons:GetZoneSize(currentZoneID)
 	if not zoneW or zoneW == 0 then return end
 	local cx, cy = zoneW * _x, zoneH * _y
 
@@ -975,7 +975,7 @@ local route_zone_args_desc_table = {
 				count = count + 1
 			end
 		end
-		return L["You have |cffffd200%d|r route(s) in |cffffd200%s|r."]:format(count, Routes.mapData:MapLocalize(zone))
+		return L["You have |cffffd200%d|r route(s) in |cffffd200%s|r."]:format(count, Routes.Dragons:GetLocalizedMap(zone))
 	end,
 	order = 0,
 }
@@ -989,7 +989,7 @@ local taboo_zone_args_desc_table = {
 				count = count + 1
 			end
 		end
-		return L["You have |cffffd200%d|r taboo region(s) in |cffffd200%s|r."]:format(count, Routes.mapData:MapLocalize(zone))
+		return L["You have |cffffd200%d|r taboo region(s) in |cffffd200%s|r."]:format(count, Routes.Dragons:GetLocalizedMap(zone))
 	end,
 	order = 0,
 }
@@ -1024,7 +1024,7 @@ function Routes:OnInitialize()
 			-- cleanup the empty zone
 			db.routes[zone] = nil
 		else
-			local localizedZoneName = self.mapData:MapLocalize(zone)
+			local localizedZoneName = self.Dragons:GetLocalizedMap(zone)
 			opts[zone] = {
 				type = "group",
 				name = localizedZoneName,
@@ -1050,7 +1050,7 @@ function Routes:OnInitialize()
 			-- cleanup the empty zone
 			db.taboo[zone] = nil
 		else
-			local localizedZoneName = self.mapData:MapLocalize(zone)
+			local localizedZoneName = self.Dragons:GetLocalizedMap(zone)
 			opts[zone] = {
 				type = "group",
 				name = localizedZoneName,
@@ -1648,7 +1648,7 @@ function ConfigHandler:ClusterRoute(info)
 	local zone = info[2]
 	local route = Routes.routekeys[zone][ info[3] ]
 	local t = db.routes[zone][route]
-	t.route, t.metadata, t.length = Routes.TSP:ClusterRoute(db.routes[zone][route].route, Routes.mapData:MapAreaId(zone), db.defaults.cluster_dist)
+	t.route, t.metadata, t.length = Routes.TSP:ClusterRoute(db.routes[zone][route].route, Routes.Dragons:GetMapIDFromFile(zone), db.defaults.cluster_dist)
 	t.cluster_dist = db.defaults.cluster_dist
 	Routes:DrawWorldmapLines()
 	Routes:DrawMinimapLines(true)
@@ -1667,7 +1667,7 @@ function ConfigHandler:UnClusterRoute(info)
 	end
 	t.metadata = nil
 	t.cluster_dist = nil
-	t.length = Routes.TSP:PathLength(t.route, Routes.mapData:MapAreaId(zone))
+	t.length = Routes.TSP:PathLength(t.route, Routes.Dragons:GetMapIDFromFile(zone))
 	Routes:DrawWorldmapLines()
 	Routes:DrawMinimapLines(true)
 end
@@ -1771,7 +1771,7 @@ do
 
 		local numNodes = 0
 		local maxt = 0
-		local zoneW, zoneH = Routes.mapData:MapArea(zone)
+		local zoneW, zoneH = Routes.Dragons:GetZoneSize(zone)
 		for i = 1, #t.metadata do
 			local numData = #t.metadata[i]
 			numNodes = numNodes + numData
@@ -1840,7 +1840,7 @@ function ConfigHandler:DoForeground(info)
 			tinsert(taboos, db.taboo[zone][tabooname])
 		end
 	end
-	local output, meta, length, iter, timetaken = Routes.TSP:SolveTSP(t.route, t.metadata, taboos, Routes.mapData:MapAreaId(zone), db.defaults.tsp)
+	local output, meta, length, iter, timetaken = Routes.TSP:SolveTSP(t.route, t.metadata, taboos, Routes.Dragons:GetMapIDFromFile(zone), db.defaults.tsp)
 	t.route = output
 	t.length = length
 	t.metadata = meta
@@ -1869,7 +1869,7 @@ function ConfigHandler:DoBackground(info)
 			tinsert(taboos, db.taboo[zone][tabooname])
 		end
 	end
-	local running, errormsg = Routes.TSP:SolveTSPBackground(t.route, t.metadata, taboos, Routes.mapData:MapAreaId(zone), db.defaults.tsp)
+	local running, errormsg = Routes.TSP:SolveTSPBackground(t.route, t.metadata, taboos, Routes.Dragons:GetMapIDFromFile(zone), db.defaults.tsp)
 	if (running == 1) then
 		Routes:Print(L["Now running TSP in the background..."])
 		local dispLength;
@@ -2381,7 +2381,7 @@ do
 				-- Use currently viewed map on first view.
 				local mapID = GetCurrentMapAreaID()
 				if mapID == -1 then return nil end
-				create_zone = create_zone or Routes.mapData:MapLocalize(mapID)
+				create_zone = create_zone or Routes.Dragons:GetLocalizedMap(mapID)
 				return create_zone
 			end,
 			set = function(info, key) create_zone = key end,
@@ -2414,7 +2414,7 @@ do
 				new_route.route = Routes.TSP:DecrossRoute(new_route.route)
 				deep_copy_table(db.routes[mapfile][create_name], new_route)
 
-				db.routes[mapfile][create_name].length = Routes.TSP:PathLength(new_route.route, Routes.mapData:MapAreaId(mapfile))
+				db.routes[mapfile][create_name].length = Routes.TSP:PathLength(new_route.route, Routes.Dragons:GetMapIDFromFile(mapfile))
 
 				-- Create the aceopts table entry for our new route
 				local opts = options.args.routes_group.args
@@ -2529,7 +2529,7 @@ do
 				new_route.route = Routes.TSP:DecrossRoute(new_route.route)
 				deep_copy_table(db.routes[mapfile][create_name], new_route)
 
-				db.routes[mapfile][create_name].length = Routes.TSP:PathLength(new_route.route, Routes.mapData:MapAreaId(mapfile))
+				db.routes[mapfile][create_name].length = Routes.TSP:PathLength(new_route.route, Routes.Dragons:GetMapIDFromFile(mapfile))
 
 				-- Create the aceopts table entry for our new route
 				local opts = options.args.routes_group.args
@@ -2583,7 +2583,7 @@ do
 
 	function Routes:RecreateRoute(mapFile, routeName)
 		create_name = routeName
-		create_zone = Routes.mapData:MapLocalize(mapFile)
+		create_zone = Routes.Dragons:GetLocalizedMap(mapFile)
 		if type(create_choices[create_zone]) == "table" then
 			wipe(create_choices[create_zone])
 		else
@@ -3000,7 +3000,7 @@ do
 		Routes:DrawTaboos()
 		-- open the WorldMapFlame on the right zone
 		WorldMapFrame:Show()
-		SetMapByID(Routes.mapData:MapAreaId(zone))
+		SetMapByID(Routes.Dragons:GetMapIDFromFile(zone))
 	end
 	function TabooHandler:SaveEditTaboo(info)
 		WorldMapButton:SetParent(WorldMapDetailFrame) --Returning the WorldMapButton to its original parent
@@ -3216,7 +3216,7 @@ do
 				-- Use currently viewed map on first view.
 				local mapID = GetCurrentMapAreaID()
 				if mapID == -1 then return nil end
-				create_zone = create_zone or Routes.mapData:MapLocalize(mapID)
+				create_zone = create_zone or Routes.Dragons:GetLocalizedMap(mapID)
 				return create_zone
 			end,
 			set = function(info, key) create_zone = key end,
@@ -3423,7 +3423,7 @@ do
 							tremove(route_data.route, i)
 						end
 						tinsert(route_data.taboolist, coord)
-						route_data.length = Routes.TSP:PathLength(route_data.route, Routes.mapData:MapAreaId(zone))
+						route_data.length = Routes.TSP:PathLength(route_data.route, Routes.Dragons:GetMapIDFromFile(zone))
 						throttleFrame:Show()
 					end
 				end
@@ -3436,7 +3436,7 @@ do
 				if Routes:IsNodeInTaboo(x, y, taboo_data) then -- remove node
 					tremove(route_data.route, i)
 					tinsert(route_data.taboolist, coord)
-					route_data.length = self.TSP:PathLength(route_data.route, Routes.mapData:MapAreaId(zone))
+					route_data.length = self.TSP:PathLength(route_data.route, Routes.Dragons:GetMapIDFromFile(zone))
 					throttleFrame:Show()
 				end
 			end
@@ -3453,7 +3453,7 @@ do
 				end
 			end
 			if flag == false then
-				route_data.length = Routes.TSP:InsertNode(route_data.route, route_data.metadata, Routes.mapData:MapAreaId(zone), coord, route_data.cluster_dist or 65) -- 65 is the old default
+				route_data.length = Routes.TSP:InsertNode(route_data.route, route_data.metadata, Routes.Dragons:GetMapIDFromFile(zone), coord, route_data.cluster_dist or 65) -- 65 is the old default
 				tremove(route_data.taboolist, i)
 				throttleFrame:Show()
 			end

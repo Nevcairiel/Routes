@@ -168,45 +168,6 @@ local WorldMapButton = WorldMapButton
 local Minimap = Minimap
 local GetPlayerFacing = GetPlayerFacing
 
-
-------------------------------------------------------------------------------------------------------
--- Remap mapfiles internally due to phasing
-local remapMapFile = {
-	["Uldum_terrain1"] = "Uldum",
-	["TwilightHighlands_terrain1"] = "TwilightHighlands",
-	["Gilneas_terrain1"] = "Gilneas",
-	["Gilneas_terrain2"] = "Gilneas",
-	["BattleforGilneas"] = "GilneasCity",
-	["TheLostIsles_terrain1"] = "TheLostIsles",
-	["TheLostIsles_terrain2"] = "TheLostIsles",
-	["Hyjal_terrain1"] = "Hyjal",
-	["Krasarang_terrain1"] = "Krasarang",
-}
-local remapMapID = {
-	[748] = 720,  --["Uldum_terrain1"] = "Uldum",
-	[770] = 700,  --["TwilightHighlands_terrain1"] = "TwilightHighlands",
-	[678] = 545,  --["Gilneas_terrain1"] = "Gilneas",
-	[679] = 545,  --["Gilneas_terrain2"] = "Gilneas",
-	[677] = 611,  --["BattleforGilneas"] = "GilneasCity",
-	[681] = 544,  --["TheLostIsles_terrain1"] = "TheLostIsles",
-	[682] = 544,  --["TheLostIsles_terrain2"] = "TheLostIsles",
-	[683] = 606,  --["Hyjal_terrain1"] = "Hyjal",
-	[910] = 857,  --["Krasarang_terrain1"] = "Krasarang",
-}
-
--- Use local remapped versions of these 2 functions
-local RealGetMapInfo = GetMapInfo
-local GetMapInfo = function()
-	local mapFile, x, y = RealGetMapInfo()
-	return remapMapFile[mapFile] or mapFile, x, y
-end
-
-local RealGetCurrentMapAreaID = GetCurrentMapAreaID
-local GetCurrentMapAreaID = function()
-	local id = RealGetCurrentMapAreaID()
-	return remapMapID[id] or id
-end
-
 local function ZoneInfo(...)
 	local t = {}
 	for i=1, select("#", ...), 2 do
@@ -229,10 +190,17 @@ for cID_new, cname in next, {GetMapContinents()} do
 			if zID == 473 or zID == 477 then
 				zname = ("%s (%s)"):format(zname, cname)
 			end
-			SetMapByID(zID)
-			Routes.LZName[zname] = {GetMapInfo(), zID, cID, (GetCurrentMapZone())}
+			Routes.LZName[zname] = {Routes.Dragons:GetMapFileFromID(zID), zID, cID, Routes.Dragons:GetCZFromMapID(zID)}
 		end
 	end
+end
+
+local function GetZoneName(mapFile)
+	local name = Routes.Dragons:GetLocalizedMap(mapFile)
+	if (mapFile == 473 or mapFile == 477 or mapFile == "Nagrand" or mapFile == "ShadowmoonValley") then
+		name = format("%s (%s)", name, Routes.Dragons:GetLocalizedMap("Expansion01"))
+	end
+	return name
 end
 
 ------------------------------------------------------------------------------------------------------
@@ -253,8 +221,6 @@ end
 
 function Routes:DrawWorldmapLines()
 	-- setup locals
-	local mapID = GetCurrentMapAreaID()
-	local BattlefieldMinimap = BattlefieldMinimap  -- local reference if it exists
 	local fh, fw = WorldMapButton:GetHeight(), WorldMapButton:GetWidth()
 	local bfh, bfw  -- BattlefieldMinimap height and width
 	local defaults = db.defaults
@@ -273,9 +239,8 @@ function Routes:DrawWorldmapLines()
 	local flag2 = defaults.draw_battlemap and BattlefieldMinimap and BattlefieldMinimap:IsShown() -- Draw battlemap lines?
 	if (not flag1) and (not flag2) then	return end 	-- Nothing to draw
 
-	local mapFile = GetMapInfo()
 	-- microdungeon check
-	local mapName, textureWidth, textureHeight, isMicroDungeon, microDungeonName = RealGetMapInfo()
+	local mapFile, textureWidth, textureHeight, isMicroDungeon, microDungeonName = GetMapInfo()
 	if isMicroDungeon then
 		if not WorldMapFrame:IsShown() then
 			-- return to the main map of this zone
@@ -286,6 +251,7 @@ function Routes:DrawWorldmapLines()
 		end
 	end --end check
 
+	mapFile = mapFile:gsub("_terrain%d+$", "")
 
 	for route_name, route_data in pairs( db.routes[mapFile] ) do
 		if type(route_data) == "table" and type(route_data.route) == "table" and #route_data.route > 1 then
@@ -960,7 +926,7 @@ local route_zone_args_desc_table = {
 				count = count + 1
 			end
 		end
-		return L["You have |cffffd200%d|r route(s) in |cffffd200%s|r."]:format(count, Routes.Dragons:GetLocalizedMap(zone))
+		return L["You have |cffffd200%d|r route(s) in |cffffd200%s|r."]:format(count, GetZoneName(zone))
 	end,
 	order = 0,
 }
@@ -974,7 +940,7 @@ local taboo_zone_args_desc_table = {
 				count = count + 1
 			end
 		end
-		return L["You have |cffffd200%d|r taboo region(s) in |cffffd200%s|r."]:format(count, Routes.Dragons:GetLocalizedMap(zone))
+		return L["You have |cffffd200%d|r taboo region(s) in |cffffd200%s|r."]:format(count, GetZoneName(zone))
 	end,
 	order = 0,
 }
@@ -1009,7 +975,7 @@ function Routes:OnInitialize()
 			-- cleanup the empty zone
 			db.routes[zone] = nil
 		else
-			local localizedZoneName = self.Dragons:GetLocalizedMap(zone)
+			local localizedZoneName = GetZoneName(zone)
 			opts[zone] = {
 				type = "group",
 				name = localizedZoneName,
@@ -1035,7 +1001,7 @@ function Routes:OnInitialize()
 			-- cleanup the empty zone
 			db.taboo[zone] = nil
 		else
-			local localizedZoneName = self.Dragons:GetLocalizedMap(zone)
+			local localizedZoneName = GetZoneName(zone)
 			opts[zone] = {
 				type = "group",
 				name = localizedZoneName,
@@ -2366,7 +2332,7 @@ do
 				-- Use currently viewed map on first view.
 				local mapID = GetCurrentMapAreaID()
 				if mapID == -1 then return nil end
-				create_zone = create_zone or Routes.Dragons:GetLocalizedMap(mapID)
+				create_zone = create_zone or GetZoneName(mapID)
 				return create_zone
 			end,
 			set = function(info, key) create_zone = key end,
@@ -2568,7 +2534,7 @@ do
 
 	function Routes:RecreateRoute(mapFile, routeName)
 		create_name = routeName
-		create_zone = Routes.Dragons:GetLocalizedMap(mapFile)
+		create_zone = GetZoneName(mapFile)
 		if type(create_choices[create_zone]) == "table" then
 			wipe(create_choices[create_zone])
 		else
@@ -3201,7 +3167,7 @@ do
 				-- Use currently viewed map on first view.
 				local mapID = GetCurrentMapAreaID()
 				if mapID == -1 then return nil end
-				create_zone = create_zone or Routes.Dragons:GetLocalizedMap(mapID)
+				create_zone = create_zone or GetZoneName(mapID)
 				return create_zone
 			end,
 			set = function(info, key) create_zone = key end,

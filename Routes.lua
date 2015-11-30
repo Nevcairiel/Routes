@@ -428,37 +428,28 @@ function Routes:DrawMinimapLines(forceUpdate)
 		return
 	end
 
-	local _x, _y = GetPlayerMapPosition("player")
+	local _x, _y, currentZoneID, currentZoneLevel, mapName = self.Dragons:GetPlayerZonePosition(true)
+	if currentZoneLevel and currentZoneLevel > 0 then
+		_x, _y = self.Dragons:TranslateZoneCoordinates(_x, _y, currentZoneID, currentZoneLevel, currentZoneID, 0, true)
+		currentZoneLevel = 0
+		mapName = self.Dragons:GetMapFileFromID(currentZoneID)
+	end
 
 	-- invalid coordinates - clear map
-	if not _x or not _y or _x < 0 or _x > 1 or _y < 0 or _y > 1 then
+	if not _x or not _y then
 		G:HideLines(Minimap)
 		return
 	end
-	-- microdungeon check
-	local mapName, textureWidth, textureHeight, isMicroDungeon, microDungeonName = RealGetMapInfo()
-	if isMicroDungeon then
-		if not WorldMapFrame:IsShown() then
-			-- return to the main map of this zone
-			ZoomOut()
-		else
-			-- can't do anything while in a micro dungeon and the main map is visible
-			G:HideLines(Minimap)
-			return
-		end
-	end	--end check
-	local zone = GetRealZoneText()
 
 	-- if we are indoors, or the zone we are in is not defined in our tables ... no routes
 	-- double check zoom as onload doesnt get you the map zoom
 	indoors = GetCVar("minimapZoom")+0 == Minimap:GetZoom() and "outdoor" or "indoor"
-	if not zone or self.LZName[zone][1] == "" or (not db.defaults.draw_indoors and indoors == "indoor") then
+	if not db.defaults.draw_indoors and indoors == "indoor" then
 		G:HideLines(Minimap)
 		return
 	end
 
 	local defaults = db.defaults
-	local currentZoneID = self.LZName[zone][2]
 	local zoneW, zoneH = self.Dragons:GetZoneSize(currentZoneID)
 	if not zoneW or zoneW == 0 then return end
 	local cx, cy = zoneW * _x, zoneH * _y
@@ -470,12 +461,6 @@ function Routes:DrawMinimapLines(forceUpdate)
 
 	if (not forceUpdate) and facing == last_facing and (last_X-cx)^2 + (last_Y-cy)^2 < defaults.update_distance^2 then
 		-- no update!
-		return
-	end
-
-	if currentZoneID ~= GetCurrentMapAreaID() then
-		-- we are viewing a map that isn't the current zone (usually a continent
-		-- map), so the coordinates are wrong, unless we translate them
 		return
 	end
 
@@ -508,7 +493,7 @@ function Routes:DrawMinimapLines(forceUpdate)
 
 	local minimapScale = Minimap:GetScale()
 
-	for route_name, route_data in pairs( db.routes[ self.LZName[zone][1] ] ) do
+	for route_name, route_data in pairs( db.routes[ mapName ] ) do
 		if type(route_data) == "table" and type(route_data.route) == "table" and #route_data.route > 1 then
 			-- store color/width
 			local width = (route_data.width_minimap or defaults.width_minimap) / (minimapScale)

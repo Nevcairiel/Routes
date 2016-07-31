@@ -186,8 +186,8 @@ for cID_new, cname in next, {GetMapContinents()} do
 	if type(cname) == "string" then
 		local cID = cID_new / 2
 		for zID, zname in pairs(ZoneInfo(GetMapZones(cID))) do
-			-- old SMV/Nagrand in outlands
-			if zID == 473 or zID == 477 then
+			-- old SMV/Nagrand in outlands, Dalaran in Northrend
+			if zID == 473 or zID == 477 or zID == 504 then
 				zname = ("%s (%s)"):format(zname, cname)
 			end
 			Routes.LZName[zname] = {Routes.Dragons:GetMapFileFromID(zID), zID, cID, Routes.Dragons:GetCZFromMapID(zID)}
@@ -199,6 +199,8 @@ local function GetZoneName(mapFile)
 	local name = Routes.Dragons:GetLocalizedMap(mapFile)
 	if (mapFile == 473 or mapFile == 477 or mapFile == "Nagrand" or mapFile == "ShadowmoonValley") then
 		name = format("%s (%s)", name, Routes.Dragons:GetLocalizedMap("Expansion01"))
+	elseif (mapFile == 504 or mapFile == "Dalaran") then
+		name = format("%s (%s)", name, Routes.Dragons:GetLocalizedMap("Northrend"))
 	end
 	return name
 end

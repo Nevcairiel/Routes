@@ -54,6 +54,7 @@ L["Routes with Ore"] = true
 L["Routes with Treasure"] = true
 L["Routes with Archaeology"] = true
 L["Routes with Notes"] = true
+L["Routes with Timber"] = true
 L["Always show"] = true
 L["Only with profession"] = true
 L["Only while tracking"] = true
@@ -120,6 +121,7 @@ L["Treasure"] = true
 L["ExtractGas"] = "Gas"
 L["Archaeology"] = true
 L["Note"] = true
+L["Logging"] = true
 
 -- Route Config
 L["When the following data sources add or delete node data, update my routes automatically by inserting or removing the same node in the relevant routes."] = true

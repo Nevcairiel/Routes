@@ -128,13 +128,7 @@ local defaults = {
 				two_point_five_opt = false, -- Perform optimized 2-opt pass
 			},
 			prof_options = {
-				Herbalism  = "Always",
-				Mining     = "Always",
-				Fishing    = "Always",
-				Treasure   = "Always",
-				ExtractGas = "Always",
-				Archaeology= "Always",
-				Note       = "Always",
+				['*'] = "Always",
 			},
 			use_auto_showhide = false,
 			waypoint_hit_distance = 50,

@@ -28,6 +28,7 @@ tracking_spells[(GetSpellInfo(2580))] = "Mining"
 tracking_spells[(GetSpellInfo(2383))] = "Herbalism"
 tracking_spells[(GetSpellInfo(43308))] = "Fishing"
 tracking_spells[(GetSpellInfo(2481))] = "Treasure"
+tracking_spells[(GetSpellInfo(167898))] = "Logging"
 
 function AutoShow:SKILL_LINES_CHANGED()
 	for k, v in pairs(have_prof) do
@@ -209,6 +210,13 @@ options = {
 					order = 700,
 					values = prof_options4,
 					arg = "Note",
+				},
+				logging = {
+					name = L["Logging"], type = "select",
+					desc = L["Routes with Timber"],
+					order = 800,
+					values = prof_options2,
+					arg = "Logging",
 				},
 			},
 		},

@@ -1,4 +1,4 @@
-﻿## Interface: 70100
+﻿## Interface: 70200
 ## Title: Routes
 ## Notes: Routes on your worldmap and minimap!
 ## Notes-frFR: Routes sur votre carte du monde et minicarte !

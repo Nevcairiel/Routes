@@ -7,4 +7,4 @@ local AceLocale = LibStub:GetLibrary("AceLocale-3.0")
 local L = AceLocale:NewLocale("Routes", "deDE")
 if not L then return end
 
---@localization(locale="deDE", format="lua_additive_table", table-name="L", handle-unlocalized="comment")@
+--@localization(locale="deDE", format="lua_additive_table", table-name="L", handle-unlocalized="ignore")@

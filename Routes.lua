@@ -984,11 +984,19 @@ function RoutesDataProviderMixin:OnAdded(mapCanvas)
 	local pin = self:GetMap():AcquirePin("RoutesPinTemplate", self.battleField)
 	pin:SetPosition(0.5, 0.5);
 	self.pin = pin;
+
+	-- Taboo pin for the main map
+	if not self.battleField then
+		self:GetMap():GetPinFrameLevelsManager():AddFrameLevel("PIN_FRAME_LEVEL_ROUTES_TABOO")
+		self.tabooPin = self:GetMap():AcquirePin("RoutesTabooPinTemplate")
+		self.tabooPin:SetPosition(0.5, 0.5)
+	end
 end
 
 function RoutesDataProviderMixin:OnRemoved(mapCanvas)
 	MapCanvasDataProviderMixin.OnRemoved(self, mapCanvas);
 	self:GetMap():RemoveAllPinsByTemplate("RoutesPinTemplate");
+	self:GetMap():RemoveAllPinsByTemplate("RoutesTabooPinTemplate");
 end
 
 function RoutesDataProviderMixin:OnMapChanged()
@@ -1011,18 +1019,6 @@ function RoutesPinMixin:OnLoad()
 end
 
 function RoutesPinMixin:OnAcquired(battleField)
-	if not battleField then
-		-- Give ourselves a new frame to draw on (so we don't have opening/closing the map wiping stuff out)
-		if not self.TabooFrame then
-			self.TabooFrame = CreateFrame("Frame", nil, self)
-			self.TabooFrame:SetAllPoints(self)
-			self.TabooFrame:EnableMouse(false)
-		end
-		self.TabooFrame:Show()
-	elseif battleField and self.TabooFrame then
-		self.TabooFrame:Hide()
-	end
-
 	if battleField then
 		self.width_key = "width_battlemap"
 		self.draw_key = "draw_battlemap"
@@ -1084,6 +1080,17 @@ function RoutesPinMixin:DrawLines()
 			end
 		end
 	end
+end
+
+RoutesTabooPinMixin = CreateFromMixins(MapCanvasPinMixin)
+
+function RoutesTabooPinMixin:OnLoad()
+	self:SetIgnoreGlobalPinScale(true)
+	self:UseFrameLevelType("PIN_FRAME_LEVEL_ROUTES_TABOO")
+end
+
+function RoutesTabooPinMixin:OnCanvasSizeChanged()
+	self:SetSize(self:GetMap():DenormalizeHorizontalSize(1.0), self:GetMap():DenormalizeVerticalSize(1.0));
 end
 
 function Routes:DrawWorldmapLines()
@@ -2652,7 +2659,7 @@ do
 	end
 
 	-- This function takes a taboo (a route basically), and draws it on screen and shades the inside
-	function RoutesPinMixin:DrawTaboo(route_data, width, color)
+	function RoutesTabooPinMixin:DrawTaboo(route_data, width, color)
 		local fh, fw = self:GetHeight(), self:GetWidth()
 		width = width or db.defaults.width
 		color = color or db.defaults.color
@@ -2668,7 +2675,7 @@ do
 				local point = route_data.route[i]
 				local ex, ey = floor(point / 10000) / 10000, (point % 10000) / 10000
 				ey = (1 - ey)
-				G:DrawLine(self.TabooFrame, sx*fw, sy*fh, ex*fw, ey*fh, width, color , "OVERLAY")
+				G:DrawLine(self, sx*fw, sy*fh, ex*fw, ey*fh, width, color , "OVERLAY")
 				sx, sy = ex, ey
 				last_point = point
 			end
@@ -2729,7 +2736,7 @@ do
 					end
 				end]]
 				for j = 1, #intersection - (#intersection % 2), 2 do -- this loop draws the pairs of intersections
-					G:DrawLine(self.TabooFrame, intersection[j].x*fw, (1-intersection[j].y)*fh, intersection[j+1].x*fw, (1-intersection[j+1].y)*fh, width, color , "OVERLAY")
+					G:DrawLine(self, intersection[j].x*fw, (1-intersection[j].y)*fh, intersection[j+1].x*fw, (1-intersection[j+1].y)*fh, width, color , "OVERLAY")
 				end
 			end
 		end
@@ -2740,10 +2747,10 @@ do
 
 	local taboo_edit_list = {}
 	function Routes:DrawTaboos()
-		local ProviderPin = self.DataProvider.pin
-		G:HideLines(ProviderPin.TabooFrame)
+		local TabooPin = self.DataProvider.tabooPin
+		G:HideLines(TabooPin)
 		for taboo_orig, taboo_copy in pairs(taboo_edit_list) do
-			ProviderPin:DrawTaboo(taboo_copy)
+			TabooPin:DrawTaboo(taboo_copy)
 		end
 	end
 
@@ -2763,9 +2770,9 @@ do
 		self:StopMovingOrSizing()
 		self:SetScript("OnUpdate", nil)
 		self.elapsed = nil
-		self:SetParent(Routes.DataProvider.pin.TabooFrame)
+		self:SetParent(Routes.DataProvider.tabooPin)
 		self:ClearAllPoints()
-		self:SetPoint("CENTER", Routes.DataProvider.pin.TabooFrame, "TOPLEFT", self[X]*Routes.DataProvider.pin.TabooFrame:GetWidth(), -self[Y]*Routes.DataProvider.pin.TabooFrame:GetHeight())
+		self:SetPoint("CENTER", Routes.DataProvider.tabooPin, "TOPLEFT", self[X]*Routes.DataProvider.tabooPin:GetWidth(), -self[Y]*Routes.DataProvider.tabooPin:GetHeight())
 	end
 	function NodeHelper:OnUpdate(elapsed)
 		self.elapsed = self.elapsed + elapsed
@@ -2801,7 +2808,7 @@ do
 		local new_id = Routes:getID( (x+x2)/2, (y+y2)/2 )
 		x2, y2 = Routes:getXY(new_id)
 		node[COORD], node[X], node[Y] = new_id, x2, y2
-		node:SetPoint("CENTER", Routes.DataProvider.pin.TabooFrame, "TOPLEFT", x2*pw, -y2*ph)
+		node:SetPoint("CENTER", Routes.DataProvider.tabooPin, "TOPLEFT", x2*pw, -y2*ph)
 
 		-- Relocate the after helper pin
 		nodenum = current == #self[DATA].route and 1 or current+1
@@ -2810,7 +2817,7 @@ do
 		new_id = Routes:getID( (x+x2)/2, (y+y2)/2 )
 		x2, y2 = Routes:getXY(new_id)
 		node[COORD], node[X], node[Y] = new_id, x2, y2
-		node:SetPoint("CENTER", Routes.DataProvider.pin.TabooFrame, "TOPLEFT", x2*pw, -y2*ph)
+		node:SetPoint("CENTER", Routes.DataProvider.tabooPin, "TOPLEFT", x2*pw, -y2*ph)
 
 		-- redraw
 		Routes:DrawTaboos()
@@ -2832,7 +2839,7 @@ do
 			tinsert(self[DATA].nodes, current, self)
 			tremove(self[DATA].fakenodes, current-1)
 			local x, y = Routes:getXY(self[COORD])
-			local w, h = Routes.DataProvider.pin.TabooFrame:GetWidth(), Routes.DataProvider.pin.TabooFrame:GetHeight()
+			local w, h = Routes.DataProvider.tabooPin:GetWidth(), Routes.DataProvider.tabooPin:GetHeight()
 
 			-- Now create the before helper pin
 			local nodenum = current == 1 and #self[DATA].route or current-1
@@ -2840,7 +2847,7 @@ do
 			local new_id = Routes:getID( (x+x2)/2, (y+y2)/2 )
 			local node = GetOrCreateTabooNode(self[DATA], new_id)
 			x2, y2 = Routes:getXY(new_id)
-			node:SetPoint("CENTER", Routes.DataProvider.pin.TabooFrame, "TOPLEFT", x2*w, -y2*h)
+			node:SetPoint("CENTER", Routes.DataProvider.tabooPin, "TOPLEFT", x2*w, -y2*h)
 			node:SetWidth(10)
 			node:SetHeight(10)
 			node:SetAlpha(0.75)
@@ -2854,7 +2861,7 @@ do
 			new_id = Routes:getID( (x+x2)/2, (y+y2)/2 )
 			node = GetOrCreateTabooNode(self[DATA], new_id)
 			x2, y2 = Routes:getXY(new_id)
-			node:SetPoint("CENTER", Routes.DataProvider.pin.TabooFrame, "TOPLEFT", x2*w, -y2*h)
+			node:SetPoint("CENTER", Routes.DataProvider.tabooPin, "TOPLEFT", x2*w, -y2*h)
 			node:SetWidth(10)
 			node:SetHeight(10)
 			node:SetAlpha(0.75)
@@ -2874,7 +2881,7 @@ do
 			local b = tremove(self[DATA].fakenodes, current)
 
 			-- Relocate the before helper pin
-			local w, h = Routes.DataProvider.pin.TabooFrame:GetWidth(), Routes.DataProvider.pin.TabooFrame:GetHeight()
+			local w, h = Routes.DataProvider.tabooPin:GetWidth(), Routes.DataProvider.tabooPin:GetHeight()
 			local nodenum = current == 1 and #self[DATA].route or current-1
 			local nodenum2 = current > #self[DATA].route and 1 or current
 			local node = self[DATA].fakenodes[nodenum]
@@ -2883,7 +2890,7 @@ do
 			local new_id = Routes:getID( (x+x2)/2, (y+y2)/2 )
 			x2, y2 = Routes:getXY(new_id)
 			node[COORD], node[X], node[Y] = new_id, x2, y2
-			node:SetPoint("CENTER", Routes.DataProvider.pin.TabooFrame, "TOPLEFT", x2*w, -y2*h)
+			node:SetPoint("CENTER", Routes.DataProvider.tabooPin, "TOPLEFT", x2*w, -y2*h)
 
 			-- Recycle ourselves
 			a:Hide()
@@ -2906,8 +2913,8 @@ do
 			taboo_cache[ node ] = nil
 		else
 			-- Create new node
-			node = CreateFrame( "Button", nil, Routes.DataProvider.pin.TabooFrame )
-			node:SetFrameLevel( Routes.DataProvider.pin.TabooFrame:GetFrameLevel() + 6 ) -- we need to be above others (GatherMate nodes are @ 5)
+			node = CreateFrame( "Button", nil, Routes.DataProvider.tabooPin )
+			node:SetFrameLevel( Routes.DataProvider.tabooPin:GetFrameLevel() + 6 ) -- we need to be above others (GatherMate nodes are @ 5)
 
 			-- set it up
 			local texture = node:CreateTexture( nil, "OVERLAY" )
@@ -2978,14 +2985,14 @@ do
 		-- open the WorldMapFlame on the right zone
 		OpenWorldMap(zone)
 
-		local fh, fw = Routes.DataProvider.pin.TabooFrame:GetHeight(), Routes.DataProvider.pin.TabooFrame:GetWidth()
+		local fh, fw = Routes.DataProvider.tabooPin:GetHeight(), Routes.DataProvider.tabooPin:GetWidth()
 
 		local route = copy_of_taboo_data.route
 		-- Pin the real nodes
 		for i=1, #route do
 			local node = GetOrCreateTabooNode(copy_of_taboo_data, route[i])
 			local x, y = node[X], node[Y]
-			node:SetPoint("CENTER", Routes.DataProvider.pin.TabooFrame, "TOPLEFT", x*fw, -y*fh)
+			node:SetPoint("CENTER", Routes.DataProvider.tabooPin, "TOPLEFT", x*fw, -y*fh)
 			node[CURRENT] = i
 			node[REAL] = true
 			copy_of_taboo_data.nodes[i] = node
@@ -3000,7 +3007,7 @@ do
 			local new_id = Routes:getID( (beforeX+afterX)/2, (beforeY+afterY)/2 )
 			local node = GetOrCreateTabooNode(copy_of_taboo_data, new_id)
 			local x, y = Routes:getXY(new_id)
-			node:SetPoint("CENTER", Routes.DataProvider.pin.TabooFrame, "TOPLEFT", x*fw, -y*fh)
+			node:SetPoint("CENTER", Routes.DataProvider.tabooPin, "TOPLEFT", x*fw, -y*fh)
 			node[CURRENT] = i
 			node[REAL] = false
 			copy_of_taboo_data.fakenodes[i] = node

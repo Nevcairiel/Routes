@@ -2,4 +2,6 @@
 ..\FrameXML\UI.xsd">
 	<Frame name="RoutesPinTemplate" mixin="RoutesPinMixin" virtual="true">
 	</Frame>
+	<Frame name="RoutesTabooPinTemplate" mixin="RoutesTabooPinMixin" virtual="true">
+	</Frame>
 </Ui>

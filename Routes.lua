@@ -981,7 +981,7 @@ function RoutesDataProviderMixin:OnAdded(mapCanvas)
 	self:GetMap():GetPinFrameLevelsManager():AddFrameLevel("PIN_FRAME_LEVEL_ROUTES")
 
 	-- a single permanent pin
-	local pin = self:GetMap():AcquirePin("RoutesPinTemplate")
+	local pin = self:GetMap():AcquirePin("RoutesPinTemplate", self.battleField)
 	pin:SetPosition(0.5, 0.5);
 	self.pin = pin;
 end
@@ -992,7 +992,7 @@ function RoutesDataProviderMixin:OnRemoved(mapCanvas)
 end
 
 function RoutesDataProviderMixin:OnMapChanged()
-	Routes:DrawWorldmapLines()
+	self:RefreshAllData()
 end
 
 function RoutesDataProviderMixin:RemoveAllData()
@@ -1008,16 +1008,28 @@ RoutesPinMixin = CreateFromMixins(MapCanvasPinMixin)
 function RoutesPinMixin:OnLoad()
 	self:SetIgnoreGlobalPinScale(true)
 	self:UseFrameLevelType("PIN_FRAME_LEVEL_ROUTES")
+end
 
-	-- Give ourselves a new frame to draw on (so we don't have opening/closing the map wiping stuff out)
-	self.TabooFrame = CreateFrame("Frame", nil, self)
-	self.TabooFrame:SetAllPoints(self)
-	self.TabooFrame:EnableMouse(false)
-	self.TabooFrame:Show()
+function RoutesPinMixin:OnAcquired(battleField)
+	if not battleField then
+		-- Give ourselves a new frame to draw on (so we don't have opening/closing the map wiping stuff out)
+		if not self.TabooFrame then
+			self.TabooFrame = CreateFrame("Frame", nil, self)
+			self.TabooFrame:SetAllPoints(self)
+			self.TabooFrame:EnableMouse(false)
+		end
+		self.TabooFrame:Show()
+	elseif battleField and self.TabooFrame then
+		self.TabooFrame:Hide()
+	end
 
-	-- TODO: battlefield map?
-	self.width_key = "width"
-	self.draw_key = "draw_worldmap"
+	if battleField then
+		self.width_key = "width_battlemap"
+		self.draw_key = "draw_battlemap"
+	else
+		self.width_key = "width"
+		self.draw_key = "draw_worldmap"
+	end
 end
 
 function RoutesPinMixin:OnCanvasSizeChanged()
@@ -1076,6 +1088,9 @@ end
 
 function Routes:DrawWorldmapLines()
 	self.DataProvider:RefreshAllData()
+	if self.BattleFieldDataProvider then
+		self.BattleFieldDataProvider:RefreshAllData()
+	end
 end
 
 function Routes:OnEnable()
@@ -1084,6 +1099,12 @@ function Routes:OnEnable()
 		self.DataProvider = CreateFromMixins(RoutesDataProviderMixin)
 	end
 	WorldMapFrame:AddDataProvider(self.DataProvider)
+
+	-- Battlefield Map
+	if BattlefieldMapFrame then
+		self:ADDON_LOADED("ADDON_LOADED", "Blizzard_BattlefieldMap")
+	end
+
 	-- Minimap line drawing
 	self:SecureHook(Minimap, "SetZoom", SetZoomHook)
 	if db.defaults.draw_minimap then
@@ -1111,6 +1132,9 @@ function Routes:OnDisable()
 	end
 	timerFrame:Hide()
 	WorldMapFrame:RemoveDataProvider(self.DataProvider)
+	if BattlefieldMapFrame then
+		BattlefieldMapFrame:RemoveDataProvider(self.BattleFieldDataProvider)
+	end
 end
 
 function Routes:ADDON_LOADED(event, addon)
@@ -1120,6 +1144,14 @@ function Routes:ADDON_LOADED(event, addon)
 		if db.defaults.callbacks[addon] and self.plugins[addon].IsActive() then
 			self.plugins[addon].AddCallbacks()
 		end
+	end
+
+	if addon == "Blizzard_BattlefieldMap" then
+		if not self.BattleFieldDataProvider then
+			self.BattleFieldDataProvider = CreateFromMixins(RoutesDataProviderMixin)
+			self.BattleFieldDataProvider.battleField = true
+		end
+		BattlefieldMapFrame:AddDataProvider(self.BattleFieldDataProvider)
 	end
 end
 

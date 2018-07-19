@@ -161,16 +161,6 @@ local math_cos = math.cos
 local Minimap = Minimap
 local GetPlayerFacing = GetPlayerFacing
 
-local function ZoneInfo(...)
-	local t = {}
-	for i=1, select("#", ...), 2 do
-		local MapID = select(i, ...)
-		local ZoneName = select(i+1, ...)
-		t[MapID] = ZoneName
-	end
-	return t
-end
-
 ------------------------------------------------------------------------------------------------------
 -- Data for Localized Zone Names
 local noData = {"", -1, 0}

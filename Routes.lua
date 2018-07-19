@@ -1619,6 +1619,7 @@ end
 
 function ConfigHandler:DeleteRoute(info)
 	local zone = tonumber(info[2])
+	local zoneKey = info[2]
 	local routekey = info[3]
 	local route = Routes.routekeys[zone][routekey]
 	local is_running, route_table = Routes.TSP:IsTSPRunning()
@@ -1628,11 +1629,11 @@ function ConfigHandler:DeleteRoute(info)
 	end
 	db.routes[zone][route] = nil
 	--local routekey = route:gsub("%s", "\255") -- can't have spaces in the key
-	options.args.routes_group.args[zone].args[routekey] = nil -- delete route from aceopt
+	options.args.routes_group.args[zoneKey].args[routekey] = nil -- delete route from aceopt
 	Routes.routekeys[zone][routekey] = nil
 	if next(db.routes[zone]) == nil then
 		db.routes[zone] = nil
-		options.args.routes_group.args[zone] = nil -- delete zone from aceopt if no routes remaining
+		options.args.routes_group.args[zoneKey] = nil -- delete zone from aceopt if no routes remaining
 		Routes.routekeys[zone] = nil
 	end
 	Routes:DrawWorldmapLines()

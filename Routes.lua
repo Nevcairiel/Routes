@@ -869,7 +869,7 @@ local taboo_zone_args_desc_table = {
 
 function Routes:OnInitialize()
 	-- Initialize database
-	self.db = LibStub("AceDB-3.0"):New("RoutesDB", defaults)
+	self.db = LibStub("AceDB-3.0"):New("RoutesDB", defaults, true)
 	db = self.db.global
 	self.options = options
 

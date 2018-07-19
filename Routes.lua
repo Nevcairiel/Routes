@@ -163,22 +163,21 @@ local GetPlayerFacing = GetPlayerFacing
 
 ------------------------------------------------------------------------------------------------------
 -- Data for Localized Zone Names
-local noData = {"", -1, 0}
-Routes.LZName = setmetatable({}, { __index = function() return 0 end})
-for uiMapID, data in pairs(Routes.Dragons.mapData) do
-	if data.mapType == Enum.UIMapType.Zone and data.name then
-		Routes.LZName[data.name] = uiMapID
-	end
-end
-
 local function GetZoneName(uiMapID)
 	local name = Routes.Dragons:GetLocalizedMap(uiMapID)
-	--[[if (mapFile == 473 or mapFile == 477 or mapFile == "Nagrand" or mapFile == "ShadowmoonValley") then
-		name = format("%s (%s)", name, Routes.Dragons:GetLocalizedMap("Expansion01"))
-	elseif (mapFile == 504 or mapFile == "Dalaran") then
-		name = format("%s (%s)", name, Routes.Dragons:GetLocalizedMap("Northrend"))
-	end--]]
+	if uiMapID == 104 or uiMapID == 107 then -- Outland SMV and Nagrand
+		name = format("%s (%s)", name, Routes.Dragons:GetLocalizedMap(101))
+	elseif uiMapID == 125 then -- Northrend Dalaran
+		name = format("%s (%s)", name, Routes.Dragons:GetLocalizedMap(113))
+	end
 	return name
+end
+
+Routes.LZName = setmetatable({}, { __index = function() return 0 end})
+for uiMapID, data in pairs(Routes.Dragons.mapData) do
+	if (data.mapType == Enum.UIMapType.Zone or data.mapType == Enum.UIMapType.Continent) and data.name then
+		Routes.LZName[GetZoneName(uiMapID)] = uiMapID
+	end
 end
 
 ------------------------------------------------------------------------------------------------------

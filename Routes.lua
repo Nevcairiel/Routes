@@ -978,7 +978,7 @@ local RoutesDataProviderMixin = CreateFromMixins(MapCanvasDataProviderMixin)
 
 function RoutesDataProviderMixin:OnAdded(mapCanvas)
 	MapCanvasDataProviderMixin.OnAdded(self, mapCanvas)
-	self:GetMap():GetPinFrameLevelsManager():AddFrameLevel("PIN_FRAME_LEVEL_ROUTES")
+	self:GetMap():GetPinFrameLevelsManager():InsertFrameLevelAbove("PIN_FRAME_LEVEL_ROUTES", "PIN_FRAME_LEVEL_FOG_OF_WAR")
 
 	-- a single permanent pin
 	local pin = self:GetMap():AcquirePin("RoutesPinTemplate", self.battleField)

@@ -32,7 +32,7 @@ end
 local function Summarize(data, zone)
 	local amount_of = {}
 	local db_type_of = {}
-	local zoneID = Routes.LZName[zone][2]
+	local zoneID = Routes.LZName[zone]
 
 	-- This loop works only because of a bug in Gatherer.
 	-- Gatherer may be fixed in the future and break this loop.
@@ -59,7 +59,7 @@ local translate_db_type = {
 	["ARCH"] = "Archaeology",
 }
 local function AppendNodes(node_list, zone, db_type, node_type)
-	local zoneID = Routes.LZName[zone][2]
+	local zoneID = Routes.LZName[zone]
 	node_type = tonumber(node_type)
 
 	-- posX, posY, timesGathered, indoors, harvested, inspected, source = GetGatherInfo(C, Z, node_type, db_type, index)

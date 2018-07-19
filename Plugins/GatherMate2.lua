@@ -37,7 +37,7 @@ local function Summarize(data, zone)
 		-- reuse table
 		wipe(amount_of)
 		-- only look for data for this currentzone
-		local zoneID = Routes.LZName[zone][2]
+		local zoneID = Routes.LZName[zone]
 		if db_data[zoneID] then
 			-- count the unique values (structure is: location => itemID)
 			for _,node in pairs(db_data[zoneID]) do
@@ -73,7 +73,7 @@ local function AppendNodes(node_list, zone, db_type, node_type)
 		node_type = tonumber(node_type)
 
 		-- Find all of the notes
-		local zoneID = Routes.LZName[zone][2]
+		local zoneID = Routes.LZName[zone]
 		for loc, t in pairs(GatherMate2.gmdbs[db_type][zoneID]) do
 			-- And are of a selected type - store
 			if t == node_type then

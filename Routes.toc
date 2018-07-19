@@ -1,4 +1,4 @@
-﻿## Interface: 70200
+﻿## Interface: 80000
 ## Title: Routes
 ## Notes: Routes on your worldmap and minimap!
 ## Notes-frFR: Routes sur votre carte du monde et minicarte !
@@ -9,7 +9,7 @@
 ## X-Category: Map
 ## X-eMail: routes @ grum DOT nl & xinhuan @ gmail DOT com
 ## X-Name: Routes
-## OptionalDeps: Ace3, HereBeDragons-1.0, Cartographer, Cartographer_Notes, GatherMate, GatherMate2, Gatherer, HandyNotes
+## OptionalDeps: Ace3, HereBeDragons, Cartographer, Cartographer_Notes, GatherMate, GatherMate2, Gatherer, HandyNotes
 ## SavedVariables: RoutesDB
 
 # Library files
@@ -24,7 +24,8 @@ Libs\AceLocale-3.0\AceLocale-3.0.xml
 Libs\AceGUI-3.0\AceGUI-3.0.xml
 Libs\AceConsole-3.0\AceConsole-3.0.xml
 Libs\AceConfig-3.0\AceConfig-3.0.xml
-Libs\HereBeDragons-1.0\HereBeDragons-1.0.lua
+Libs\HereBeDragons\HereBeDragons-2.0.lua
+Libs\HereBeDragons\HereBeDragons-Migrate.lua
 #@end-no-lib-strip@
 
 # Locale files
@@ -40,6 +41,7 @@ Locales\Locale-zhTW.lua
 
 # Core Routes files
 Routes.lua
+Routes.xml
 TSP.lua
 
 # Routes Module files

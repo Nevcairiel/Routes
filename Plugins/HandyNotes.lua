@@ -36,9 +36,9 @@ local function Summarize(data, zone)
 	for k in pairs(amount_of) do amount_of[k] = nil end
 
 	local HN = HandyNotes:GetModule("HandyNotes")
-	local mapFile = Routes.LZName[zone][1]
-	for coord, mapFile2, iconpath, scale, alpha in HandyNotes.plugins["HandyNotes"]:GetNodes(mapFile) do
-		local title = HN.db.global[mapFile2 or mapFile][coord].title
+	local zoneID = Routes.LZName[zone]
+	for coord, zoneID2, iconpath, scale, alpha in HandyNotes.plugins["HandyNotes"]:GetNodes2(zoneID) do
+		local title = HN.db.global[zoneID2 or zoneID][coord].title
 		if not title then title = "" end -- For improperly imported notes into HandyNotes
 		amount_of[title] = (amount_of[title] or 0) + 1
 	end
@@ -54,9 +54,9 @@ source.Summarize = Summarize
 local function AppendNodes(node_list, zone, db_type, node_type)
 	-- Find all of the notes
 	local HN = HandyNotes:GetModule("HandyNotes")
-	local mapFile = Routes.LZName[zone][1]
-	for coord, mapFile2, iconpath, scale, alpha in HandyNotes.plugins["HandyNotes"]:GetNodes(mapFile) do
-		local title = HN.db.global[mapFile2 or mapFile][coord].title
+	local zoneID = Routes.LZName[zone]
+	for coord, zoneID2, iconpath, scale, alpha in HandyNotes.plugins["HandyNotes"]:GetNodes2(zoneID) do
+		local title = HN.db.global[zoneID2 or zoneID][coord].title
 		if not title then title = "" end -- For improperly imported notes into HandyNotes
 		if title == node_type then
 			tinsert(node_list, coord)

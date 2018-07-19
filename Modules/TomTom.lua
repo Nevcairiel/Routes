@@ -44,25 +44,23 @@ function TT:FindClosestVisibleRoute()
 		Routes:Print(L["TomTom is missing or disabled"])
 		return
 	end
-	if not TomTom.SetCustomMFWaypoint then
+	if not TomTom.SetCustomWaypoint then
 		Routes:Print(L["An updated copy of TomTom is required for TomTom integration to work"])
 		return
 	end
-	local zone = GetRealZoneText()
-	local closest_zone, closest_route, closest_node
+	local zone = Routes.Dragons:GetPlayerZone()
+	local closest_route, closest_node
 	local min_distance = math.huge
 	local defaults = db.defaults
-	for route_name, route_data in pairs(db.routes[ Routes.LZName[zone][1] ]) do  -- for each route in current zone
+	for route_name, route_data in pairs(db.routes[ zone ]) do  -- for each route in current zone
 		if type(route_data) == "table" and type(route_data.route) == "table" and #route_data.route > 1 then  -- if it is valid
 			if (not route_data.hidden and (route_data.visible or not defaults.use_auto_showhide)) or defaults.show_hidden then  -- if it is visible
 				for i = 1, #route_data.route do  -- for each node
 					local x2, y2 = Routes:getXY(route_data.route[i])
-					local mapID = Routes.LZName[zone][2]
-					local dist = GetDistance(mapID, x2, y2)
+					local dist = GetDistance(zone, x2, y2)
 					if dist < min_distance and dist > db.defaults.waypoint_hit_distance then
 						-- Only consider nodes further than the hit distance
 						min_distance = dist
-						closest_zone = zone
 						closest_route = route_name
 						closest_node = i
 					end
@@ -70,7 +68,7 @@ function TT:FindClosestVisibleRoute()
 			end
 		end
 	end
-	return closest_zone, closest_route, closest_node
+	return zone, closest_route, closest_node
 end
 
 function TT:QueueFirstNode()
@@ -78,7 +76,7 @@ function TT:QueueFirstNode()
 		Routes:Print(L["TomTom is missing or disabled"])
 		return
 	end
-	if not TomTom.SetCustomMFWaypoint then
+	if not TomTom.SetCustomWaypoint then
 		Routes:Print(L["An updated copy of TomTom is required for TomTom integration to work"])
 		return
 	end
@@ -88,13 +86,13 @@ function TT:QueueFirstNode()
 			self:RemoveQueuedNode()
 		end
 		route_name = b
-		route_table = db.routes[ Routes.LZName[a][1] ][b]
+		route_table = db.routes[ a ][b]
 		node_num = c
 		local x2, y2 = Routes:getXY(route_table.route[node_num])
 		stored_nodeID = route_table.route[node_num]
 		waypoints_opts.callbacks = callbacks
 		waypoints_opts.title = L["%s - Node %d"]:format(route_name, node_num)
-		stored_uid = TomTom:SetCustomMFWaypoint(Routes.LZName[a][2], 0, x2, y2, waypoints_opts)
+		stored_uid = TomTom:SetCustomWaypoint(a, x2, y2, waypoints_opts)
 	end
 end
 
@@ -107,7 +105,7 @@ function TT.WaypointHit(event, uid, distance, dist, lastdist)
 		for i = 1, #route do
 			if stored_nodeID == route[i] then
 				-- Match found, get the next node to waypoint
-				local zone = GetRealZoneText()
+				local zone = Routes.Dragons:GetPlayerZone()
 				node_num = i
 
 				while true do
@@ -119,14 +117,13 @@ function TT.WaypointHit(event, uid, distance, dist, lastdist)
 						node_num = #route
 					end
 					local x2, y2 = Routes:getXY(route[node_num])
-					local mapID = Routes.LZName[zone][2]
-					local dist = GetDistance(mapID, x2, y2)
+					local dist = GetDistance(zone, x2, y2)
 					if dist > db.defaults.waypoint_hit_distance then
 						--Routes:Print("Adding node "..node_num)
 						stored_nodeID = route[node_num]
 						waypoints_opts.callbacks = callbacks
 						waypoints_opts.title = L["%s - Node %d"]:format(route_name, node_num)
-						stored_uid = TomTom:SetCustomMFWaypoint(mapID, 0, x2, y2, waypoints_opts)
+						stored_uid = TomTom:SetCustomWaypoint(zone, x2, y2, waypoints_opts)
 						return
 					end
 					if node_num == i then
@@ -145,7 +142,7 @@ function TT:RemoveQueuedNode()
 		Routes:Print(L["TomTom is missing or disabled"])
 		return
 	end
-	if not TomTom.SetCustomMFWaypoint then
+	if not TomTom.SetCustomWaypoint then
 		Routes:Print(L["An updated copy of TomTom is required for TomTom integration to work"])
 		return
 	end

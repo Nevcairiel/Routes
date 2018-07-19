@@ -1113,8 +1113,7 @@ function Routes:OnEnable()
 		timerFrame:Show()
 		Routes.Dragons.RegisterCallback(Routes, "PlayerZoneChanged", function() Routes:DrawMinimapLines(true) end)
 		minimap_rotate = GetCVar("rotateMinimap") == "1"
-		-- Notes: Do not call self:MINIMAP_UPDATE_ZOOM() here because the CVARs aren't applied yet.
-		-- MINIMAP_UPDATE_ZOOM gets fired automatically by wow when it applies the CVARs.
+		self:MINIMAP_UPDATE_ZOOM()
 	end
 	for addon, plugin_table in pairs(Routes.plugins) do
 		if db.defaults.callbacks[addon] and plugin_table.IsActive() then

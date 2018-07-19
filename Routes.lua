@@ -1657,7 +1657,7 @@ function ConfigHandler:ClusterRoute(info)
 	local zone = tonumber(info[2])
 	local route = Routes.routekeys[zone][ info[3] ]
 	local t = db.routes[zone][route]
-	t.route, t.metadata, t.length = Routes.TSP:ClusterRoute(db.routes[zone][route].route, Routes.Dragons:GetMapIDFromFile(zone), db.defaults.cluster_dist)
+	t.route, t.metadata, t.length = Routes.TSP:ClusterRoute(db.routes[zone][route].route, zone, db.defaults.cluster_dist)
 	t.cluster_dist = db.defaults.cluster_dist
 	Routes:DrawWorldmapLines()
 	Routes:DrawMinimapLines(true)
@@ -1676,7 +1676,7 @@ function ConfigHandler:UnClusterRoute(info)
 	end
 	t.metadata = nil
 	t.cluster_dist = nil
-	t.length = Routes.TSP:PathLength(t.route, Routes.Dragons:GetMapIDFromFile(zone))
+	t.length = Routes.TSP:PathLength(t.route, zone)
 	Routes:DrawWorldmapLines()
 	Routes:DrawMinimapLines(true)
 end

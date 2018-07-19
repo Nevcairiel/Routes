@@ -2943,6 +2943,9 @@ do
 		end
 		taboo_edit_list[taboo_data] = copy_of_taboo_data
 
+		-- open the WorldMapFlame on the right zone
+		OpenWorldMap(zone)
+
 		local fh, fw = Routes.DataProvider.pin.TabooFrame:GetHeight(), Routes.DataProvider.pin.TabooFrame:GetWidth()
 
 		local route = copy_of_taboo_data.route
@@ -2973,9 +2976,9 @@ do
 			node:SetHeight(10)
 			node:SetAlpha(0.75)
 		end
+
+		-- and draw taboos
 		Routes:DrawTaboos()
-		-- open the WorldMapFlame on the right zone
-		OpenWorldMap(zone)
 	end
 	function TabooHandler:SaveEditTaboo(info)
 		local zone = tonumber(info[2])

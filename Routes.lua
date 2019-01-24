@@ -3503,6 +3503,8 @@ function G:DrawLine(C, sx, sy, ex, ey, w, color, layer)
 
 	local T = tremove(C.Routes_Lines) or C:CreateTexture(nil, "ARTWORK")
 	T:SetTexture("Interface\\AddOns\\Routes\\line")
+	T:SetTexelSnappingBias(0)
+	T:SetSnapToPixelGrid(false)
 	tinsert(C.Routes_Lines_Used,T)
 
 	T:SetDrawLayer(layer or "ARTWORK")

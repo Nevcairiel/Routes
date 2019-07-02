@@ -2677,7 +2677,8 @@ do
 	-- This function takes a taboo (a route basically), and draws it on screen and shades the inside
 	function RoutesTabooPinMixin:DrawTaboo(route_data, width, color)
 		local fh, fw = self:GetHeight(), self:GetWidth()
-		width = width or db.defaults.width
+		local canvasScale = self:GetEffectiveScale() / self:GetMap():GetEffectiveScale()
+		width = width or db.defaults.width / canvasScale
 		color = color or db.defaults.color
 
 		-- This part just draws the taboo outline, its the same code as the one that draws routes
@@ -2842,8 +2843,8 @@ do
 		if button == "LeftButton" and not self[REAL] then
 			-- Promote helper node to a real node
 			self[REAL] = true
-			self:SetWidth(16)
-			self:SetHeight(16)
+			self:SetWidth(16 * self.scale)
+			self:SetHeight(16 * self.scale)
 			self:SetAlpha(1)
 			local current = self[CURRENT]+1
 			for i = current, #self[DATA].route do
@@ -2864,8 +2865,8 @@ do
 			local node = GetOrCreateTabooNode(self[DATA], new_id)
 			x2, y2 = Routes:getXY(new_id)
 			node:SetPoint("CENTER", Routes.DataProvider.tabooPin, "TOPLEFT", x2*w, -y2*h)
-			node:SetWidth(10)
-			node:SetHeight(10)
+			node:SetWidth(10 * node.scale)
+			node:SetHeight(10 * node.scale)
 			node:SetAlpha(0.75)
 			node[REAL] = false
 			node[CURRENT] = nodenum
@@ -2878,8 +2879,8 @@ do
 			node = GetOrCreateTabooNode(self[DATA], new_id)
 			x2, y2 = Routes:getXY(new_id)
 			node:SetPoint("CENTER", Routes.DataProvider.tabooPin, "TOPLEFT", x2*w, -y2*h)
-			node:SetWidth(10)
-			node:SetHeight(10)
+			node:SetWidth(10 * node.scale)
+			node:SetHeight(10 * node.scale)
 			node:SetAlpha(0.75)
 			node[REAL] = false
 			node[CURRENT] = current
@@ -2940,9 +2941,11 @@ do
 
 			node:EnableMouse(true)
 			node:SetMovable(true)
-			node:SetWidth(16)
-			node:SetHeight(16)
 		end
+
+		node.scale = 1 / (Routes.DataProvider.tabooPin:GetEffectiveScale() / Routes.DataProvider.tabooPin:GetMap():GetEffectiveScale())
+		node:SetWidth(16 * node.scale)
+		node:SetHeight(16 * node.scale)
 
 		-- store data
 		node[X], node[Y] = Routes:getXY( coord )
@@ -3012,8 +3015,8 @@ do
 			node[CURRENT] = i
 			node[REAL] = true
 			copy_of_taboo_data.nodes[i] = node
-			node:SetWidth(16)
-			node:SetHeight(16)
+			node:SetWidth(16 * node.scale)
+			node:SetHeight(16 * node.scale)
 			node:SetAlpha(1)
 		end
 		-- Pin the helper nodes
@@ -3027,8 +3030,8 @@ do
 			node[CURRENT] = i
 			node[REAL] = false
 			copy_of_taboo_data.fakenodes[i] = node
-			node:SetWidth(10)
-			node:SetHeight(10)
+			node:SetWidth(10 * node.scale)
+			node:SetHeight(10 * node.scale)
 			node:SetAlpha(0.75)
 		end
 

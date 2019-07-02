@@ -174,11 +174,27 @@ local function GetZoneName(uiMapID)
 end
 
 Routes.LZName = setmetatable({}, { __index = function() return 0 end})
-for uiMapID, data in pairs(Routes.Dragons.mapData) do
-	if (data.mapType == Enum.UIMapType.Zone or data.mapType == Enum.UIMapType.Continent) and data.name then
-		Routes.LZName[GetZoneName(uiMapID)] = uiMapID
+local function processMapChildrenRecursive(parent)
+	local children = C_Map.GetMapChildrenInfo(parent)
+	if children and #children > 0 then
+		for i = 1, #children do
+			local id = children[i].mapID
+			if id then
+				if children[i].mapType == Enum.UIMapType.Zone or children[i].mapType == Enum.UIMapType.Continent then
+					local name = GetZoneName(id)
+					Routes.LZName[name] = id
+
+					processMapChildrenRecursive(id)
+				elseif children[i].mapType == Enum.UIMapType.World then
+					processMapChildrenRecursive(id)
+				end
+			end
+		end
 	end
 end
+
+local COSMIC_MAP_ID = 946
+processMapChildrenRecursive(COSMIC_MAP_ID)
 
 ------------------------------------------------------------------------------------------------------
 -- Core Routes functions

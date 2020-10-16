@@ -175,6 +175,11 @@ local function GetZoneName(uiMapID)
 	return name
 end
 
+local function GetZoneNameSafe(uiMapID)
+	local name = GetZoneName(uiMapID)
+	return name or ("Zone #%s"):format(tostring(uiMapID))
+end
+
 Routes.LZName = setmetatable({}, { __index = function() return 0 end})
 local function processMapChildrenRecursive(parent)
 	local children = C_Map.GetMapChildrenInfo(parent)
@@ -866,7 +871,7 @@ local route_zone_args_desc_table = {
 				count = count + 1
 			end
 		end
-		return L["You have |cffffd200%d|r route(s) in |cffffd200%s|r."]:format(count, GetZoneName(zone))
+		return L["You have |cffffd200%d|r route(s) in |cffffd200%s|r."]:format(count, GetZoneNameSafe(zone))
 	end,
 	order = 0,
 }
@@ -880,7 +885,7 @@ local taboo_zone_args_desc_table = {
 				count = count + 1
 			end
 		end
-		return L["You have |cffffd200%d|r taboo region(s) in |cffffd200%s|r."]:format(count, GetZoneName(zone))
+		return L["You have |cffffd200%d|r taboo region(s) in |cffffd200%s|r."]:format(count, GetZoneNameSafe(zone))
 	end,
 	order = 0,
 }
@@ -915,7 +920,7 @@ function Routes:OnInitialize()
 			-- cleanup the empty zone
 			db.routes[zone] = nil
 		else
-			local localizedZoneName = GetZoneName(zone) or ("Zone #%s"):format(zone)
+			local localizedZoneName = GetZoneNameSafe(zone)
 			opts[tostring(zone)] = {
 				type = "group",
 				name = localizedZoneName,
@@ -941,7 +946,7 @@ function Routes:OnInitialize()
 			-- cleanup the empty zone
 			db.taboo[zone] = nil
 		else
-			local localizedZoneName = GetZoneName(zone)  or ("Zone #%s"):format(zone)
+			local localizedZoneName = GetZoneNameSafe(zone)
 			opts[tostring(zone)] = {
 				type = "group",
 				name = localizedZoneName,

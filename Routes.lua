@@ -1457,14 +1457,14 @@ options.args.options_group.args = {
 								Routes:RegisterEvent("MINIMAP_UPDATE_ZOOM")
 								Routes:RegisterEvent("CVAR_UPDATE")
 								timerFrame:Show()
-								Routes:RegisterEvent("MINIMAP_ZONE_CHANGED", "DrawMinimapLines", true)
+								Routes.Dragons.RegisterCallback(Routes, "PlayerZoneChanged", function() Routes:DrawMinimapLines(true) end)
 								minimap_rotate = GetCVar("rotateMinimap") == "1"
 								Routes:MINIMAP_UPDATE_ZOOM()  -- This has a DrawMinimapLines(true) call in it, and sets an "indoors" variable
 							else
 								Routes:UnregisterEvent("MINIMAP_UPDATE_ZOOM")
 								Routes:UnregisterEvent("CVAR_UPDATE")
 								timerFrame:Hide()
-								Routes:UnregisterEvent("MINIMAP_ZONE_CHANGED")
+								Routes.Dragons.UnregisterCallback(Routes, "PlayerZoneChanged")
 								G:HideLines(Minimap)
 							end
 						end,

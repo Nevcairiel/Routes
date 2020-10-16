@@ -915,7 +915,7 @@ function Routes:OnInitialize()
 			-- cleanup the empty zone
 			db.routes[zone] = nil
 		else
-			local localizedZoneName = GetZoneName(zone)
+			local localizedZoneName = GetZoneName(zone) or ("Zone #%s"):format(zone)
 			opts[tostring(zone)] = {
 				type = "group",
 				name = localizedZoneName,
@@ -941,7 +941,7 @@ function Routes:OnInitialize()
 			-- cleanup the empty zone
 			db.taboo[zone] = nil
 		else
-			local localizedZoneName = GetZoneName(zone)
+			local localizedZoneName = GetZoneName(zone)  or ("Zone #%s"):format(zone)
 			opts[tostring(zone)] = {
 				type = "group",
 				name = localizedZoneName,

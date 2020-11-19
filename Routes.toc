@@ -1,4 +1,4 @@
-﻿## Interface: 90001
+﻿## Interface: 90002
 ## Title: Routes
 ## Notes: Routes on your worldmap and minimap!
 ## Notes-frFR: Routes sur votre carte du monde et minicarte !

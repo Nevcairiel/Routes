@@ -8,6 +8,7 @@
 ## DefaultState: enabled
 ## X-Category: Map
 ## X-eMail: routes @ grum DOT nl & xinhuan @ gmail DOT com
+## X-Curse-Project-ID: 14599
 ## X-Name: Routes
 ## OptionalDeps: Ace3, HereBeDragons, Cartographer, Cartographer_Notes, GatherMate, GatherMate2, Gatherer, HandyNotes
 ## SavedVariables: RoutesDB

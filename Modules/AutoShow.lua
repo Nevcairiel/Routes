@@ -16,16 +16,9 @@ local have_prof = {
 }
 local active_tracking = {}
 local profession_to_skill = {}
-if Routes:isClassic() then
-	profession_to_skill[GetSpellInfo(9134)] = "Herbalism"
-	profession_to_skill[GetSpellInfo(2575)] = "Mining"
-	profession_to_skill[GetSpellInfo(7620)] = "Fishing"
-elseif Routes:isBCC() then
-	profession_to_skill[GetSpellInfo(9134)] = "Herbalism"
-	profession_to_skill[GetSpellInfo(2575)] = "Mining"
-	profession_to_skill[GetSpellInfo(7620)] = "Fishing"
-	profession_to_skill[GetSpellInfo(4036)] = "ExtractGas"
-else
+local classic_spell_ids = {}
+
+if Routes:isMainline() then
 	profession_to_skill[GetSpellInfo(170691)] = "Herbalism"
 	profession_to_skill[GetSpellInfo(2575)] = "Mining"
 	profession_to_skill[GetSpellInfo(7620) or GetSpellInfo(131476)] = "Fishing"
@@ -33,22 +26,26 @@ else
 	if GetSpellInfo(78670) then
 		profession_to_skill[GetSpellInfo(78670)] = "Archaeology"
 	end
-end
-local tracking_spells = {}
-if Routes:isClassic() then
-	tracking_spells[(GetSpellInfo(2580))] = "Mining"
-	tracking_spells[(GetSpellInfo(2383))] = "Herbalism"
-	tracking_spells[(GetSpellInfo(2481))] = "Treasure"
-elseif Routes:isBCC() then
-	tracking_spells[(GetSpellInfo(2580))] = "Mining"
-	tracking_spells[(GetSpellInfo(2383))] = "Herbalism"
-	tracking_spells[(GetSpellInfo(2481))] = "Treasure"
-	tracking_spells[(GetSpellInfo(43308))] = "Fishing"
 else
-	tracking_spells[(GetSpellInfo(2580))] = "Mining"
-	tracking_spells[(GetSpellInfo(2383))] = "Herbalism"
+	classic_spell_ids = {
+		Herbalism = { 2366, 2368, 3570, 11993, 28695 },
+		Mining = { 2575, 2576, 3564, 10248, 29354 },
+		Fishing = { 7620, 7731, 7732, 18248, 33095 },
+		ExtractGas = { 30350 }, -- From Master Engineering
+	}
+end
+
+local tracking_spells = {}
+
+tracking_spells[(GetSpellInfo(2383))] = "Herbalism"
+tracking_spells[(GetSpellInfo(2580))] = "Mining"
+tracking_spells[(GetSpellInfo(2481))] = "Treasure"
+
+if GetSpellInfo(43308) then
 	tracking_spells[(GetSpellInfo(43308))] = "Fishing"
-	tracking_spells[(GetSpellInfo(2481))] = "Treasure"
+end
+
+if GetSpellInfo(167898) then
 	tracking_spells[(GetSpellInfo(167898))] = "Logging"
 end
 
@@ -64,11 +61,11 @@ function AutoShow:SKILL_LINES_CHANGED()
 			end
 		end
 	else
-		for i = 1, GetNumSkillLines() do
-			local skillName, isHeader = GetSkillLineInfo(i)
-			if isHeader and (skillName == TRADE_SKILLS or skillName == SECONDARY_SKILLS:sub(1, strlen(skillName) - 1)) then
-				if profession_to_skill[name] then
-					have_prof[profession_to_skill[name]] = true
+		for professionName, spellIds in pairs(classic_spell_ids) do
+			for k, spellId in pairs(spellIds) do
+				if IsPlayerSpell(spellId) then
+					have_prof[professionName] = true
+					break
 				end
 			end
 		end
@@ -245,13 +242,6 @@ options = {
 					values = prof_options,
 					arg = "Fishing",
 				},
-				gas = {
-					name = L["ExtractGas"], type = "select",
-					desc = L["Routes with Gas"],
-					order = 200,
-					values = prof_options3,
-					arg = "ExtractGas",
-				},
 				herbalism = {
 					name = L["Herbalism"], type = "select",
 					desc = L["Routes with Herbs"],
@@ -273,13 +263,6 @@ options = {
 					values = prof_options2,
 					arg = "Treasure",
 				},
-				archaeology = {
-					name = L["Archaeology"], type = "select",
-					desc = L["Routes with Archaeology"],
-					order = 600,
-					values = prof_options3,
-					arg = "Archaeology",
-				},
 				note = {
 					name = L["Note"], type = "select",
 					desc = L["Routes with Notes"],
@@ -287,27 +270,39 @@ options = {
 					values = prof_options4,
 					arg = "Note",
 				},
-				logging = {
-					name = L["Logging"], type = "select",
-					desc = L["Routes with Timber"],
-					order = 800,
-					values = prof_options2,
-					arg = "Logging",
-				},
 			},
 		},
 	},
 }
 
-if Routes:isClassic() then
-	options.args.auto_group.args.archaeology = nil
-	options.args.auto_group.args.logging = nil
-	options.args.auto_group.args.gas = nil
+if GetSpellInfo(30427) then
+	options.args.auto_group.args.gas = {
+		name = L["ExtractGas"], type = "select",
+		desc = L["Routes with Gas"],
+		order = 200,
+		values = prof_options3,
+		arg = "ExtractGas",
+	}
 end
 
-if Routes:isBCC() then
-	options.args.auto_group.args.archaeology = nil
-	options.args.auto_group.args.logging = nil
+if GetSpellInfo(78670) then
+	options.args.auto_group.args.archaeology = {
+		name = L["Archaeology"], type = "select",
+		desc = L["Routes with Archaeology"],
+		order = 600,
+		values = prof_options3,
+		arg = "Archaeology",
+	}
+end
+
+if GetSpellInfo(167898) then
+	options.args.auto_group.args.logging = {
+		name = L["Logging"], type = "select",
+		desc = L["Routes with Timber"],
+		order = 800,
+		values = prof_options2,
+		arg = "Logging",
+	}
 end
 
 -- vim: ts=4 noexpandtab

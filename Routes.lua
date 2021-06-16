@@ -163,6 +163,10 @@ local math_cos = math.cos
 local Minimap = Minimap
 local GetPlayerFacing = GetPlayerFacing
 
+function Routes:isMainline()
+	return _G.WOW_PROJECT_ID == _G.WOW_PROJECT_MAINLINE
+end
+
 function Routes:isClassic()
 	return _G.WOW_PROJECT_ID == _G.WOW_PROJECT_CLASSIC
 end
@@ -3033,11 +3037,11 @@ do
 		taboo_edit_list[taboo_data] = copy_of_taboo_data
 
 		-- open the WorldMapFlame on the right zone
-		if Routes:isClassic() then
+		if Routes:isMainline() then
+			OpenWorldMap(zone)
+		else
 			ShowUIPanel(WorldMapFrame)
 			WorldMapFrame:SetMapID(zone)
-		else
-			OpenWorldMap(zone)
 		end
 
 		local fh, fw = Routes.DataProvider.tabooPin:GetHeight(), Routes.DataProvider.tabooPin:GetWidth()

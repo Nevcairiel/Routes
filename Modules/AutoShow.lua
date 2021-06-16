@@ -56,20 +56,20 @@ function AutoShow:SKILL_LINES_CHANGED()
 	for k, v in pairs(have_prof) do
 		have_prof[k] = false
 	end
-	if Routes:isClassic() or Routes:isBCC() then
+	if Routes:isMainline() then
+		for index, key in pairs({GetProfessions()}) do
+			local name, icon, rank, maxrank, numspells, spelloffset, skillline = GetProfessionInfo(key)
+			if profession_to_skill[name] then
+				have_prof[profession_to_skill[name]] = true
+			end
+		end
+	else
 		for i = 1, GetNumSkillLines() do
 			local skillName, isHeader = GetSkillLineInfo(i)
 			if isHeader and (skillName == TRADE_SKILLS or skillName == SECONDARY_SKILLS:sub(1, strlen(skillName) - 1)) then
 				if profession_to_skill[name] then
 					have_prof[profession_to_skill[name]] = true
 				end
-			end
-		end
-	else
-		for index, key in pairs({GetProfessions()}) do
-			local name, icon, rank, maxrank, numspells, spelloffset, skillline = GetProfessionInfo(key)
-			if profession_to_skill[name] then
-				have_prof[profession_to_skill[name]] = true
 			end
 		end
 	end

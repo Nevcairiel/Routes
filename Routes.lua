@@ -163,6 +163,14 @@ local math_cos = math.cos
 local Minimap = Minimap
 local GetPlayerFacing = GetPlayerFacing
 
+function Routes:isClassic()
+	return _G.WOW_PROJECT_ID == _G.WOW_PROJECT_CLASSIC
+end
+
+function Routes:isBCC()
+	return _G.WOW_PROJECT_ID == _G.WOW_PROJECT_BURNING_CRUSADE_CLASSIC
+end
+
 ------------------------------------------------------------------------------------------------------
 -- Data for Localized Zone Names
 local function GetZoneName(uiMapID)
@@ -201,7 +209,13 @@ local function processMapChildrenRecursive(parent)
 end
 
 local COSMIC_MAP_ID = 946
-processMapChildrenRecursive(COSMIC_MAP_ID)
+local WORLD_MAP_ID = 947
+
+if Routes:isClassic() then
+	processMapChildrenRecursive(WORLD_MAP_ID)
+else
+	processMapChildrenRecursive(COSMIC_MAP_ID)
+end
 
 ------------------------------------------------------------------------------------------------------
 -- Core Routes functions
@@ -3019,7 +3033,12 @@ do
 		taboo_edit_list[taboo_data] = copy_of_taboo_data
 
 		-- open the WorldMapFlame on the right zone
-		OpenWorldMap(zone)
+		if Routes:isClassic() then
+			ShowUIPanel(WorldMapFrame)
+			WorldMapFrame:SetMapID(zone)
+		else
+			OpenWorldMap(zone)
+		end
 
 		local fh, fw = Routes.DataProvider.tabooPin:GetHeight(), Routes.DataProvider.tabooPin:GetWidth()
 

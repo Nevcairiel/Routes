@@ -16,45 +16,115 @@ local have_prof = {
 }
 local active_tracking = {}
 local profession_to_skill = {}
-profession_to_skill[GetSpellInfo(170691)] = "Herbalism"
-profession_to_skill[GetSpellInfo(2575)] = "Mining"
-profession_to_skill[GetSpellInfo(7620) or GetSpellInfo(131476)] = "Fishing"
-profession_to_skill[GetSpellInfo(4036)] = "ExtractGas"
-if GetSpellInfo(78670) then
-	profession_to_skill[GetSpellInfo(78670)] = "Archaeology"
+if Routes:isClassic() then
+	profession_to_skill[GetSpellInfo(9134)] = "Herbalism"
+	profession_to_skill[GetSpellInfo(2575)] = "Mining"
+	profession_to_skill[GetSpellInfo(7620)] = "Fishing"
+elseif Routes:isBCC() then
+	profession_to_skill[GetSpellInfo(9134)] = "Herbalism"
+	profession_to_skill[GetSpellInfo(2575)] = "Mining"
+	profession_to_skill[GetSpellInfo(7620)] = "Fishing"
+	profession_to_skill[GetSpellInfo(4036)] = "ExtractGas"
+else
+	profession_to_skill[GetSpellInfo(170691)] = "Herbalism"
+	profession_to_skill[GetSpellInfo(2575)] = "Mining"
+	profession_to_skill[GetSpellInfo(7620) or GetSpellInfo(131476)] = "Fishing"
+	profession_to_skill[GetSpellInfo(4036)] = "ExtractGas"
+	if GetSpellInfo(78670) then
+		profession_to_skill[GetSpellInfo(78670)] = "Archaeology"
+	end
 end
 local tracking_spells = {}
-tracking_spells[(GetSpellInfo(2580))] = "Mining"
-tracking_spells[(GetSpellInfo(2383))] = "Herbalism"
-tracking_spells[(GetSpellInfo(43308))] = "Fishing"
-tracking_spells[(GetSpellInfo(2481))] = "Treasure"
-tracking_spells[(GetSpellInfo(167898))] = "Logging"
+if Routes:isClassic() then
+	tracking_spells[(GetSpellInfo(2580))] = "Mining"
+	tracking_spells[(GetSpellInfo(2383))] = "Herbalism"
+	tracking_spells[(GetSpellInfo(2481))] = "Treasure"
+elseif Routes:isBCC() then
+	tracking_spells[(GetSpellInfo(2580))] = "Mining"
+	tracking_spells[(GetSpellInfo(2383))] = "Herbalism"
+	tracking_spells[(GetSpellInfo(2481))] = "Treasure"
+	tracking_spells[(GetSpellInfo(43308))] = "Fishing"
+else
+	tracking_spells[(GetSpellInfo(2580))] = "Mining"
+	tracking_spells[(GetSpellInfo(2383))] = "Herbalism"
+	tracking_spells[(GetSpellInfo(43308))] = "Fishing"
+	tracking_spells[(GetSpellInfo(2481))] = "Treasure"
+	tracking_spells[(GetSpellInfo(167898))] = "Logging"
+end
 
 function AutoShow:SKILL_LINES_CHANGED()
 	for k, v in pairs(have_prof) do
 		have_prof[k] = false
 	end
-	for index, key in pairs({GetProfessions()}) do
-		local name, icon, rank, maxrank, numspells, spelloffset, skillline = GetProfessionInfo(key)
-		if profession_to_skill[name] then
-			have_prof[profession_to_skill[name]] = true
+	if Routes:isClassic() or Routes:isBCC() then
+		for i = 1, GetNumSkillLines() do
+			local skillName, isHeader = GetSkillLineInfo(i)
+			if isHeader and (skillName == TRADE_SKILLS or skillName == SECONDARY_SKILLS:sub(1, strlen(skillName) - 1)) then
+				if profession_to_skill[name] then
+					have_prof[profession_to_skill[name]] = true
+				end
+			end
+		end
+	else
+		for index, key in pairs({GetProfessions()}) do
+			local name, icon, rank, maxrank, numspells, spelloffset, skillline = GetProfessionInfo(key)
+			if profession_to_skill[name] then
+				have_prof[profession_to_skill[name]] = true
+			end
 		end
 	end
 	self:ApplyVisibility()
 end
 
 function AutoShow:MINIMAP_UPDATE_TRACKING()
-	for i = 1, GetNumTrackingTypes() do
-		local name, texture, active, category  = GetTrackingInfo(i)
-		if tracking_spells[name] then
-			if active then
-				active_tracking[tracking_spells[name]] = true
-			else
-				active_tracking[tracking_spells[name]] = false
+	if Routes:isClassic() then
+		local miningName = GetSpellInfo(2580)
+		local herbalismName = GetSpellInfo(2383)
+		local treasureName = GetSpellInfo(2481)
+		local fishingName = GetSpellInfo(43308) or "Find Fish"
+		local trackingTex = GetTrackingTexture()
+		if trackingTex then
+			if trackingTex == 136025 then -- Mining
+				active_tracking[tracking_spells[miningName]] = true
+				active_tracking[tracking_spells[herbalismName]] = false
+				active_tracking[tracking_spells[treasureName]] = false
+				active_tracking[tracking_spells[fishingName]] = false
+			elseif trackingTex == 133939 then -- Herbalism
+				active_tracking[tracking_spells[miningName]] = false
+				active_tracking[tracking_spells[herbalismName]] = true
+				active_tracking[tracking_spells[treasureName]] = false
+				active_tracking[tracking_spells[fishingName]] = false
+			elseif trackingTex == 135725 then -- Treasure
+				active_tracking[tracking_spells[miningName]] = false
+				active_tracking[tracking_spells[herbalismName]] = false
+				active_tracking[tracking_spells[treasureName]] = true
+				active_tracking[tracking_spells[fishingName]] = false
+			elseif trackingTex == 133888 then -- Fishing
+				active_tracking[tracking_spells[miningName]] = false
+				active_tracking[tracking_spells[herbalismName]] = false
+				active_tracking[tracking_spells[treasureName]] = false
+				active_tracking[tracking_spells[fishingName]] = true
+			end
+		else
+			active_tracking = {}
+		end
+	else
+		for i = 1, GetNumTrackingTypes() do
+			local name, texture, active, category  = GetTrackingInfo(i)
+			if tracking_spells[name] then
+				if active then
+					active_tracking[tracking_spells[name]] = true
+				else
+					active_tracking[tracking_spells[name]] = false
+				end
 			end
 		end
 	end
 	self:ApplyVisibility()
+end
+
+function AutoShow:UNIT_AURA()
+	self:MINIMAP_UPDATE_TRACKING()
 end
 
 function AutoShow:ApplyVisibility()
@@ -94,9 +164,15 @@ end
 function AutoShow:SetupAutoShow()
 	if db.defaults.use_auto_showhide then
 		self:RegisterEvent("SKILL_LINES_CHANGED")
-		self:RegisterEvent("MINIMAP_UPDATE_TRACKING")
-		self:MINIMAP_UPDATE_TRACKING()
 		self:SKILL_LINES_CHANGED()
+
+		if Routes:isClassic() then
+			self:RegisterEvent("UNIT_AURA")
+			self:UNIT_AURA()
+		else
+			self:RegisterEvent("MINIMAP_UPDATE_TRACKING")
+			self:MINIMAP_UPDATE_TRACKING()
+		end
 	end
 end
 
@@ -222,5 +298,16 @@ options = {
 		},
 	},
 }
+
+if Routes:isClassic() then
+	options.args.auto_group.args.archaeology = nil
+	options.args.auto_group.args.logging = nil
+	options.args.auto_group.args.gas = nil
+end
+
+if Routes:isBCC() then
+	options.args.auto_group.args.archaeology = nil
+	options.args.auto_group.args.logging = nil
+end
 
 -- vim: ts=4 noexpandtab

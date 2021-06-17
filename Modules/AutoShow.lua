@@ -18,7 +18,7 @@ local active_tracking = {}
 local profession_to_skill = {}
 local classic_spell_ids = {}
 
-if Routes:isMainline() then
+if GetProfessions then
 	profession_to_skill[GetSpellInfo(170691)] = "Herbalism"
 	profession_to_skill[GetSpellInfo(2575)] = "Mining"
 	profession_to_skill[GetSpellInfo(7620) or GetSpellInfo(131476)] = "Fishing"
@@ -53,7 +53,7 @@ function AutoShow:SKILL_LINES_CHANGED()
 	for k, v in pairs(have_prof) do
 		have_prof[k] = false
 	end
-	if Routes:isMainline() then
+	if GetProfessions then
 		for index, key in pairs({GetProfessions()}) do
 			local name, icon, rank, maxrank, numspells, spelloffset, skillline = GetProfessionInfo(key)
 			if profession_to_skill[name] then
@@ -74,46 +74,13 @@ function AutoShow:SKILL_LINES_CHANGED()
 end
 
 function AutoShow:MINIMAP_UPDATE_TRACKING()
-	if Routes:isClassic() then
-		local miningName = GetSpellInfo(2580)
-		local herbalismName = GetSpellInfo(2383)
-		local treasureName = GetSpellInfo(2481)
-		local fishingName = GetSpellInfo(43308) or "Find Fish"
-		local trackingTex = GetTrackingTexture()
-		if trackingTex then
-			if trackingTex == 136025 then -- Mining
-				active_tracking[tracking_spells[miningName]] = true
-				active_tracking[tracking_spells[herbalismName]] = false
-				active_tracking[tracking_spells[treasureName]] = false
-				active_tracking[tracking_spells[fishingName]] = false
-			elseif trackingTex == 133939 then -- Herbalism
-				active_tracking[tracking_spells[miningName]] = false
-				active_tracking[tracking_spells[herbalismName]] = true
-				active_tracking[tracking_spells[treasureName]] = false
-				active_tracking[tracking_spells[fishingName]] = false
-			elseif trackingTex == 135725 then -- Treasure
-				active_tracking[tracking_spells[miningName]] = false
-				active_tracking[tracking_spells[herbalismName]] = false
-				active_tracking[tracking_spells[treasureName]] = true
-				active_tracking[tracking_spells[fishingName]] = false
-			elseif trackingTex == 133888 then -- Fishing
-				active_tracking[tracking_spells[miningName]] = false
-				active_tracking[tracking_spells[herbalismName]] = false
-				active_tracking[tracking_spells[treasureName]] = false
-				active_tracking[tracking_spells[fishingName]] = true
-			end
-		else
-			active_tracking = {}
-		end
-	else
-		for i = 1, GetNumTrackingTypes() do
-			local name, texture, active, category  = GetTrackingInfo(i)
-			if tracking_spells[name] then
-				if active then
-					active_tracking[tracking_spells[name]] = true
-				else
-					active_tracking[tracking_spells[name]] = false
-				end
+	for i = 1, GetNumTrackingTypes() do
+		local name, texture, active, category  = GetTrackingInfo(i)
+		if tracking_spells[name] then
+			if active then
+				active_tracking[tracking_spells[name]] = true
+			else
+				active_tracking[tracking_spells[name]] = false
 			end
 		end
 	end
@@ -121,7 +88,28 @@ function AutoShow:MINIMAP_UPDATE_TRACKING()
 end
 
 function AutoShow:UNIT_AURA()
-	self:MINIMAP_UPDATE_TRACKING()
+	local miningName = GetSpellInfo(2580)
+	local herbalismName = GetSpellInfo(2383)
+	local treasureName = GetSpellInfo(2481)
+	local trackingTex = GetTrackingTexture()
+	if trackingTex then
+		if trackingTex == 136025 then -- Mining
+			active_tracking[tracking_spells[miningName]] = true
+			active_tracking[tracking_spells[herbalismName]] = false
+			active_tracking[tracking_spells[treasureName]] = false
+		elseif trackingTex == 133939 then -- Herbalism
+			active_tracking[tracking_spells[miningName]] = false
+			active_tracking[tracking_spells[herbalismName]] = true
+			active_tracking[tracking_spells[treasureName]] = false
+		elseif trackingTex == 135725 then -- Treasure
+			active_tracking[tracking_spells[miningName]] = false
+			active_tracking[tracking_spells[herbalismName]] = false
+			active_tracking[tracking_spells[treasureName]] = true
+		end
+	else
+		active_tracking = {}
+	end
+	self:ApplyVisibility()
 end
 
 function AutoShow:ApplyVisibility()
@@ -163,12 +151,12 @@ function AutoShow:SetupAutoShow()
 		self:RegisterEvent("SKILL_LINES_CHANGED")
 		self:SKILL_LINES_CHANGED()
 
-		if Routes:isClassic() then
-			self:RegisterEvent("UNIT_AURA")
-			self:UNIT_AURA()
-		else
+		if GetTrackingInfo then
 			self:RegisterEvent("MINIMAP_UPDATE_TRACKING")
 			self:MINIMAP_UPDATE_TRACKING()
+		else
+			self:RegisterEvent("UNIT_AURA")
+			self:UNIT_AURA()
 		end
 	end
 end
@@ -242,6 +230,14 @@ options = {
 					values = prof_options,
 					arg = "Fishing",
 				},
+				gas = {
+					name = L["ExtractGas"], type = "select",
+					desc = L["Routes with Gas"],
+					order = 200,
+					hidden = not GetSpellInfo(30427),
+					values = prof_options3,
+					arg = "ExtractGas",
+				},
 				herbalism = {
 					name = L["Herbalism"], type = "select",
 					desc = L["Routes with Herbs"],
@@ -263,6 +259,14 @@ options = {
 					values = prof_options2,
 					arg = "Treasure",
 				},
+				archaeology = {
+					name = L["Archaeology"], type = "select",
+					desc = L["Routes with Archaeology"],
+					order = 600,
+					hidden = not GetSpellInfo(78670),
+					values = prof_options3,
+					arg = "Archaeology",
+				},
 				note = {
 					name = L["Note"], type = "select",
 					desc = L["Routes with Notes"],
@@ -270,39 +274,17 @@ options = {
 					values = prof_options4,
 					arg = "Note",
 				},
+				logging = {
+					name = L["Logging"], type = "select",
+					desc = L["Routes with Timber"],
+					order = 800,
+					hidden = not GetSpellInfo(167898),
+					values = prof_options2,
+					arg = "Logging",
+				},
 			},
 		},
 	},
 }
-
-if GetSpellInfo(30427) then
-	options.args.auto_group.args.gas = {
-		name = L["ExtractGas"], type = "select",
-		desc = L["Routes with Gas"],
-		order = 200,
-		values = prof_options3,
-		arg = "ExtractGas",
-	}
-end
-
-if GetSpellInfo(78670) then
-	options.args.auto_group.args.archaeology = {
-		name = L["Archaeology"], type = "select",
-		desc = L["Routes with Archaeology"],
-		order = 600,
-		values = prof_options3,
-		arg = "Archaeology",
-	}
-end
-
-if GetSpellInfo(167898) then
-	options.args.auto_group.args.logging = {
-		name = L["Logging"], type = "select",
-		desc = L["Routes with Timber"],
-		order = 800,
-		values = prof_options2,
-		arg = "Logging",
-	}
-end
 
 -- vim: ts=4 noexpandtab

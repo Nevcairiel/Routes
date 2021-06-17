@@ -227,7 +227,7 @@ options = {
 					name = L["Fishing"], type = "select",
 					desc = L["Routes with Fish"],
 					order = 100,
-					values = prof_options,
+					values = GetTrackingInfo and prof_options or prof_options3,
 					arg = "Fishing",
 				},
 				gas = {

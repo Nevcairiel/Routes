@@ -1,4 +1,6 @@
 ﻿## Interface: 90005
+## Interface-Classic: 11307
+## Interface-BCC: 20501
 ## Title: Routes
 ## Notes: Routes on your worldmap and minimap!
 ## Notes-frFR: Routes sur votre carte du monde et minicarte !

@@ -201,7 +201,13 @@ local function processMapChildrenRecursive(parent)
 end
 
 local COSMIC_MAP_ID = 946
-processMapChildrenRecursive(COSMIC_MAP_ID)
+local WORLD_MAP_ID = 947
+
+if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
+	processMapChildrenRecursive(WORLD_MAP_ID)
+else
+	processMapChildrenRecursive(COSMIC_MAP_ID)
+end
 
 ------------------------------------------------------------------------------------------------------
 -- Core Routes functions
@@ -3019,7 +3025,12 @@ do
 		taboo_edit_list[taboo_data] = copy_of_taboo_data
 
 		-- open the WorldMapFlame on the right zone
-		OpenWorldMap(zone)
+		if WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then
+			OpenWorldMap(zone)
+		else
+			ShowUIPanel(WorldMapFrame)
+			WorldMapFrame:SetMapID(zone)
+		end
 
 		local fh, fw = Routes.DataProvider.tabooPin:GetHeight(), Routes.DataProvider.tabooPin:GetWidth()
 

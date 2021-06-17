@@ -16,28 +16,57 @@ local have_prof = {
 }
 local active_tracking = {}
 local profession_to_skill = {}
-profession_to_skill[GetSpellInfo(170691)] = "Herbalism"
-profession_to_skill[GetSpellInfo(2575)] = "Mining"
-profession_to_skill[GetSpellInfo(7620) or GetSpellInfo(131476)] = "Fishing"
-profession_to_skill[GetSpellInfo(4036)] = "ExtractGas"
-if GetSpellInfo(78670) then
-	profession_to_skill[GetSpellInfo(78670)] = "Archaeology"
+local classic_spell_ids = {}
+
+if GetProfessions then
+	profession_to_skill[GetSpellInfo(170691)] = "Herbalism"
+	profession_to_skill[GetSpellInfo(2575)] = "Mining"
+	profession_to_skill[GetSpellInfo(7620) or GetSpellInfo(131476)] = "Fishing"
+	profession_to_skill[GetSpellInfo(4036)] = "ExtractGas"
+	if GetSpellInfo(78670) then
+		profession_to_skill[GetSpellInfo(78670)] = "Archaeology"
+	end
+else
+	classic_spell_ids = {
+		Herbalism = { 2366, 2368, 3570, 11993, 28695 },
+		Mining = { 2575, 2576, 3564, 10248, 29354 },
+		Fishing = { 7620, 7731, 7732, 18248, 33095 },
+		ExtractGas = { 30350 }, -- From Master Engineering
+	}
 end
+
 local tracking_spells = {}
 tracking_spells[(GetSpellInfo(2580))] = "Mining"
 tracking_spells[(GetSpellInfo(2383))] = "Herbalism"
-tracking_spells[(GetSpellInfo(43308))] = "Fishing"
 tracking_spells[(GetSpellInfo(2481))] = "Treasure"
-tracking_spells[(GetSpellInfo(167898))] = "Logging"
+
+if GetSpellInfo(43308) then
+	tracking_spells[(GetSpellInfo(43308))] = "Fishing"
+end
+
+if GetSpellInfo(167898) then
+	tracking_spells[(GetSpellInfo(167898))] = "Logging"
+end
 
 function AutoShow:SKILL_LINES_CHANGED()
 	for k, v in pairs(have_prof) do
 		have_prof[k] = false
 	end
-	for index, key in pairs({GetProfessions()}) do
-		local name, icon, rank, maxrank, numspells, spelloffset, skillline = GetProfessionInfo(key)
-		if profession_to_skill[name] then
-			have_prof[profession_to_skill[name]] = true
+	if GetProfessions then
+		for index, key in pairs({GetProfessions()}) do
+			local name, icon, rank, maxrank, numspells, spelloffset, skillline = GetProfessionInfo(key)
+			if profession_to_skill[name] then
+				have_prof[profession_to_skill[name]] = true
+			end
+		end
+	else
+		for professionName, spellIds in pairs(classic_spell_ids) do
+			for k, spellId in pairs(spellIds) do
+				if IsPlayerSpell(spellId) then
+					have_prof[professionName] = true
+					break
+				end
+			end
 		end
 	end
 	self:ApplyVisibility()
@@ -53,6 +82,31 @@ function AutoShow:MINIMAP_UPDATE_TRACKING()
 				active_tracking[tracking_spells[name]] = false
 			end
 		end
+	end
+	self:ApplyVisibility()
+end
+
+function AutoShow:UNIT_AURA()
+	local miningName = GetSpellInfo(2580)
+	local herbalismName = GetSpellInfo(2383)
+	local treasureName = GetSpellInfo(2481)
+	local trackingTex = GetTrackingTexture()
+	if trackingTex then
+		if trackingTex == 136025 then -- Mining
+			active_tracking[tracking_spells[miningName]] = true
+			active_tracking[tracking_spells[herbalismName]] = false
+			active_tracking[tracking_spells[treasureName]] = false
+		elseif trackingTex == 133939 then -- Herbalism
+			active_tracking[tracking_spells[miningName]] = false
+			active_tracking[tracking_spells[herbalismName]] = true
+			active_tracking[tracking_spells[treasureName]] = false
+		elseif trackingTex == 135725 then -- Treasure
+			active_tracking[tracking_spells[miningName]] = false
+			active_tracking[tracking_spells[herbalismName]] = false
+			active_tracking[tracking_spells[treasureName]] = true
+		end
+	else
+		active_tracking = {}
 	end
 	self:ApplyVisibility()
 end
@@ -94,9 +148,15 @@ end
 function AutoShow:SetupAutoShow()
 	if db.defaults.use_auto_showhide then
 		self:RegisterEvent("SKILL_LINES_CHANGED")
-		self:RegisterEvent("MINIMAP_UPDATE_TRACKING")
-		self:MINIMAP_UPDATE_TRACKING()
 		self:SKILL_LINES_CHANGED()
+
+		if GetTrackingInfo then
+			self:RegisterEvent("MINIMAP_UPDATE_TRACKING")
+			self:MINIMAP_UPDATE_TRACKING()
+		else
+			self:RegisterEvent("UNIT_AURA")
+			self:UNIT_AURA()
+		end
 	end
 end
 
@@ -166,13 +226,14 @@ options = {
 					name = L["Fishing"], type = "select",
 					desc = L["Routes with Fish"],
 					order = 100,
-					values = prof_options,
+					values = GetTrackingInfo and prof_options or prof_options3,
 					arg = "Fishing",
 				},
 				gas = {
 					name = L["ExtractGas"], type = "select",
 					desc = L["Routes with Gas"],
 					order = 200,
+					hidden = not GetSpellInfo(30427),
 					values = prof_options3,
 					arg = "ExtractGas",
 				},
@@ -201,6 +262,7 @@ options = {
 					name = L["Archaeology"], type = "select",
 					desc = L["Routes with Archaeology"],
 					order = 600,
+					hidden = not GetSpellInfo(78670),
 					values = prof_options3,
 					arg = "Archaeology",
 				},
@@ -215,6 +277,7 @@ options = {
 					name = L["Logging"], type = "select",
 					desc = L["Routes with Timber"],
 					order = 800,
+					hidden = not GetSpellInfo(167898),
 					values = prof_options2,
 					arg = "Logging",
 				},

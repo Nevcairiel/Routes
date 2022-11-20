@@ -1,6 +1,6 @@
-﻿## Interface: 90100
+﻿## Interface: 100002
 ## Interface-Classic: 11307
-## Interface-BCC: 20501
+## Interface-WOTLK: 30400
 ## Title: Routes
 ## Notes: Routes on your worldmap and minimap!
 ## Notes-frFR: Routes sur votre carte du monde et minicarte !

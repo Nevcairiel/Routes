@@ -18,6 +18,15 @@ local active_tracking = {}
 local profession_to_skill = {}
 local classic_spell_ids = {}
 
+string.startsWith = function(stringInput, stringStart)
+	return string.sub(stringInput,1,string.len(stringStart))== stringStart
+end
+
+-- Get build version to differentiate needed methods
+local version = GetBuildInfo()
+
+local isRetail = string.startsWith(tostring(version), "10.")
+
 if GetProfessions then
 	profession_to_skill[GetSpellInfo(170691)] = "Herbalism"
 	profession_to_skill[GetSpellInfo(2575)] = "Mining"
@@ -49,19 +58,19 @@ if GetSpellInfo(167898) then
 end
 
 function AutoShow:SKILL_LINES_CHANGED()
-	for k, v in pairs(have_prof) do
+	for k, _ in pairs(have_prof) do
 		have_prof[k] = false
 	end
 	if GetProfessions then
-		for index, key in pairs({GetProfessions()}) do
-			local name, icon, rank, maxrank, numspells, spelloffset, skillline = GetProfessionInfo(key)
+		for _, key in pairs({GetProfessions()}) do
+			local name = GetProfessionInfo(key)
 			if profession_to_skill[name] then
 				have_prof[profession_to_skill[name]] = true
 			end
 		end
 	else
 		for professionName, spellIds in pairs(classic_spell_ids) do
-			for k, spellId in pairs(spellIds) do
+			for _, spellId in pairs(spellIds) do
 				if IsPlayerSpell(spellId) then
 					have_prof[professionName] = true
 					break
@@ -73,8 +82,15 @@ function AutoShow:SKILL_LINES_CHANGED()
 end
 
 function AutoShow:MINIMAP_UPDATE_TRACKING()
-	for i = 1, GetNumTrackingTypes() do
-		local name, texture, active, category  = GetTrackingInfo(i)
+	local numberTypes
+	if isRetail then
+		numberTypes = C_Minimap.GetNumTrackingTypes()
+	else
+		numberTypes = GetNumTrackingTypes()
+	end
+
+	for i = 1, numberTypes do
+		local name, _, active, _  = self:GET_TRACKING_INFO(i)
 		if tracking_spells[name] then
 			if active then
 				active_tracking[tracking_spells[name]] = true
@@ -84,6 +100,22 @@ function AutoShow:MINIMAP_UPDATE_TRACKING()
 		end
 	end
 	self:ApplyVisibility()
+end
+
+function AutoShow:GET_TRACKING_INFO(i)
+	if isRetail then
+		return C_Minimap.GetTrackingInfo(i)
+	else
+		return GetTrackingInfo(i)
+	end
+end
+
+function AutoShow:GET_TRACKING_INFO_FUNCTION()
+	if isRetail then
+		return C_Minimap.GetTrackingInfo
+	else
+		return GetTrackingInfo
+	end
 end
 
 function AutoShow:UNIT_AURA()
@@ -113,9 +145,9 @@ end
 
 function AutoShow:ApplyVisibility()
 	local modified = false
-	for zone, zone_table in pairs(db.routes) do -- for each zone
+	for _, zone_table in pairs(db.routes) do -- for each zone
 		if next(zone_table) ~= nil then
-			for route_name, route_data in pairs(zone_table) do -- for each route
+			for _, route_data in pairs(zone_table) do -- for each route
 				if route_data.db_type then
 					local visible = false
 					for db_type in pairs(route_data.db_type) do -- for each db type used
@@ -150,7 +182,7 @@ function AutoShow:SetupAutoShow()
 		self:RegisterEvent("SKILL_LINES_CHANGED")
 		self:SKILL_LINES_CHANGED()
 
-		if GetTrackingInfo then
+		if self:GET_TRACKING_INFO_FUNCTION() then
 			self:RegisterEvent("MINIMAP_UPDATE_TRACKING")
 			self:MINIMAP_UPDATE_TRACKING()
 		else
@@ -226,7 +258,7 @@ options = {
 					name = L["Fishing"], type = "select",
 					desc = L["Routes with Fish"],
 					order = 100,
-					values = GetTrackingInfo and prof_options or prof_options3,
+					values = AutoShow:GET_TRACKING_INFO_FUNCTION() and prof_options or prof_options3,
 					arg = "Fishing",
 				},
 				gas = {

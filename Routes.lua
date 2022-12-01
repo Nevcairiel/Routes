@@ -171,6 +171,8 @@ local function GetZoneName(uiMapID)
 		name = format("%s (%s)", name, Routes.Dragons:GetLocalizedMap(101))
 	elseif uiMapID == 125 then -- Northrend Dalaran
 		name = format("%s (%s)", name, Routes.Dragons:GetLocalizedMap(113))
+	elseif uiMapID == 2104 then -- Wintergrasp BG
+		name = format("%s (BG)", name)
 	end
 	return name
 end

@@ -191,6 +191,13 @@ local function processMapChildrenRecursive(parent)
 			if id then
 				if children[i].mapType == Enum.UIMapType.Zone or children[i].mapType == Enum.UIMapType.Continent then
 					local name = GetZoneName(id)
+
+					--[[
+					if Routes.LZName[name] and Routes.LZName[name] ~= 0 then
+						print(("Routes: Name %q already mapped to %d (new: %d)"):format(name, Routes.LZName[name], id))
+					end
+					--]]
+
 					Routes.LZName[name] = id
 
 					processMapChildrenRecursive(id)

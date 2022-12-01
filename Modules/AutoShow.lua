@@ -2,6 +2,9 @@
 local AutoShow = Routes:NewModule("AutoShow", "AceEvent-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("Routes")
 
+local GetNumTrackingTypes = C_Minimap and C_Minimap.GetNumTrackingTypes or GetNumTrackingTypes
+local GetTrackingInfo = C_Minimap and C_Minimap.GetTrackingInfo or GetTrackingInfo
+
 -- Aceopt table, defined later
 local options
 -- Our db

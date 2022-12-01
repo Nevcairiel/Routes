@@ -352,6 +352,10 @@ function Routes:DrawMinimapLines(forceUpdate)
 	local facing, sin, cos
 	if minimap_rotate then
 		facing = GetFacing()
+
+		if not facing then
+			return
+		end
 	end
 
 	if (not forceUpdate) and facing == last_facing and (last_X-cx)^2 + (last_Y-cy)^2 < defaults.update_distance^2 then

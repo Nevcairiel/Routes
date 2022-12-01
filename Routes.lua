@@ -1006,7 +1006,7 @@ function Routes:MINIMAP_UPDATE_ZOOM()
 end
 
 function Routes:CVAR_UPDATE(event, cvar, value)
-	if cvar == "ROTATE_MINIMAP" then
+	if cvar == "ROTATE_MINIMAP" or cvar == "rotateMinimap" then
 		minimap_rotate = value == "1"
 	end
 end

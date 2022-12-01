@@ -55,3 +55,4 @@ Modules\TomTom.lua
 Plugins\GatherMate2.lua
 Plugins\Gatherer.lua
 Plugins\HandyNotes.lua
+Plugins\GatherLite.lua

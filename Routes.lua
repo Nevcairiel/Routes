@@ -1028,7 +1028,7 @@ local RoutesDataProviderMixin = CreateFromMixins(MapCanvasDataProviderMixin)
 
 function RoutesDataProviderMixin:OnAdded(mapCanvas)
 	MapCanvasDataProviderMixin.OnAdded(self, mapCanvas)
-	self:GetMap():GetPinFrameLevelsManager():InsertFrameLevelAbove("PIN_FRAME_LEVEL_ROUTES", "PIN_FRAME_LEVEL_FOG_OF_WAR")
+	--self:GetMap():GetPinFrameLevelsManager():InsertFrameLevelAbove("PIN_FRAME_LEVEL_ROUTES", "PIN_FRAME_LEVEL_FOG_OF_WAR")
 
 	-- a single permanent pin
 	local pin = self:GetMap():AcquirePin("RoutesPinTemplate", self.battleField)
@@ -1037,7 +1037,7 @@ function RoutesDataProviderMixin:OnAdded(mapCanvas)
 
 	-- Taboo pin for the main map
 	if not self.battleField then
-		self:GetMap():GetPinFrameLevelsManager():AddFrameLevel("PIN_FRAME_LEVEL_ROUTES_TABOO")
+		--self:GetMap():GetPinFrameLevelsManager():AddFrameLevel("PIN_FRAME_LEVEL_ROUTES_TABOO")
 		self.tabooPin = self:GetMap():AcquirePin("RoutesTabooPinTemplate")
 		self.tabooPin:SetPosition(0.5, 0.5)
 	end
@@ -1065,7 +1065,7 @@ RoutesPinMixin = CreateFromMixins(MapCanvasPinMixin)
 
 function RoutesPinMixin:OnLoad()
 	self:SetIgnoreGlobalPinScale(true)
-	self:UseFrameLevelType("PIN_FRAME_LEVEL_ROUTES")
+	self:UseFrameLevelType("PIN_FRAME_LEVEL_SCENARIO_BLOB")
 end
 
 function RoutesPinMixin:OnAcquired(battleField)
@@ -1136,7 +1136,7 @@ RoutesTabooPinMixin = CreateFromMixins(MapCanvasPinMixin)
 
 function RoutesTabooPinMixin:OnLoad()
 	self:SetIgnoreGlobalPinScale(true)
-	self:UseFrameLevelType("PIN_FRAME_LEVEL_ROUTES_TABOO")
+	self:UseFrameLevelType("PIN_FRAME_LEVEL_AREA_POI_BANNER")
 end
 
 function RoutesTabooPinMixin:OnCanvasSizeChanged()

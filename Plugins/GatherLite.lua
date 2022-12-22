@@ -74,7 +74,8 @@ end
 
 local function InsertNode(event, node)
     local newCoord = Routes:getID(node.posX, node.posY)
-    local zoneLocalized = GatherLite:MapLocalize(node.mapID)
+    local zoneLocalized = Routes.GetZoneName(node.mapID)
+    if not zoneLocalized then return end
 
     local object = GatherLite:GetNodeObject(node.object);
     local translatednode = GatherLite:translate("node." .. object.name)

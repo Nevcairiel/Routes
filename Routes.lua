@@ -182,6 +182,8 @@ local function GetZoneNameSafe(uiMapID)
 	return name or ("Zone #%s"):format(tostring(uiMapID))
 end
 
+Routes.GetZoneName = GetZoneName
+
 Routes.LZName = setmetatable({}, { __index = function() return 0 end})
 local function processMapChildrenRecursive(parent)
 	local children = C_Map.GetMapChildrenInfo(parent)

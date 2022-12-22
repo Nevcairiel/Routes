@@ -100,7 +100,8 @@ local function InsertNode(event, zone, nodeType, coord, node_name)
 	local x, y, l = GatherMate2:DecodeLoc(coord) -- ignore level for now
 	local newCoord = Routes:getID(x, y)
 	-- Convert zone
-	local zoneLocalized = GatherMate2:MapLocalize(zone)
+	local zoneLocalized = Routes.GetZoneName(zone)
+	if not zoneLocalized then return end
 	Routes:InsertNode(zoneLocalized, newCoord, node_name)
 end
 
@@ -109,7 +110,8 @@ local function DeleteNode(event, zone, nodeType, coord, node_name)
 	local x, y, l = GatherMate2:DecodeLoc(coord) -- ignore level for now
 	local newCoord = Routes:getID(x, y)
 	-- Convert zone
-	local zoneLocalized = GatherMate2:MapLocalize(zone)
+	local zoneLocalized = Routes.GetZoneName(zone)
+	if not zoneLocalized then return end
 	Routes:DeleteNode(zoneLocalized, newCoord, node_name)
 end
 

@@ -1733,12 +1733,20 @@ function ConfigHandler:ClusterRouteBackground(info)
 		t.route, t.metadata, t.length = route, metadata, length
 
 		t.cluster_dist = db.defaults.cluster_dist
+		Routes:Print(L["Background Route Clustering completed."])
+
+		-- redraw lines
+		local AutoShow = Routes:GetModule("AutoShow", true)
+		if AutoShow and db.defaults.use_auto_showhide then
+			AutoShow:ApplyVisibility()
+		end
 		Routes:DrawWorldmapLines()
 		Routes:DrawMinimapLines(true)
 
-		Routes:Print(L["Background Route Clustering completed."])
+		LibStub("AceConfigRegistry-3.0"):NotifyChange("Routes")
 	end
 
+	Routes:Print(L["Now running route clustering in the background..."])
 	Routes.TSP:ClusterRouteBackground(db.routes[zone][route].route, zone, db.defaults.cluster_dist, callbackClusterFinished)
 end
 

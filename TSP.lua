@@ -160,6 +160,33 @@ function TSPUpdateFrame:OnUpdate(elapsed)
 	end
 end
 
+local TSPClusterFrame = CreateFrame("Frame")
+TSPClusterFrame.running = false
+
+function TSPClusterFrame:OnUpdate(elapsed)
+	local status, nodes, metadata, pathLength = coroutine.resume(self.co)
+	if status then
+		if coroutine.status(self.co) == "dead" then
+			-- Function finished, return results
+			self:SetScript("OnUpdate", nil)
+			self.running = false
+			self.finishFunc(nodes, metadata, pathLength)
+			self.finishFunc = nil
+			self.statusFunc = nil
+			self.co = nil
+		end
+	else
+		-- An error occured in the coroutine, abort and print the error
+		self:SetScript("OnUpdate", nil)
+		self.running = false
+		self.co = nil
+		self.finishFunc = nil
+		self.statusFunc = nil
+		Routes:Print(Routes.L["The following error occured in the background clustering coroutine, please report to Grum or Xinhuan:"])
+		Routes:Print(nodes)
+	end
+end
+
 function TSP:IsTSPRunning()
 	return TSPUpdateFrame.running, TSPUpdateFrame.nodes
 end
@@ -881,7 +908,7 @@ between clusters.
 -- http://en.wikipedia.org/wiki/Cluster_analysis
 -- 25 January 2008
 ]]
-function TSP:ClusterRoute(nodes, zoneID, radius)
+function TSP:ClusterRoute(nodes, zoneID, radius, nonblocking)
 	local weight = {} -- weight matrix
 	local metadata = {} -- metadata after clustering
 
@@ -916,6 +943,11 @@ function TSP:ClusterRoute(nodes, zoneID, radius)
 	for i = 1, numNodes do
 		metadata[i] = {}
 		metadata[i][1] = nodes[i]
+	end
+
+	-- ensure one yield is always called
+	if nonblocking then
+		coroutine.yield()
 	end
 
 	-- Step 5: ...and loop until there is no such pair of nodes
@@ -1007,6 +1039,10 @@ function TSP:ClusterRoute(nodes, zoneID, radius)
 		else
 			break -- loop termination
 		end
+
+		if nonblocking then
+			yield()
+		end
 	end
 
 	-- Get the new pathLength
@@ -1021,7 +1057,27 @@ function TSP:ClusterRoute(nodes, zoneID, radius)
 	return nodes, metadata, pathLength
 end
 
-
+function TSP:ClusterRouteBackground(nodes, zoneID, radius, finishFunc)
+	if not TSPClusterFrame.running then
+		TSPClusterFrame.co = coroutine.create(TSP.ClusterRoute)
+		TSPClusterFrame.finishFunc = finishFunc
+		TSPClusterFrame:SetScript("OnUpdate", TSPClusterFrame.OnUpdate)
+		TSPClusterFrame.running = true
+		local status = coroutine.resume(TSPClusterFrame.co, TSP, nodes, zoneID, radius, true)
+		if status then
+			-- Do nothing, path isn't complete because at least 1 yield() is called.
+			return 1
+		else
+			-- An error occured in the coroutine, abort and return the error message.
+			TSPClusterFrame.running = false
+			TSPClusterFrame:SetScript("OnUpdate", nil)
+			TSPClusterFrame.co = nil
+			return 3
+		end
+	else
+		return 2
+	end
+end
 
 -- TSP:DecrossRoute(nodes)
 -- Arguments

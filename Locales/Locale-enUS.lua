@@ -177,7 +177,10 @@ L["CLUSTER_DESC"] = "Clustering a route makes Routes take all the nodes that are
 L["Cluster Radius"] = true
 L["CLUSTER_RADIUS_DESC"] = "The maximum distance a node will be away from its cluster node point. The default is 60 yards because the detection radius of tracking skills is 80 yards."
 L["Cluster"] = true
+L["Cluster (in Background)"] = true
 L["Cluster this route"] = true
+L["Cluster this route in the background"] = true
+L["Background Route Clustering completed."] = true
 L["Uncluster"] = true
 L["Uncluster this route"] = true
 

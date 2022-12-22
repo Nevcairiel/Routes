@@ -1722,6 +1722,24 @@ function ConfigHandler:ClusterRoute(info)
 	Routes:DrawMinimapLines(true)
 end
 
+function ConfigHandler:ClusterRouteBackground(info)
+	local zone = tonumber(info[2])
+	local route = Routes.routekeys[zone][ info[3] ]
+	local t = db.routes[zone][route]
+
+	local function callbackClusterFinished(route, metadata, length)
+		t.route, t.metadata, t.length = route, metadata, length
+
+		t.cluster_dist = db.defaults.cluster_dist
+		Routes:DrawWorldmapLines()
+		Routes:DrawMinimapLines(true)
+
+		Routes:Print(L["Background Route Clustering completed."])
+	end
+
+	Routes.TSP:ClusterRouteBackground(db.routes[zone][route].route, zone, db.defaults.cluster_dist, callbackClusterFinished)
+end
+
 function ConfigHandler:UnClusterRoute(info)
 	local zone = tonumber(info[2])
 	local route = Routes.routekeys[zone][ info[3] ]
@@ -2187,13 +2205,26 @@ do
 						disabled = "IsCluster",
 						order = 60,
 					},
+					cluster_bl = {
+						type  = "description",
+						name  = " ",
+						order = 70,
+					},
 					cluster = {
 						name = L["Cluster"], type = "execute",
 						desc = L["Cluster this route"],
 						func = "ClusterRoute",
 						hidden = "IsCluster",
 						disabled = "IsCluster",
-						order = 70,
+						order = 71,
+					},
+					cluster_background = {
+						name = L["Cluster (in Background)"], type = "execute",
+						desc = L["Cluster this route in the background"],
+						func = "ClusterRouteBackground",
+						hidden = "IsCluster",
+						disabled = "IsCluster",
+						order = 72,
 					},
 					uncluster = {
 						name = L["Uncluster"], type = "execute",

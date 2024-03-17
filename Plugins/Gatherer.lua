@@ -20,7 +20,7 @@ do
 	-- stop loading if there is a reason why it can't be loaded ("MISSING" or "DISABLED")
 	local enabled = GetAddOnEnableState(UnitName("player"), SourceName)
 	local name, title, notes, loadable, reason, security = GetAddOnInfo(SourceName)
-	if not enabled or (reason ~= nil and reason ~= "DEMAND_LOADED") then
+	if not enabled or (reason ~= nil and reason ~= "" and reason ~= "DEMAND_LOADED") then
 		loaded = false
 		return
 	end

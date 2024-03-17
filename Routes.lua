@@ -1067,7 +1067,7 @@ RoutesPinMixin = CreateFromMixins(MapCanvasPinMixin)
 
 function RoutesPinMixin:OnLoad()
 	self:SetIgnoreGlobalPinScale(true)
-	self:UseFrameLevelType("PIN_FRAME_LEVEL_SCENARIO_BLOB")
+	self:UseFrameLevelType("PIN_FRAME_LEVEL_MAP_HIGHLIGHT")
 end
 
 function RoutesPinMixin:OnAcquired(battleField)

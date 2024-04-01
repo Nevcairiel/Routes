@@ -166,12 +166,19 @@ local GetPlayerFacing = GetPlayerFacing
 ------------------------------------------------------------------------------------------------------
 -- Data for Localized Zone Names
 local function GetZoneName(uiMapID)
+	-- Change individual zone display format in UI, eg. for the different Dalaran's.
 	local name = Routes.Dragons:GetLocalizedMap(uiMapID)
-	if uiMapID == 104 or uiMapID == 107 then -- Outland SMV and Nagrand
+	-- Outland
+	if uiMapID == 104 or uiMapID == 107 then
+		-- Shadowmoon Valley (Outland)
+		-- Nagrand (Outland)
 		name = format("%s (%s)", name, Routes.Dragons:GetLocalizedMap(101))
-	elseif uiMapID == 125 then -- Northrend Dalaran
+	-- Northrend
+	elseif uiMapID == 125 then
+		-- Dalaran (Northrend)
 		name = format("%s (%s)", name, Routes.Dragons:GetLocalizedMap(113))
-	elseif uiMapID == 2104 then -- Wintergrasp BG
+	elseif uiMapID == 2104 then
+		-- Wintergrasp (BG)
 		name = format("%s (BG)", name)
 	end
 	return name

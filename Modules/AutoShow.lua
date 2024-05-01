@@ -22,7 +22,7 @@ local profession_to_skill = {}
 local classic_spell_ids = {}
 
 if GetProfessions then
-	profession_to_skill[GetSpellInfo(170691)] = "Herbalism"
+	profession_to_skill[GetSpellInfo(170691) or GetSpellInfo(9134)] = "Herbalism"
 	profession_to_skill[GetSpellInfo(2575)] = "Mining"
 	profession_to_skill[GetSpellInfo(7620) or GetSpellInfo(131476)] = "Fishing"
 	profession_to_skill[GetSpellInfo(4036)] = "ExtractGas"

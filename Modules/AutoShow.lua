@@ -4,6 +4,7 @@ local L = LibStub("AceLocale-3.0"):GetLocale("Routes")
 
 local GetNumTrackingTypes = C_Minimap and C_Minimap.GetNumTrackingTypes or GetNumTrackingTypes
 local GetTrackingInfo = C_Minimap and C_Minimap.GetTrackingInfo or GetTrackingInfo
+local GetSpellName = C_Spell and C_Spell.GetSpellName or GetSpellInfo
 
 -- Aceopt table, defined later
 local options
@@ -22,12 +23,12 @@ local profession_to_skill = {}
 local classic_spell_ids = {}
 
 if GetProfessions then
-	profession_to_skill[GetSpellInfo(170691) or GetSpellInfo(9134)] = "Herbalism"
-	profession_to_skill[GetSpellInfo(2575)] = "Mining"
-	profession_to_skill[GetSpellInfo(7620) or GetSpellInfo(131476)] = "Fishing"
-	profession_to_skill[GetSpellInfo(4036)] = "ExtractGas"
-	if GetSpellInfo(78670) then
-		profession_to_skill[GetSpellInfo(78670)] = "Archaeology"
+	profession_to_skill[GetSpellName(170691) or GetSpellName(9134)] = "Herbalism"
+	profession_to_skill[GetSpellName(2575)] = "Mining"
+	profession_to_skill[GetSpellName(7620) or GetSpellName(131476)] = "Fishing"
+	profession_to_skill[GetSpellName(4036)] = "ExtractGas"
+	if GetSpellName(78670) then
+		profession_to_skill[GetSpellName(78670)] = "Archaeology"
 	end
 else
 	classic_spell_ids = {
@@ -39,16 +40,16 @@ else
 end
 
 local tracking_spells = {}
-tracking_spells[(GetSpellInfo(2580))] = "Mining"
-tracking_spells[(GetSpellInfo(2383))] = "Herbalism"
-tracking_spells[(GetSpellInfo(2481))] = "Treasure"
+tracking_spells[(GetSpellName(2580))] = "Mining"
+tracking_spells[(GetSpellName(2383))] = "Herbalism"
+tracking_spells[(GetSpellName(2481))] = "Treasure"
 
-if GetSpellInfo(43308) then
-	tracking_spells[(GetSpellInfo(43308))] = "Fishing"
+if GetSpellName(43308) then
+	tracking_spells[(GetSpellName(43308))] = "Fishing"
 end
 
-if GetSpellInfo(167898) then
-	tracking_spells[(GetSpellInfo(167898))] = "Logging"
+if GetSpellName(167898) then
+	tracking_spells[(GetSpellName(167898))] = "Logging"
 end
 
 function AutoShow:SKILL_LINES_CHANGED()
@@ -90,9 +91,9 @@ function AutoShow:MINIMAP_UPDATE_TRACKING()
 end
 
 function AutoShow:UNIT_AURA()
-	local miningName = GetSpellInfo(2580)
-	local herbalismName = GetSpellInfo(2383)
-	local treasureName = GetSpellInfo(2481)
+	local miningName = GetSpellName(2580)
+	local herbalismName = GetSpellName(2383)
+	local treasureName = GetSpellName(2481)
 	local trackingTex = GetTrackingTexture()
 	if trackingTex then
 		if trackingTex == 136025 then -- Mining
@@ -236,7 +237,7 @@ options = {
 					name = L["ExtractGas"], type = "select",
 					desc = L["Routes with Gas"],
 					order = 200,
-					hidden = not GetSpellInfo(30427),
+					hidden = not GetSpellName(30427),
 					values = prof_options3,
 					arg = "ExtractGas",
 				},
@@ -265,7 +266,7 @@ options = {
 					name = L["Archaeology"], type = "select",
 					desc = L["Routes with Archaeology"],
 					order = 600,
-					hidden = not GetSpellInfo(78670),
+					hidden = not GetSpellName(78670),
 					values = prof_options3,
 					arg = "Archaeology",
 				},
@@ -280,7 +281,7 @@ options = {
 					name = L["Logging"], type = "select",
 					desc = L["Routes with Timber"],
 					order = 800,
-					hidden = not GetSpellInfo(167898),
+					hidden = not GetSpellName(167898),
 					values = prof_options2,
 					arg = "Logging",
 				},

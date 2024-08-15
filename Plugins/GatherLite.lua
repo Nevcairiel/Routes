@@ -18,8 +18,8 @@ do
 
     -- stop loading if the addon is not enabled, or
     -- stop loading if there is a reason why it can't be loaded ("MISSING" or "DISABLED")
-    local enabled = GetAddOnEnableState(UnitName("player"), SourceName)
-    local name, title, notes, loadable, reason, security = GetAddOnInfo(SourceName)
+    local enabled = C_AddOns.GetAddOnEnableState(UnitName("player"), SourceName)
+    local name, title, notes, loadable, reason, security = C_AddOns.GetAddOnInfo(SourceName)
     if not enabled or (reason ~= nil and reason ~= "" and reason ~= "DEMAND_LOADED") then
         loaded = false
         return

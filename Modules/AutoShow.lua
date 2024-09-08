@@ -78,12 +78,12 @@ end
 
 function AutoShow:MINIMAP_UPDATE_TRACKING()
 	for i = 1, GetNumTrackingTypes() do
-		local name, texture, active, category  = GetTrackingInfo(i)
-		if tracking_spells[name] then
-			if active then
-				active_tracking[tracking_spells[name]] = true
+		local info = GetTrackingInfo(i)
+		if tracking_spells[info.name] then
+			if info.active then
+				active_tracking[tracking_spells[info.name]] = true
 			else
-				active_tracking[tracking_spells[name]] = false
+				active_tracking[tracking_spells[info.name]] = false
 			end
 		end
 	end

@@ -947,6 +947,11 @@ function Routes:OnInitialize()
 	if L["routes"] ~= "routes" then
 		self:RegisterChatCommand("routes", f)
 	end
+	LibStub("LibDBIcon-1.0", true):Register("Routes", {
+		icon = "Interface\\AddOns\\Routes\\icon",
+		text = "Routes",
+		OnClick = f,
+	}, {})
 
 	-- Upgrade old storage format (which was dependant on LibBabble-Zone-3.0
 	-- to the new format that doesn't require it

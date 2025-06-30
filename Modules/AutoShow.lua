@@ -77,6 +77,9 @@ function AutoShow:SKILL_LINES_CHANGED()
 end
 
 function AutoShow:MINIMAP_UPDATE_TRACKING()
+	if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
+		return self:UNIT_AURA()
+	end
 	for i = 1, GetNumTrackingTypes() do
 		local info = GetTrackingInfo(i)
 		if tracking_spells[info.name] then

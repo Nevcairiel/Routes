@@ -82,7 +82,7 @@ function AutoShow:MINIMAP_UPDATE_TRACKING()
 	end
 	for i = 1, GetNumTrackingTypes() do
 		local info = GetTrackingInfo(i)
-		if tracking_spells[info.name] then
+		if info and type(info) == "table" and tracking_spells[info.name] then
 			if info.active then
 				active_tracking[tracking_spells[info.name]] = true
 			else

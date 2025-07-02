@@ -157,13 +157,8 @@ function AutoShow:SetupAutoShow()
 		self:RegisterEvent("SKILL_LINES_CHANGED")
 		self:SKILL_LINES_CHANGED()
 
-		if GetTrackingInfo then
-			self:RegisterEvent("MINIMAP_UPDATE_TRACKING")
-			self:MINIMAP_UPDATE_TRACKING()
-		else
-			self:RegisterEvent("UNIT_AURA")
-			self:UNIT_AURA()
-		end
+		self:RegisterEvent("MINIMAP_UPDATE_TRACKING")
+		self:MINIMAP_UPDATE_TRACKING()
 	end
 end
 

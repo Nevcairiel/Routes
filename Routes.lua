@@ -172,7 +172,7 @@ local function GetZoneName(uiMapID)
 	if uiMapID == 104 or uiMapID == 107 then
 		-- Shadowmoon Valley (Outland)
 		-- Nagrand (Outland)
-		name = format("%s (%s)", name, Routes.Dragons:GetLocalizedMap(101))
+		name = format("%s (%s)", name, Routes.Dragons:GetLocalizedMap(101) or Routes.Dragons:GetLocalizedMap(1467))
 	-- Northrend
 	elseif uiMapID == 125 then
 		-- Dalaran (Northrend)

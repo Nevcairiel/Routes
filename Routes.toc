@@ -1,6 +1,4 @@
-﻿## Interface: 100207, 110000, 110002
-## Interface-Classic: 11503
-## Interface-Cata: 40400
+﻿## Interface: 110107, 11507, 50500
 
 ## Title: Routes
 ## Author: Grum, Xinhuan

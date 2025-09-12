@@ -1,4 +1,4 @@
-﻿## Interface: 110107, 11507, 50500
+﻿## Interface: 110200, 110205, 11507, 50500
 
 ## Title: Routes
 ## Author: Grum, Xinhuan
@@ -10,7 +10,6 @@
 
 ## X-Curse-Project-ID: 14599
 ## X-Name: Routes
-## X-Category: Map
 ## X-eMail: routes@grum.nl & xinhuan@gmail.com
 ## X-License: All Rights Reserved.
 ## X-Discord: https://discord.com/invite/ayPc89hCbj
@@ -19,6 +18,18 @@
 ## DefaultState: enabled
 ## OptionalDeps: Ace3, HereBeDragons, Cartographer, Cartographer_Notes, GatherMate, GatherMate2, Gatherer, HandyNotes
 ## SavedVariables: RoutesDB
+
+## Category: Map
+## Category-deDE: Karte
+## Category-esES: Mapa
+## Category-esMX: Mapa
+## Category-frFR: Carte
+## Category-itIT: Mappa
+## Category-koKR: 지도
+## Category-ptBR: Mapa
+## Category-ruRU: Карта
+## Category-zhCN: 地图
+## Category-zhTW: 地圖
 
 # Library files
 #@no-lib-strip@

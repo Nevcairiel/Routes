@@ -74,7 +74,7 @@ local function AppendNodes(node_list, zone, db_type, node_type)
 
 		-- Find all of the notes
 		local zoneID = Routes.LZName[zone]
-		for loc, t in pairs(GatherMate2.gmdbs[db_type][zoneID]) do
+		for loc, t in GatherMate2:GetNodesForZone(zoneID, db_type, true) do
 			-- And are of a selected type - store
 			if t == node_type then
 				-- Convert GM2 location to our format

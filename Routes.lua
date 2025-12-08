@@ -934,6 +934,14 @@ local taboo_zone_args_desc_table = {
 ------------------------------------------------------------------------------------------------------
 -- General event functions
 
+local function ChatCommand(input)
+	if not input or input:trim() == "" then
+		LibStub("AceConfigDialog-3.0"):Open("Routes")
+	else
+		LibStub("AceConfigCmd-3.0").HandleCommand(Routes, "routes", "Routes", input)
+	end
+end
+
 function Routes:OnInitialize()
 	-- Initialize database
 	self.db = LibStub("AceDB-3.0"):New("RoutesDB", defaults, true)
@@ -942,10 +950,9 @@ function Routes:OnInitialize()
 
 	-- Initialize the ace options table
 	LibStub("AceConfigRegistry-3.0"):RegisterOptionsTable("Routes", options)
-	local f = function() LibStub("AceConfigDialog-3.0"):Open("Routes") end
-	self:RegisterChatCommand(L["routes"], f)
+	self:RegisterChatCommand(L["routes"], ChatCommand)
 	if L["routes"] ~= "routes" then
-		self:RegisterChatCommand("routes", f)
+		self:RegisterChatCommand("routes", ChatCommand)
 	end
 
 	-- Upgrade old storage format (which was dependant on LibBabble-Zone-3.0
@@ -1319,6 +1326,7 @@ options = {
 			type = "group",
 			name = L["Help File"],
 			desc = L["Help File"],
+			cmdHidden = true,
 			order = 300,
 			args = {
 				overview = {

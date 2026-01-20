@@ -163,6 +163,16 @@ local math_cos = math.cos
 local Minimap = Minimap
 local GetPlayerFacing = GetPlayerFacing
 
+local function GetCurrentMapID()
+	-- Use currently viewed map on first view if map was opened.
+	local uiMapID = WorldMapFrame:GetMapID()
+	if uiMapID ~= 947 then
+		return uiMapID
+	end
+	-- Otherwise, use the current zone of the player
+	return C_Map.GetBestMapForUnit("player")
+end
+
 ------------------------------------------------------------------------------------------------------
 -- Data for Localized Zone Names
 local function GetZoneName(uiMapID)
@@ -954,6 +964,11 @@ function Routes:OnInitialize()
 	if L["routes"] ~= "routes" then
 		self:RegisterChatCommand("routes", ChatCommand)
 	end
+	LibStub("LibDBIcon-1.0", true):Register("Routes", {
+		icon = "Interface\\AddOns\\Routes\\icon",
+		text = "Routes",
+		OnClick = f,
+	}, {})
 
 	-- Upgrade old storage format (which was dependant on LibBabble-Zone-3.0
 	-- to the new format that doesn't require it
@@ -2516,8 +2531,7 @@ do
 			end,
 			get = function()
 				if create_zone then return create_zone end
-				-- Use currently viewed map on first view.
-				local mapID = WorldMapFrame:GetMapID()
+				local mapID = GetCurrentMapID()
 				if not mapID then return nil end
 				create_zone = GetZoneName(mapID)
 				return create_zone
@@ -3358,8 +3372,7 @@ do
 			end,
 			get = function()
 				if create_zone then return create_zone end
-				-- Use currently viewed map on first view.
-				local mapID = WorldMapFrame:GetMapID()
+				local mapID = GetCurrentMapID()
 				if not mapID then return nil end
 				create_zone = GetZoneName(mapID)
 				return create_zone

@@ -165,7 +165,18 @@ local GetPlayerFacing = GetPlayerFacing
 
 ------------------------------------------------------------------------------------------------------
 -- Data for Localized Zone Names
+
+-- Cache populated by processMapEntries() for zones whose raw names collide with another zone.
+-- Keyed by uiMapID, value is the disambiguated display name.
+local disambiguatedZoneNames = {}
+
 local function GetZoneName(uiMapID)
+	-- Return the pre-computed disambiguated name when a collision was detected at load time.
+	-- This ensures plugins (GatherMate2, etc.) that call Routes.GetZoneName(id) receive the
+	-- same unique name that was stored in Routes.LZName, preventing cross-zone data lookup.
+	if disambiguatedZoneNames[uiMapID] then
+		return disambiguatedZoneNames[uiMapID]
+	end
 	-- Change individual zone display format in UI, eg. for the different Dalaran's.
 	local name = Routes.Dragons:GetLocalizedMap(uiMapID)
 	-- Outland
@@ -219,19 +230,52 @@ local function validMapParent(id)
 end
 
 local function processMapEntries()
+	-- Pass 1: collect all valid zone candidates and their raw names.
+	-- Using a name→list-of-ids table lets us detect collisions before writing LZName.
+	local nameToIDs = {}
 	for id, data in pairs(Routes.Dragons.mapData) do
 		if (data.mapType == Enum.UIMapType.Zone or data.mapType == Enum.UIMapType.Continent) and validMapParent(data.parent) then
 			validParentIDs[data.parent] = true
-
 			local name = GetZoneName(id)
-
-			--[[
-			if Routes.LZName[name] and Routes.LZName[name] ~= 0 then
-				print(("Routes: Name %q already mapped to %d (new: %d)"):format(name, Routes.LZName[name], id))
+			if not nameToIDs[name] then
+				nameToIDs[name] = {}
 			end
-			--]]
+			nameToIDs[name][#nameToIDs[name]+1] = id
+		end
+	end
 
-			Routes.LZName[name] = id
+	-- Detect collisions and pre-populate disambiguatedZoneNames so that GetZoneName()
+	-- returns unique strings for both the zone UI dropdown and plugin callbacks.
+	-- Disambiguation uses the parent zone name (same strategy as the hardcoded cases
+	-- above for Dalaran, Shadowmoon Valley, etc.).
+	for name, ids in pairs(nameToIDs) do
+		if #ids > 1 then
+			local usedNames = {}
+			for _, id in ipairs(ids) do
+				local data = Routes.Dragons.mapData[id]
+				local parentName = Routes.Dragons:GetLocalizedMap(data.parent)
+				local uniqueName
+				if parentName then
+					uniqueName = format("%s (%s)", name, parentName)
+				end
+				-- Fall back to numeric ID if parent name is absent or also collides.
+				if not uniqueName or usedNames[uniqueName] then
+					uniqueName = format("%s (#%d)", name, id)
+				end
+				usedNames[uniqueName] = true
+				disambiguatedZoneNames[id] = uniqueName
+			end
+		end
+	end
+
+	-- Pass 2: populate LZName using the now-final names (disambiguated where needed).
+	for name, ids in pairs(nameToIDs) do
+		if #ids == 1 then
+			Routes.LZName[name] = ids[1]
+		else
+			for _, id in ipairs(ids) do
+				Routes.LZName[disambiguatedZoneNames[id]] = id
+			end
 		end
 	end
 end

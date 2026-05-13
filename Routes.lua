@@ -1791,6 +1791,12 @@ function ConfigHandler:ClusterRoute(info)
 	local zone = tonumber(info[2])
 	local route = Routes.routekeys[zone][ info[3] ]
 	local t = db.routes[zone][route]
+	if #t.route > 50000 then
+		-- Grid-based clustering can handle very large datasets
+		-- Set high limit to prevent extreme memory usage
+		Routes:Print(L["TOO_MANY_NODES_FOR_CLUSTERING_ERROR"])
+		return
+	end
 	t.route, t.metadata, t.length = Routes.TSP:ClusterRoute(db.routes[zone][route].route, zone, db.defaults.cluster_dist)
 	t.cluster_dist = db.defaults.cluster_dist
 	Routes:DrawWorldmapLines()
@@ -1801,6 +1807,11 @@ function ConfigHandler:ClusterRouteBackground(info)
 	local zone = tonumber(info[2])
 	local route = Routes.routekeys[zone][ info[3] ]
 	local t = db.routes[zone][route]
+	if #t.route > 50000 then
+		-- Grid-based clustering can handle very large datasets
+		Routes:Print(L["TOO_MANY_NODES_FOR_CLUSTERING_ERROR"])
+		return
+	end
 
 	local function callbackClusterFinished(route, metadata, length)
 		t.route, t.metadata, t.length = route, metadata, length
@@ -1997,10 +2008,11 @@ function ConfigHandler:DoForeground(info)
 	local zone = tonumber(info[2])
 	local route = Routes.routekeys[zone][ info[3] ]
 	local t = db.routes[zone][route]
-	if #t.route > 724 then
-		-- Lua has 4mb limit on table size. 725x725 will result in a table of size 525625
-		-- 524288 (or 2^19) is the max as 8 bytes per entry will give exactly 4 Mb
-		Routes:Print(L["TOO_MANY_NODES_ERROR"])
+	if #t.route > 1500 then
+		-- SolveTSP creates n×n distance matrices (weight, phero, antprob)
+		-- 1500×1500 = 2.25M entries per matrix is a safe limit for WoW's memory
+		-- For larger routes, use Clustering first to reduce node count
+		Routes:Print(L["TOO_MANY_NODES_FOR_TSP_ERROR"])
 		return
 	end
 	local taboos = {}
@@ -2028,8 +2040,10 @@ function ConfigHandler:DoBackground(info)
 	local zone = tonumber(info[2])
 	local route = Routes.routekeys[zone][ info[3] ]
 	local t = db.routes[zone][route]
-	if #t.route > 724 then
-		Routes:Print(L["TOO_MANY_NODES_ERROR"])
+	if #t.route > 1500 then
+		-- SolveTSP creates n×n distance matrices (weight, phero, antprob)
+		-- For larger routes, use Clustering first to reduce node count
+		Routes:Print(L["TOO_MANY_NODES_FOR_TSP_ERROR"])
 		return
 	end
 	local taboos = {}

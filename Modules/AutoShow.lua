@@ -48,8 +48,8 @@ if GetSpellName(43308) then
 	tracking_spells[(GetSpellName(43308))] = "Fishing"
 end
 
-if GetSpellName(167898) then
-	tracking_spells[(GetSpellName(167898))] = "Logging"
+if GetSpellName(1256697) then
+	tracking_spells[(GetSpellName(1256697))] = "Logging"
 end
 
 function AutoShow:SKILL_LINES_CHANGED()
@@ -279,7 +279,7 @@ options = {
 					name = L["Logging"], type = "select",
 					desc = L["Routes with Timber"],
 					order = 800,
-					hidden = not GetSpellName(167898),
+					hidden = not GetSpellName(1256697),
 					values = prof_options2,
 					arg = "Logging",
 				},

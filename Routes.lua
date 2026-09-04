@@ -1750,6 +1750,72 @@ function ConfigHandler:SetWidthBattleMap(info, v)
 	Routes:DrawWorldmapLines()
 end
 
+local b64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+local function b64enc(data)
+	return ((data:gsub('.', function(x) 
+		local r,b='',x:byte()
+		for i=8,1,-1 do r=r..(b%2^i-b%2^(i-1)>0 and '1' or '0') end
+		return r;
+	end)..'0000'):gsub('%d%d%d?%d?%d?%d?', function(x)
+		if (#x < 6) then return '' end
+		local c=0
+		for i=1,6 do c=c+(x:sub(i,i)=='1' and 2^(6-i) or 0) end
+		return b64chars:sub(c+1,c+1)
+	end)..({ '', '==', '=' })[#data%3+1])
+end
+
+local function b64dec(data)
+	data = string.gsub(data, '[^'..b64chars..'=]', '')
+	return (data:gsub('.', function(x)
+		if (x == '=') then return '' end
+		local r,f='',(b64chars:find(x)-1)
+		for i=6,1,-1 do r=r..(f%2^i-f%2^(i-1)>0 and '1' or '0') end
+		return r;
+	end):gsub('%d%d%d?%d?%d?%d?%d?%d?', function(x)
+		if (#x ~= 8) then return '' end
+		local c=0
+		for i=1,8 do c=c+(x:sub(i,i)=='1' and 2^(8-i) or 0) end
+		return string.char(c)
+	end))
+end
+
+StaticPopupDialogs["ROUTES_EXPORT_DIALOG"] = {
+	text = "Copy string to export route:",
+	button1 = OKAY,
+	hasEditBox = 1,
+	maxLetters = 100000,
+	editBoxWidth = 250,
+	OnShow = function(self)
+		self:SetFrameStrata("TOOLTIP")
+		local editBox = _G[self:GetName().."EditBox"]
+		if editBox then
+			editBox:SetText(Routes.exportStr or "")
+			editBox:SetFocus()
+			editBox:HighlightText()
+		end
+	end,
+	OnHide = function(self)
+		self:SetFrameStrata("DIALOG")
+	end,
+	EditBoxOnEscapePressed = function(self)
+		self:GetParent():Hide()
+	end,
+	timeout = 0,
+	whileDead = 1,
+	hideOnEscape = 1
+}
+
+function ConfigHandler:ExportRouteStr(info)
+	local zone = tonumber(info[2])
+	local routekey = info[3]
+	local routeName = Routes.routekeys[zone][routekey]
+	local t = db.routes[zone][routeName]
+	local pts = table.concat(t.route, ",")
+	local data = string.format("%s;%s;%s;%s", zone, routeName, tostring(t.looped), pts)
+	Routes.exportStr = b64enc(data)
+	StaticPopup_Show("ROUTES_EXPORT_DIALOG")
+end
+
 function ConfigHandler:DeleteRoute(info)
 	local zone = tonumber(info[2])
 	local zoneKey = info[2]
@@ -2176,6 +2242,13 @@ do
 						confirmText = L["Are you sure you want to delete this route?"],
 						order = 100,
 						disabled = "IsBeingManualEdited",
+					},
+					export = {
+						name = "Export Route", type = "execute",
+						desc = "Show a popup to copy the route string",
+						order = 105,
+						func = "ExportRouteStr",
+						width = "full",
 					},
 					recreate = {
 						name = L["Recreate Route"], type = "execute",
@@ -2766,6 +2839,74 @@ do
 	end
 	options.args.add_group.args.add_route_copy.order
 		= options.args.add_group.args.source_choices.order + 1
+
+	options.args.add_group.args.import_route_header = {
+		type = "header",
+		name = "Import Route",
+		order = options.args.add_group.args.add_route_copy.order + 10,
+	}
+	options.args.add_group.args.import_route_str = {
+		type = "input",
+		name = "Import String",
+		desc = "Paste the exported route string here",
+		order = options.args.add_group.args.add_route_copy.order + 11,
+		set = function(info, val) Routes:ImportRoute(val) end,
+		get = function() return "" end,
+		width = "full",
+	}
+
+	function Routes:ImportRoute(str)
+		local decoded = b64dec(str)
+		if not decoded or decoded == "" then
+			self:Print("Invalid import string")
+			return
+		end
+		local zoneStr, routeName, loopedStr, ptsStr = strsplit(";", decoded, 4)
+		local zone = tonumber(zoneStr)
+		if not zone or not routeName or not ptsStr then
+			self:Print("Invalid route data format")
+			return
+		end
+		if not db.routes[zone] then db.routes[zone] = {} end
+		local finalRouteName = routeName
+		if Routes.routekeys[zone] and Routes.routekeys[zone][finalRouteName:gsub("%s", "\255")] then
+			local i = 1
+			while Routes.routekeys[zone][(finalRouteName.."_"..i):gsub("%s", "\255")] do i = i + 1 end
+			finalRouteName = finalRouteName.."_"..i
+		end
+		db.routes[zone][finalRouteName] = {
+			route = {},
+			color = nil, width = nil, width_minimap = nil, width_battlemap = nil,
+			hidden = false, looped = (loopedStr == "1" or loopedStr == "true") and 1 or 0,
+			visible = true, length = 0, selection = {}, db_type = {}, taboos = {}, taboolist = {}
+		}
+		local routeTable = db.routes[zone][finalRouteName]
+		for p in string.gmatch(ptsStr, "(%d+)") do
+			table.insert(routeTable.route, tonumber(p))
+		end
+		routeTable.length = Routes.TSP:PathLength(routeTable.route, zone)
+
+		-- Update UI Options
+		local opts = options.args.routes_group.args
+		local mapIDKey = tostring(zone)
+		if not opts[mapIDKey] then
+			local create_zone_name = GetZoneName(zone)
+			opts[mapIDKey] = {
+				type = "group",
+				name = create_zone_name,
+				desc = L["Routes in %s"]:format(create_zone_name),
+				args = { desc = route_zone_args_desc_table },
+			}
+			Routes.routekeys[zone] = {}
+		end
+		local routekey = finalRouteName:gsub("%s", "\255")
+		Routes.routekeys[zone][routekey] = finalRouteName
+		opts[mapIDKey].args[routekey] = Routes:GetAceOptRouteTable()
+
+		self:DrawWorldmapLines()
+		self:DrawMinimapLines(true)
+		self:Print("Successfully imported route: " .. finalRouteName)
+	end
 
 	function Routes:RecreateRoute(mapFile, routeName)
 		create_name = routeName

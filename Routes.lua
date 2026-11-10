@@ -67,7 +67,10 @@ local G = {} -- was Graph-1.0, but we removed the dependency
 Routes.G = G
 Routes.Dragons = LibStub("HereBeDragons-2.0")
 
-local WoW90 = select(4, GetBuildInfo()) >= 90000
+-- WoW Forever reports interface 16001 but runs the mainline client, which has the modern minimap API.
+-- On the old path, MINIMAP_UPDATE_ZOOM calls Minimap:SetZoom, which fires MINIMAP_UPDATE_ZOOM again, so
+-- the minimap lines were redrawn every frame.
+local WoW90 = select(4, GetBuildInfo()) >= 90000 or (WOW_PROJECT_CAMELOT ~= nil and WOW_PROJECT_ID == WOW_PROJECT_CAMELOT)
 
 -- database defaults
 local db

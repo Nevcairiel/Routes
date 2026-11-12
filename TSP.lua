@@ -160,7 +160,7 @@ function TSPUpdateFrame:OnUpdate(elapsed)
 		self.finishFunc = nil
 		self.statusFunc = nil
 		self.nodes = nil
-		Routes:Print(Routes.L["The following error occured in the background path generation coroutine, please report to Grum or Xinhuan:"])
+		Routes:Print(Routes.L["The following error occured in the background path generation coroutine, please report to the addon authors:"])
 		Routes:Print(path)
 	end
 end
@@ -188,7 +188,7 @@ function TSPClusterFrame:OnUpdate(elapsed)
 		self.co = nil
 		self.finishFunc = nil
 		self.nodes = nil
-		Routes:Print(Routes.L["The following error occured in the background clustering coroutine, please report to Grum or Xinhuan:"])
+		Routes:Print(Routes.L["The following error occured in the background clustering coroutine, please report to the addon authors:"])
 		Routes:Print(nodes)
 	end
 end

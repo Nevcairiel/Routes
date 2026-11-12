@@ -167,7 +167,7 @@ L["Background Disclaimer"] = "This will perform the TSP route generation in the 
 L["Path with %d nodes found with length %.2f yards after %d iterations in %.2f seconds."] = true
 L["Now running TSP in the background..."] = true
 L["There is already a TSP running in background. Wait for it to complete first."] = true
-L["The following error occured in the background path generation coroutine, please report to Grum or Xinhuan:"] = true
+L["The following error occured in the background path generation coroutine, please report to the addon authors:"] = true
 L["TOO_MANY_NODES_ERROR"] = "This route has more than 724 nodes. Please reduce it by removing some nodes or by clustering otherwise memory allocation errors will occur."
 L["Pass %d: %d%% - %d yards"] = true
 L["Pass %d: %d%%"] = true
@@ -186,7 +186,7 @@ L["There is already a route being clustered in the background. Wait for it to co
 L["This route is already being clustered in the background."] = true
 L["You may not cluster or uncluster a route that is being optimized in the background."] = true
 L["The route was changed while it was being clustered in the background, the result was discarded."] = true
-L["The following error occured in the background clustering coroutine, please report to Grum or Xinhuan:"] = true
+L["The following error occured in the background clustering coroutine, please report to the addon authors:"] = true
 L["Uncluster"] = true
 L["Uncluster this route"] = true
 

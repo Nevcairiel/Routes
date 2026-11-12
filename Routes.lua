@@ -1872,7 +1872,7 @@ function ConfigHandler:ClusterRouteBackground(info)
 		Routes:Print(L["There is already a route being clustered in the background. Wait for it to complete first."])
 	elseif running == 3 then
 		-- This should never happen, but is here as a fallback
-		Routes:Print(L["The following error occured in the background clustering coroutine, please report to Grum or Xinhuan:"])
+		Routes:Print(L["The following error occured in the background clustering coroutine, please report to the addon authors:"])
 		Routes:Print(errormsg)
 	end
 end
@@ -2132,7 +2132,7 @@ function ConfigHandler:DoBackground(info)
 		Routes:Print(L["There is already a TSP running in background. Wait for it to complete first."])
 	elseif (running == 3) then
 		-- This should never happen, but is here as a fallback
-		Routes:Print(L["The following error occured in the background path generation coroutine, please report to Grum or Xinhuan:"]);
+		Routes:Print(L["The following error occured in the background path generation coroutine, please report to the addon authors:"]);
 		Routes:Print(errormsg);
 	end
 end

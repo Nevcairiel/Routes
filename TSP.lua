@@ -248,6 +248,12 @@ local NEIGHBOURS = 10
 local QUADRANT_NEIGHBOURS = 2
 -- Number of nodes to look at before giving up on finding those
 local QUADRANT_SCAN_LIMIT = 150
+-- The grid that is used to find the neighbours gets finer cells until no cell
+-- has more nodes than this, as far as that is possible
+local GRID_CELL_LIMIT = 64
+-- Number of nodes to look at before settling for the neighbours found so far.
+-- This is only reached for nodes that are (almost) on the same spot.
+local NEIGHBOUR_SCAN_LIMIT = 1000
 -- Improvements smaller than this (in yards) are ignored, so that rounding
 -- errors can't make the search run in circles
 local EPSILON = 1e-7
@@ -415,7 +421,13 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 			local pair = a < b and a * pairBase + b or b * pairBase + a
 			local c = crossing[pair]
 			if c == nil then
-				c = crossesTaboo(a, b)
+				-- always ask with the nodes in the same order, rounding errors
+				-- can make the answer depend on it if the line touches an outline
+				if a < b then
+					c = crossesTaboo(a, b)
+				else
+					c = crossesTaboo(b, a)
+				end
 				if numCrossing >= 400000 then
 					-- don't let the cache grow forever
 					crossing, numCrossing = {}, 0
@@ -431,7 +443,7 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 		end
 	end
 
-	-- Step 3	- Sort the nodes into a grid with about 2 nodes per cell
+	-- Step 3	- Sort the nodes into a grid
 	local minX, maxX, minY, maxY = X[1], X[1], Y[1], Y[1]
 	for i = 2, numNodes do
 		local x, y = X[i], Y[i]
@@ -444,25 +456,52 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 	-- no more than numNodes/2 cells per axis, even if all nodes are on a line
 	if not (cellSize > 2 * extent / numNodes) then cellSize = 2 * extent / numNodes end
 	if not (cellSize > 0) then cellSize = 1 end
-	local numColumns, numRows = floor(width / cellSize) + 1, floor(height / cellSize) + 1
-	local cells = {}             -- column * numRows + row -> list of nodes in the cell
-	local cellColumn, cellRow = {}, {}
-	local cellPos = {}           -- node -> index in the list of its cell
-	for i = 1, numNodes do
-		local column, row = floor((X[i] - minX) / cellSize), floor((Y[i] - minY) / cellSize)
-		local key = column * numRows + row
-		local cell = cells[key]
-		if not cell then
-			cell = {}
-			cells[key] = cell
+	-- That is about 2 nodes per cell if the nodes are spread evenly. If most of
+	-- them are in a small part of the zone they end up in a few cells though,
+	-- so halve the size of the cells until no cell has too many nodes. That
+	-- doesn't help if they are on the very same spot, keep the first grid then.
+	local numColumns, numRows
+	local cells                  -- column * numRows + row -> list of nodes in the cell
+	local cellColumn, cellRow
+	local cellPos                -- node -> index in the list of its cell
+	do
+		local size, fewest = cellSize, inf
+		for attempt = 0, 10 do
+			local columns, rows = floor(width / size) + 1, floor(height / size) + 1
+			local newCells, newColumn, newRow, newPos = {}, {}, {}, {}
+			local most = 0
+			for i = 1, numNodes do
+				local column, row = floor((X[i] - minX) / size), floor((Y[i] - minY) / size)
+				local key = column * rows + row
+				local cell = newCells[key]
+				if not cell then
+					cell = {}
+					newCells[key] = cell
+				end
+				local n = #cell + 1
+				cell[n] = i
+				newColumn[i], newRow[i], newPos[i] = column, row, n
+				if n > most then most = n end
+			end
+			if most < fewest then
+				fewest, cellSize, numColumns, numRows = most, size, columns, rows
+				cells, cellColumn, cellRow, cellPos = newCells, newColumn, newRow, newPos
+			end
+			if most <= GRID_CELL_LIMIT then
+				break
+			end
+			size = size / 2
+			if nonblocking then
+				tick()
+			end
 		end
-		local n = #cell + 1
-		cell[n] = i
-		cellColumn[i], cellRow[i], cellPos[i] = column, row, n
 	end
+	-- Looking for something in the grid ring by ring gets more expensive than
+	-- just looking at every node after this many rings
+	local ringLimit = floor(numNodes^0.5 / 2) + 2
 
 	-- Calls func(node) for every node in the cells that are exactly "ring"
-	-- cells away from the given cell
+	-- cells away from the given cell. Stops and returns true if func does.
 	local function scanRing(column, row, ring, func)
 		local c1, c2, r1, r2 = column - ring, column + ring, row - ring, row + ring
 		for c = c1 < 0 and 0 or c1, c2 >= numColumns and numColumns - 1 or c2 do
@@ -470,20 +509,26 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 				for r = r1 < 0 and 0 or r1, r2 >= numRows and numRows - 1 or r2 do
 					local cell = cells[c * numRows + r]
 					if cell then
-						for n = 1, #cell do func(cell[n]) end
+						for n = 1, #cell do
+							if func(cell[n]) then return true end
+						end
 					end
 				end
 			else
 				if r1 >= 0 then
 					local cell = cells[c * numRows + r1]
 					if cell then
-						for n = 1, #cell do func(cell[n]) end
+						for n = 1, #cell do
+							if func(cell[n]) then return true end
+						end
 					end
 				end
 				if r2 < numRows and r2 ~= r1 then
 					local cell = cells[c * numRows + r2]
 					if cell then
-						for n = 1, #cell do func(cell[n]) end
+						for n = 1, #cell do
+							if func(cell[n]) then return true end
+						end
 					end
 				end
 			end
@@ -497,7 +542,7 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 	local neighbour = {}
 	do
 		local nearNode, nearDist = {}, {}
-		local numNear, worst, self, selfX, selfY, numScanned
+		local numNear, worst, self, selfX, selfY, numScanned, scanLimit
 		-- the nearest nodes in each of the 4 directions (quadrants) are kept in
 		-- quadNode[quadrant * QUADRANT_NEIGHBOURS + 1 .. + quadCount[quadrant]]
 		local quadNode, quadDist, quadCount = {}, {}, {}
@@ -539,19 +584,35 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 						quadDist[base + n], quadNode[base + n] = d, node
 					end
 				end
+				-- enough is enough
+				return numScanned >= scanLimit and numNear == numNeighbours
 			end
 		end
 		local maxRing = numColumns > numRows and numColumns or numRows
 		local chosen, chosenCost = {}, {}
 		for i = 1, numNodes do
 			self, selfX, selfY = i, X[i], Y[i]
-			numNear, worst, numScanned = 0, inf, 0
+			numNear, worst, numScanned, scanLimit = 0, inf, 0, NEIGHBOUR_SCAN_LIMIT
 			for quadrant = 0, 3 do
 				quadCount[quadrant] = 0
 			end
 			local column, row = cellColumn[i], cellRow[i]
 			for ring = 0, maxRing do
-				scanRing(column, row, ring, consider)
+				if ring > ringLimit then
+					-- This node is far away from the others compared to the size of
+					-- the cells, start over and look at all nodes instead
+					numNear, worst, numScanned, scanLimit = 0, inf, 0, inf
+					for quadrant = 0, 3 do
+						quadCount[quadrant] = 0
+					end
+					for node = 1, numNodes do
+						consider(node)
+					end
+					break
+				end
+				if scanRing(column, row, ring, consider) then
+					break
+				end
 				-- everything in the cells further out is at least ring * cellSize away
 				local reach = ring * cellSize
 				if numNear == numNeighbours and worst <= reach then
@@ -615,7 +676,8 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 			for n = 1, numNeighbours do
 				neighbour[base + n] = chosen[n]
 			end
-			if nonblocking and i % 16 == 0 then
+			if nonblocking and (i % 16 == 0 or numScanned > 200) then
+				progress = 0.3 * i / numNodes
 				tick()
 			end
 		end
@@ -662,16 +724,31 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 				selfX, selfY = X[current], Y[current]
 				best, bestDist = nil, inf
 				local column, row = cellColumn[current], cellRow[current]
+				local looked = false
 				for ring = 0, maxRing do
+					if ring > ringLimit then
+						-- nothing nearby, look at all nodes instead
+						for node = 1, numNodes do
+							if not visited[node] then
+								consider(node)
+							end
+						end
+						looked = true
+						break
+					end
 					scanRing(column, row, ring, consider)
 					if best and bestDist <= (ring * cellSize)^2 then
 						break
 					end
 				end
 				nextNode = best
+				if nonblocking and looked then
+					tick()
+				end
 			end
 			current = nextNode
 			if nonblocking and i % 16 == 0 then
+				progress = 0.3 + 0.1 * i / numNodes
 				tick()
 			end
 		end
@@ -905,9 +982,13 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 			numLooked = numLooked + 1
 			if nonblocking and numLooked % 8 == 0 then
 				if pass == 1 then
-					progress = numLooked < numNodes and numLooked / numNodes or 1
+					progress = 0.4 + 0.6 * (numLooked < numNodes and numLooked / numNodes or 1)
 				end
 				tick()
+				if TSPUpdateFrame.stop then
+					-- asked to finish now, the route is valid after every change
+					break
+				end
 			end
 		end
 		queueHead, queueTail = 1, 0
@@ -977,9 +1058,14 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 		end
 		journalSize = nil
 		if nonblocking and kick % 4 == 0 then
-			progress = kick / numKicks
-			if patience and (kick - lastImprovement) / patience > progress then
-				progress = (kick - lastImprovement) / patience
+			-- how far we are, either with all the attempts or with giving up,
+			-- but never going backwards
+			local p = kick / numKicks
+			if patience and (kick - lastImprovement) / patience > p then
+				p = (kick - lastImprovement) / patience
+			end
+			if p > progress then
+				progress = p
 			end
 			tick()
 		end

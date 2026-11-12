@@ -106,11 +106,13 @@ function TSPUpdateFrame:OnUpdate(elapsed)
 			-- Function finished, return results
 			self:SetScript("OnUpdate", nil)
 			self.running = false
-			self.finishFunc(path, meta, shortestPathLength, count, timetaken)
+			local finishFunc = self.finishFunc
 			self.finishFunc = nil
 			self.statusFunc = nil
 			self.co = nil
 			self.nodes = nil
+			self.stop = nil
+			finishFunc(path, meta, shortestPathLength, count, timetaken)
 		end
 	else
 		-- An error occured in the coroutine, abort and print the error
@@ -120,6 +122,7 @@ function TSPUpdateFrame:OnUpdate(elapsed)
 		self.finishFunc = nil
 		self.statusFunc = nil
 		self.nodes = nil
+		self.stop = nil
 		Routes:Print(Routes.L["The following error occured in the background path generation coroutine, please report to the addon authors:"])
 		Routes:Print(path)
 	end
@@ -157,6 +160,14 @@ function TSP:IsTSPRunning()
 	return TSPUpdateFrame.running, TSPUpdateFrame.nodes
 end
 
+-- Tells the TSP running in the background to finish now, with the best path
+-- it has found so far
+function TSP:StopTSP()
+	if TSPUpdateFrame.running then
+		TSPUpdateFrame.stop = true
+	end
+end
+
 function TSP:IsClusterRunning()
 	return TSPClusterFrame.running, TSPClusterFrame.nodes
 end
@@ -167,8 +178,9 @@ function TSP:SolveTSPBackground(nodes, metadata, taboos, zoneID, parameters, pat
 		TSPUpdateFrame.co = coroutine.create(TSP.SolveTSP)
 		TSPUpdateFrame:SetScript("OnUpdate", TSPUpdateFrame.OnUpdate)
 		TSPUpdateFrame.running = true
+		TSPUpdateFrame.stop = nil
 		TSPUpdateFrame.nodes = nodes
-		local status = coroutine.resume(TSPUpdateFrame.co, TSP, nodes, metadata, taboos, zoneID, parameters, path, true)
+		local status, errormsg = coroutine.resume(TSPUpdateFrame.co, TSP, nodes, metadata, taboos, zoneID, parameters, path, true)
 		if status then
 			-- Do nothing, path isn't complete because at least 1 yield() is called.
 			return 1
@@ -177,7 +189,8 @@ function TSP:SolveTSPBackground(nodes, metadata, taboos, zoneID, parameters, pat
 			TSPUpdateFrame.running = false
 			TSPUpdateFrame:SetScript("OnUpdate", nil)
 			TSPUpdateFrame.co = nil
-			return 3, path
+			TSPUpdateFrame.nodes = nil
+			return 3, errormsg
 		end
 	else
 		-- There is already a TSP running
@@ -205,7 +218,12 @@ end
 --   metadata    - The table containing the cluster metadata, if available
 --   taboos      - A table containing a table of taboo regions to use.
 --   zoneID      - The map area ID of the map that the route is to be generated on.
---   parameters  - The table containing the parameters to use.
+--   parameters  - The table containing the parameters to use:
+--                   kicks_per_node    - Number of attempts to improve the route
+--                                       further, per node. The default is 10.
+--                   patience_per_node - If set, stop early if this many
+--                                       attempts per node in a row did not
+--                                       improve the route.
 --   path        - An optional input table that is used to supply the result
 --                 table. If this is nil, the function returns a new table.
 --   nonblocking - A boolean to indicate whether the function should yield() regularly.
@@ -214,11 +232,12 @@ end
 --                 to path[n], a list of Routes node IDs.
 --   metadata    - The table containing the cluster metadata, if available
 --   length      - The length in yards of the path returned.
---   iteration   - Number of interations taken.
+--   iteration   - Number of attempts to improve the route further that were made.
 --   timeTaken   - Number of seconds used.
 -- Notes: A new nodes[] and metadata[] table is returned. The original tables
 --        sent in are unmodified. The path returned is never worse than the
---        order of the nodes that were sent in.
+--        order of the nodes that were sent in. A nonblocking call can be
+--        told to finish early with TSP:StopTSP().
 
 -- Number of nearest neighbours of each node that are considered as the new
 -- neighbour of that node in the route
@@ -899,7 +918,7 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 		push(tour[i])
 	end
 	localSearch()
-	local count = 1
+	local count = 0
 
 	-- Step 8	- Kick the route out of the dead end it is in now
 	-- A kick swaps 2 short segments of the route that are next to each other,
@@ -909,8 +928,17 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 	local maxSegment = floor((numNodes - 2) / 2)
 	if maxSegment > KICK_SEGMENT then maxSegment = KICK_SEGMENT end
 	local numKicks = floor((parameters.kicks_per_node or KICKS_PER_NODE) * numNodes)
+	local patience = parameters.patience_per_node and floor(parameters.patience_per_node * numNodes)
+	local lastImprovement = 0
 	pass, progress = 2, 0
 	for kick = 1, numKicks do
+		if patience and kick - lastImprovement > patience then
+			break
+		end
+		if nonblocking and TSPUpdateFrame.stop then
+			break
+		end
+		count = kick
 		local costBefore = cost
 		journalSize = 0
 		-- the route is a a1..a2 b1..b2 c, change it to a b1..b2 a1..a2 c
@@ -939,7 +967,7 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 		push(a) push(a1) push(a2) push(b1) push(b2) push(c)
 		localSearch()
 		if cost < costBefore - EPSILON then
-			count = count + 1
+			lastImprovement = kick
 		else
 			-- no good, undo it
 			for n = journalSize, 1, -1 do
@@ -950,6 +978,9 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 		journalSize = nil
 		if nonblocking and kick % 4 == 0 then
 			progress = kick / numKicks
+			if patience and (kick - lastImprovement) / patience > progress then
+				progress = (kick - lastImprovement) / patience
+			end
 			tick()
 		end
 	end

@@ -971,6 +971,11 @@ function TSP:ClusterRoute(nodes, zoneID, radius, nonblocking)
 	-- The cells are slightly larger than the diameter so that rounding errors
 	-- can never put 2 clusters within the diameter more than 1 cell apart.
 	local cellSize = diameter * 1.001
+	-- Limit the grid to 2^20 cells per axis so that the cell keys are always
+	-- exact integers. Larger cells only mean more candidates per cell.
+	local extent = abs(zoneW)
+	if abs(zoneH) > extent then extent = abs(zoneH) end
+	if not (cellSize > extent / 1048576) then cellSize = extent / 1048576 end
 	if not (cellSize > 0) then cellSize = 1 end
 	local scaleX, scaleY = zoneW / cellSize, zoneH / cellSize
 	local stride = floor(abs(scaleY)) + 4 -- cell key is column * stride + row

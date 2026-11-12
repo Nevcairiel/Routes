@@ -2045,6 +2045,12 @@ function ConfigHandler:DoForeground(info)
 	local zone = tonumber(info[2])
 	local route = Routes.routekeys[zone][ info[3] ]
 	local t = db.routes[zone][route]
+	local is_running, route_table = Routes.TSP:IsTSPRunning()
+	if is_running and route_table == t.route then
+		-- the result of the background run would replace ours when it finishes
+		Routes:Print(L["There is already a TSP running in background. Wait for it to complete first."])
+		return
+	end
 	local taboos = {}
 	for tabooname, used in pairs(t.taboos) do
 		if used then

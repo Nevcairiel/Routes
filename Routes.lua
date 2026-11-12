@@ -1787,10 +1787,27 @@ function ConfigHandler:RecreateRoute(info)
 	Routes:DrawMinimapLines(true)
 end
 
+-- Returns true (and tells the user) if the clustering of a route can't be
+-- changed right now because a background task is working on the route
+local function IsRouteBusy(t)
+	local is_running, route_table = Routes.TSP:IsTSPRunning()
+	if is_running and route_table == t.route then
+		Routes:Print(L["You may not cluster or uncluster a route that is being optimized in the background."])
+		return true
+	end
+	is_running, route_table = Routes.TSP:IsClusterRunning()
+	if is_running and route_table == t.route then
+		Routes:Print(L["This route is already being clustered in the background."])
+		return true
+	end
+	return false
+end
+
 function ConfigHandler:ClusterRoute(info)
 	local zone = tonumber(info[2])
 	local route = Routes.routekeys[zone][ info[3] ]
 	local t = db.routes[zone][route]
+	if IsRouteBusy(t) then return end
 	t.route, t.metadata, t.length = Routes.TSP:ClusterRoute(db.routes[zone][route].route, zone, db.defaults.cluster_dist)
 	t.cluster_dist = db.defaults.cluster_dist
 	Routes:DrawWorldmapLines()
@@ -1801,11 +1818,40 @@ function ConfigHandler:ClusterRouteBackground(info)
 	local zone = tonumber(info[2])
 	local route = Routes.routekeys[zone][ info[3] ]
 	local t = db.routes[zone][route]
+	if IsRouteBusy(t) then return end
+	local source = t.route
+	local cluster_dist = db.defaults.cluster_dist
 
-	local function callbackClusterFinished(route, metadata, length)
-		t.route, t.metadata, t.length = route, metadata, length
+	local function callbackClusterFinished(new_route, metadata, length)
+		-- Only use the result if the route is still the one that was clustered
+		local valid = db.routes[zone] and db.routes[zone][route] == t and t.route == source and not t.metadata and not t.editing
+		if valid then
+			-- nodes may have been inserted or deleted in the meantime
+			local count = {}
+			for i = 1, #source do
+				count[source[i]] = (count[source[i]] or 0) + 1
+			end
+			for i = 1, #metadata do
+				local nodes = metadata[i]
+				for j = 1, #nodes do
+					count[nodes[j]] = (count[nodes[j]] or 0) - 1
+				end
+			end
+			for coord, num in pairs(count) do
+				if num ~= 0 then
+					valid = false
+					break
+				end
+			end
+		end
+		if not valid then
+			Routes:Print(L["The route was changed while it was being clustered in the background, the result was discarded."])
+			return
+		end
 
-		t.cluster_dist = db.defaults.cluster_dist
+		t.route, t.metadata, t.length = new_route, metadata, length
+
+		t.cluster_dist = cluster_dist
 		Routes:Print(L["Background Route Clustering completed."])
 
 		-- redraw lines
@@ -1819,14 +1865,23 @@ function ConfigHandler:ClusterRouteBackground(info)
 		LibStub("AceConfigRegistry-3.0"):NotifyChange("Routes")
 	end
 
-	Routes:Print(L["Now running route clustering in the background..."])
-	Routes.TSP:ClusterRouteBackground(db.routes[zone][route].route, zone, db.defaults.cluster_dist, callbackClusterFinished)
+	local running, errormsg = Routes.TSP:ClusterRouteBackground(source, zone, cluster_dist, callbackClusterFinished)
+	if running == 1 then
+		Routes:Print(L["Now running route clustering in the background..."])
+	elseif running == 2 then
+		Routes:Print(L["There is already a route being clustered in the background. Wait for it to complete first."])
+	elseif running == 3 then
+		-- This should never happen, but is here as a fallback
+		Routes:Print(L["The following error occured in the background clustering coroutine, please report to Grum or Xinhuan:"])
+		Routes:Print(errormsg)
+	end
 end
 
 function ConfigHandler:UnClusterRoute(info)
 	local zone = tonumber(info[2])
 	local route = Routes.routekeys[zone][ info[3] ]
 	local t = db.routes[zone][route]
+	if IsRouteBusy(t) then return end
 	local num = 0
 	for i = 1, #t.metadata do
 		for j = 1, #t.metadata[i] do

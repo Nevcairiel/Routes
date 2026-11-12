@@ -175,10 +175,11 @@ function TSPClusterFrame:OnUpdate(elapsed)
 			-- Function finished, return results
 			self:SetScript("OnUpdate", nil)
 			self.running = false
-			self.finishFunc(nodes, metadata, pathLength)
+			local finishFunc = self.finishFunc
 			self.finishFunc = nil
-			self.statusFunc = nil
 			self.co = nil
+			self.nodes = nil
+			finishFunc(nodes, metadata, pathLength)
 		end
 	else
 		-- An error occured in the coroutine, abort and print the error
@@ -186,7 +187,7 @@ function TSPClusterFrame:OnUpdate(elapsed)
 		self.running = false
 		self.co = nil
 		self.finishFunc = nil
-		self.statusFunc = nil
+		self.nodes = nil
 		Routes:Print(Routes.L["The following error occured in the background clustering coroutine, please report to Grum or Xinhuan:"])
 		Routes:Print(nodes)
 	end
@@ -194,6 +195,10 @@ end
 
 function TSP:IsTSPRunning()
 	return TSPUpdateFrame.running, TSPUpdateFrame.nodes
+end
+
+function TSP:IsClusterRunning()
+	return TSPClusterFrame.running, TSPClusterFrame.nodes
 end
 
 -- Same arguments as TSP:SolveTSP(), without the "nonblocking" argument
@@ -1198,7 +1203,8 @@ function TSP:ClusterRouteBackground(nodes, zoneID, radius, finishFunc)
 		TSPClusterFrame.finishFunc = finishFunc
 		TSPClusterFrame:SetScript("OnUpdate", TSPClusterFrame.OnUpdate)
 		TSPClusterFrame.running = true
-		local status = coroutine.resume(TSPClusterFrame.co, TSP, nodes, zoneID, radius, true)
+		TSPClusterFrame.nodes = nodes
+		local status, errormsg = coroutine.resume(TSPClusterFrame.co, TSP, nodes, zoneID, radius, true)
 		if status then
 			-- Do nothing, path isn't complete because at least 1 yield() is called.
 			return 1
@@ -1207,9 +1213,12 @@ function TSP:ClusterRouteBackground(nodes, zoneID, radius, finishFunc)
 			TSPClusterFrame.running = false
 			TSPClusterFrame:SetScript("OnUpdate", nil)
 			TSPClusterFrame.co = nil
-			return 3
+			TSPClusterFrame.finishFunc = nil
+			TSPClusterFrame.nodes = nil
+			return 3, errormsg
 		end
 	else
+		-- There is already a clustering running
 		return 2
 	end
 end

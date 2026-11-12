@@ -77,7 +77,7 @@ are: m = n, a = 1, b = 5, p = 0.5, t(0) = 1e-6.
 -- Localize some globals
 local ipairs, pairs, type = ipairs, pairs, type
 local random = random
-local floor, ceil = floor, ceil
+local floor, ceil, abs = floor, ceil, abs
 local coroutine = coroutine
 local tinsert, tremove = tinsert, tremove
 local debugprofilestop = debugprofilestop
@@ -96,15 +96,18 @@ Routes.TSP = TSP
 -- Milliseconds of work a background task may do per frame before it yields
 local YIELD_BUDGET = 10
 local sliceStart = 0
+local function yieldNow()
+	coroutine.yield()
+	-- measure the budget from when we are resumed, not from when we
+	-- yielded, so the time spent rendering the frame doesn't count
+	sliceStart = debugprofilestop()
+end
 local function yield()
 	local t = debugprofilestop()
 	-- t < sliceStart means someone called debugprofilestart() and reset the
 	-- timer, yield anyway in that case
 	if t - sliceStart >= YIELD_BUDGET or t < sliceStart then
-		coroutine.yield()
-		-- measure the budget from when we are resumed, not from when we
-		-- yielded, so the time spent rendering the frame doesn't count
-		sliceStart = debugprofilestop()
+		yieldNow()
 	end
 end
 
@@ -910,136 +913,252 @@ between clusters.
 -- http://en.wikipedia.org/wiki/Cluster_analysis
 -- 25 January 2008
 ]]
-function TSP:ClusterRoute(nodes, zoneID, radius, nonblocking)
-	local weight = {} -- weight matrix
-	local metadata = {} -- metadata after clustering
+--[[
+Implementation notes:
 
+The clusters are merged greedily: the two closest clusters within the cluster
+diameter are merged if every node of both clusters is within the cluster
+radius of the new (weighted) centroid, otherwise that pair is ignored until
+one of the two clusters changes. Ties are broken by route order. This repeats
+until there is no pair left that can be merged.
+
+Only clusters within the cluster diameter of each other can ever be merged, so
+instead of a full NxN distance matrix we keep
+  - a spatial grid with a cell size of the cluster diameter, so the candidates
+    for a cluster are found by looking at the 3x3 cells around it, and
+  - a binary min-heap with all candidate pairs, ordered by distance.
+Heap entries are never removed when a cluster changes or is merged away.
+Instead every entry is stamped with the number of merges done at the time it
+was added, and is ignored when it is popped if either cluster was changed
+after that.
+
+This takes O(P log P) time and O(P) memory, where P is the number of node
+pairs within the cluster diameter of each other.
+]]
+function TSP:ClusterRoute(nodes, zoneID, radius, nonblocking)
 	local numNodes = #nodes
 	local zoneW, zoneH = Routes.Dragons:GetZoneSize(zoneID)
 	local diameter = radius * 2
-	--local taboo = 0
-
-	-- Create a copy of the nodes[] table and use this instead of the original because we want to modify this table
-	local nodes2 = {}
-	for i = 1, numNodes do
-		nodes2[i] = nodes[i]
-		weight[i] = {} -- make weight[] a 2-dimensional table
-	end
-	local nodes = nodes2
-
-	-- Step 1: Generate the weight table
-	for i = 1, numNodes do
-		local coord = nodes[i]
-		local x, y = floor(coord / 10000) / 10000, (coord % 10000) / 10000
-		local w = weight[i]
-		w[i] = 0
-		for j = i+1, numNodes do
-			local coord = nodes[j]
-			local x2, y2 = floor(coord / 10000) / 10000, (coord % 10000) / 10000
-			w[j] = (((x2 - x)*zoneW)^2 + ((y2 - y)*zoneH)^2)^0.5 -- Calc distance between each node pair
-			weight[j][i] = true -- dummy value just to fill the lower half of the table so that tremove() will work on it
-		end
-	end
-
-	-- Step 2: Generate the initial metadata tables
-	for i = 1, numNodes do
-		metadata[i] = {}
-		metadata[i][1] = nodes[i]
-	end
 
 	-- ensure one yield is always called
 	if nonblocking then
-		coroutine.yield()
+		yieldNow()
 	end
 
-	-- Step 5: ...and loop until there is no such pair of nodes
-	while true do
-		-- Step 3: Find the closest pair of nodes within the merge radius
-		local smallestDist = inf
-		local node1, node2
-		for i = 1, numNodes-1 do
-			local w = weight[i]
-			for j = i+1, numNodes do
-				local w2 = w[j]
-				if w2 <= diameter and w2 < smallestDist then
-					smallestDist = w2
-					node1 = i
-					node2 = j
+	-- Clusters are identified by the route index of their first node for the
+	-- whole run, a cluster that is merged into another is just flagged as dead.
+	local coord = {}    -- node ID of the cluster point
+	local cx, cy = {}, {} -- decoded zone coordinate (0-1) of the cluster point
+	local metadata = {} -- list of the original nodes in the cluster
+	local changed = {}  -- number of merges done when the cluster last changed, inf if it is dead
+
+	-- Step 1: Every node starts as its own cluster
+	for i = 1, numNodes do
+		local c = nodes[i]
+		coord[i] = c
+		cx[i], cy[i] = floor(c / 10000) / 10000, (c % 10000) / 10000
+		metadata[i] = {c}
+		changed[i] = 0
+	end
+
+	-- Step 2: Sort the clusters into the grid
+	-- The cells are slightly larger than the diameter so that rounding errors
+	-- can never put 2 clusters within the diameter more than 1 cell apart.
+	local cellSize = diameter * 1.001
+	if not (cellSize > 0) then cellSize = 1 end
+	local scaleX, scaleY = zoneW / cellSize, zoneH / cellSize
+	local stride = floor(abs(scaleY)) + 4 -- cell key is column * stride + row
+	local cells = {}   -- cell key -> list of clusters in the cell
+	local cellOf = {}  -- cluster -> cell key
+	local cellPos = {} -- cluster -> index in the list of its cell
+	for i = 1, numNodes do
+		local key = floor(cx[i] * scaleX) * stride + floor(cy[i] * scaleY)
+		local cell = cells[key]
+		if not cell then
+			cell = {}
+			cells[key] = cell
+		end
+		local pos = #cell + 1
+		cell[pos] = i
+		cellOf[i], cellPos[i] = key, pos
+	end
+
+	-- Step 3: Find all pairs of nodes within the cluster diameter
+	-- The heap is stored in 3 parallel arrays to save memory:
+	local heapDist = {}  -- distance between the 2 clusters
+	local heapPair = {}  -- low cluster * pairBase + high cluster
+	local heapStamp = {} -- number of merges done when the entry was added
+	local heapSize = 0
+	local pairBase = numNodes + 1
+	for i = 1, numNodes do
+		local x, y, key = cx[i], cy[i], cellOf[i]
+		for column = key - stride, key + stride, stride do
+			for k = column - 1, column + 1 do
+				local cell = cells[k]
+				if cell then
+					for n = 1, #cell do
+						local j = cell[n]
+						if j > i then
+							local d = (((cx[j] - x)*zoneW)^2 + ((cy[j] - y)*zoneH)^2)^0.5
+							if d <= diameter then
+								heapSize = heapSize + 1
+								heapDist[heapSize] = d
+								heapPair[heapSize] = i * pairBase + j
+								heapStamp[heapSize] = 0
+							end
+						end
+					end
 				end
 			end
 		end
-		-- Step 4: Merge node2 into node1...
-		if node1 then
+		if nonblocking then
+			yield()
+		end
+	end
+
+	-- Moves the entry (d, p, s) down from position pos until the heap is valid.
+	-- An entry is smaller if its distance is smaller, or on equal distance if
+	-- it comes first in route order.
+	local function siftDown(pos, d, p, s)
+		local child = pos * 2
+		while child <= heapSize do
+			local cd, cp = heapDist[child], heapPair[child]
+			if child < heapSize then
+				local rd, rp = heapDist[child + 1], heapPair[child + 1]
+				if rd < cd or (rd == cd and rp < cp) then
+					child, cd, cp = child + 1, rd, rp
+				end
+			end
+			if cd < d or (cd == d and cp < p) then
+				heapDist[pos], heapPair[pos], heapStamp[pos] = cd, cp, heapStamp[child]
+				pos, child = child, child * 2
+			else
+				break
+			end
+		end
+		heapDist[pos], heapPair[pos], heapStamp[pos] = d, p, s
+	end
+
+	-- Turn the unsorted list of pairs into a heap
+	for pos = floor(heapSize / 2), 1, -1 do
+		siftDown(pos, heapDist[pos], heapPair[pos], heapStamp[pos])
+		if nonblocking and pos % 256 == 0 then
+			yield()
+		end
+	end
+
+	-- Step 4: Keep merging the closest pair of clusters until there is none left
+	local merges = 0
+	while heapSize > 0 do
+		-- Take the closest pair off the heap
+		local pair, stamp = heapPair[1], heapStamp[1]
+		local d, p, s = heapDist[heapSize], heapPair[heapSize], heapStamp[heapSize]
+		heapDist[heapSize], heapPair[heapSize], heapStamp[heapSize] = nil, nil, nil
+		heapSize = heapSize - 1
+		if heapSize > 0 then
+			siftDown(1, d, p, s)
+		end
+
+		local node1 = floor(pair / pairBase)
+		local node2 = pair - node1 * pairBase
+		-- Ignore the pair if either cluster has changed or died since
+		if stamp >= changed[node1] and stamp >= changed[node2] then
 			local m1, m2 = metadata[node1], metadata[node2]
 			local node1num, node2num = #m1, #m2
 			local totalnum = node1num + node2num
 			-- Calculate the new centroid of node1
-			local n1, n2 = nodes[node1], nodes[node2]
-			local node1x = ( floor(n1 / 10000) / 10000 * node1num + floor(n2 / 10000) / 10000 * node2num ) / totalnum
-			local node1y = ( (n1 % 10000) / 10000 * node1num + (n2 % 10000) / 10000 * node2num ) / totalnum
+			local node1x = ( cx[node1] * node1num + cx[node2] * node2num ) / totalnum
+			local node1y = ( cy[node1] * node1num + cy[node2] * node2num ) / totalnum
 			-- Calculate the new coord from the new (x,y)
-			local coord = floor(node1x * 10000 + 0.5) * 10000 + floor(node1y * 10000 + 0.5)
-			node1x, node1y = floor(coord / 10000) / 10000, (coord % 10000) / 10000 -- to round off the coordinate
-			-- Check that the merged point is valid
+			local newCoord = floor(node1x * 10000 + 0.5) * 10000 + floor(node1y * 10000 + 0.5)
+			node1x, node1y = floor(newCoord / 10000) / 10000, (newCoord % 10000) / 10000 -- to round off the coordinate
+			-- Check that the merged point is valid: merging must not cause the
+			-- merged point to be too far away from any of the original nodes
+			local valid = true
 			for i = 1, node1num do
-				local coord = m1[i]
-				local x, y = floor(coord / 10000) / 10000, (coord % 10000) / 10000
-				local t = (((node1x - x)*zoneW)^2 + ((node1y - y)*zoneH)^2)^0.5
-				if t > radius then
-					-- Merging this node will cause the merged point to be too far away
-					-- from an original point, so taboo it by making the weight infinity
-					-- And store a backup in the lower half of the table
-					weight[node2][node1] = weight[node1][node2]
-					weight[node1][node2] = inf
-					--taboo = taboo + 1
+				local c = m1[i]
+				local x, y = floor(c / 10000) / 10000, (c % 10000) / 10000
+				if (((node1x - x)*zoneW)^2 + ((node1y - y)*zoneH)^2)^0.5 > radius then
+					valid = false
 					break
 				end
 			end
-			if weight[node1][node2] ~= inf then
+			if valid then
 				for i = 1, node2num do
-					local coord = m2[i]
-					local x, y = floor(coord / 10000) / 10000, (coord % 10000) / 10000
-					local t = (((node1x - x)*zoneW)^2 + ((node1y - y)*zoneH)^2)^0.5
-					if t > radius then
-						weight[node2][node1] = weight[node1][node2]
-						weight[node1][node2] = inf
-						--taboo = taboo + 1
+					local c = m2[i]
+					local x, y = floor(c / 10000) / 10000, (c % 10000) / 10000
+					if (((node1x - x)*zoneW)^2 + ((node1y - y)*zoneH)^2)^0.5 > radius then
+						valid = false
 						break
 					end
 				end
 			end
-			if weight[node1][node2] ~= inf then
+			if valid then
+				merges = merges + 1
 				-- Merge the metadata of node2 into node1
 				for i = 1, node2num do
-					tinsert(m1, m2[i])
+					m1[node1num + i] = m2[i]
 				end
+				-- Delete node2, the last cluster in its cell takes its place there
+				metadata[node2] = false
+				changed[node2] = inf
+				local cell, pos = cells[cellOf[node2]], cellPos[node2]
+				local last = #cell
+				local moved = cell[last]
+				cell[pos], cellPos[moved] = moved, pos
+				cell[last] = nil
 				-- Set the new coord of node1
-				nodes[node1] = coord
-				-- Delete node2 from metadata[]
-				tremove(metadata, node2)
-				-- Delete node2 from nodes[]
-				tremove(nodes, node2)
-				-- Remove node2 from the weight table
-				for i = 1, numNodes do
-					tremove(weight[i], node2) -- remove column
+				coord[node1], cx[node1], cy[node1] = newCoord, node1x, node1y
+				changed[node1] = merges
+				-- Move node1 to another cell if necessary
+				local key = floor(node1x * scaleX) * stride + floor(node1y * scaleY)
+				if key ~= cellOf[node1] then
+					cell, pos = cells[cellOf[node1]], cellPos[node1]
+					last = #cell
+					moved = cell[last]
+					cell[pos], cellPos[moved] = moved, pos
+					cell[last] = nil
+					cell = cells[key]
+					if not cell then
+						cell = {}
+						cells[key] = cell
+					end
+					pos = #cell + 1
+					cell[pos] = node1
+					cellOf[node1], cellPos[node1] = key, pos
 				end
-				tremove(weight, node2) -- remove row
-				-- Update number of nodes
-				numNodes = numNodes - 1
-				-- Update the weight table for all nodes relating to node1, this can untaboo nodes
-				for i = 1, node1-1 do
-					local coord = nodes[i]
-					local x, y = floor(coord / 10000) / 10000, (coord % 10000) / 10000
-					weight[i][node1] = (((node1x - x)*zoneW)^2 + ((node1y - y)*zoneH)^2)^0.5
-				end
-				for i = node1+1, numNodes do
-					local coord = nodes[i]
-					local x, y = floor(coord / 10000) / 10000, (coord % 10000) / 10000
-					weight[node1][i] = (((node1x - x)*zoneW)^2 + ((node1y - y)*zoneH)^2)^0.5
+				-- Add the new distances from node1 to all clusters around it
+				for column = key - stride, key + stride, stride do
+					for k = column - 1, column + 1 do
+						cell = cells[k]
+						if cell then
+							for n = 1, #cell do
+								local j = cell[n]
+								if j ~= node1 then
+									d = (((node1x - cx[j])*zoneW)^2 + ((node1y - cy[j])*zoneH)^2)^0.5
+									if d <= diameter then
+										p = j > node1 and node1 * pairBase + j or j * pairBase + node1
+										-- Insert it into the heap, moving it up from the end
+										heapSize = heapSize + 1
+										pos = heapSize
+										while pos > 1 do
+											local parent = floor(pos / 2)
+											local pd, pp = heapDist[parent], heapPair[parent]
+											if d < pd or (d == pd and p < pp) then
+												heapDist[pos], heapPair[pos], heapStamp[pos] = pd, pp, heapStamp[parent]
+												pos = parent
+											else
+												break
+											end
+										end
+										heapDist[pos], heapPair[pos], heapStamp[pos] = d, p, merges
+									end
+								end
+							end
+						end
+					end
 				end
 			end
-		else
-			break -- loop termination
 		end
 
 		if nonblocking then
@@ -1047,16 +1166,30 @@ function TSP:ClusterRoute(nodes, zoneID, radius, nonblocking)
 		end
 	end
 
-	-- Get the new pathLength
-	local pathLength = weight[1][numNodes]
-	pathLength = pathLength == inf and weight[numNodes][1] or pathLength
-	for i = 1, numNodes-1 do
-		local w = weight[i][i+1]
-		pathLength = pathLength + (w == inf and weight[i+1][i] or w) -- use the backup in the lower half of the triangle if it was tabooed
+	-- Step 5: Collect the remaining clusters in route order and get the new pathLength
+	local newNodes, newMetadata = {}, {}
+	local numClusters = 0
+	local pathLength = 0
+	local firstX, firstY, lastX, lastY
+	for i = 1, numNodes do
+		if changed[i] ~= inf then
+			numClusters = numClusters + 1
+			newNodes[numClusters] = coord[i]
+			newMetadata[numClusters] = metadata[i]
+			local x, y = cx[i], cy[i]
+			if lastX then
+				pathLength = pathLength + (((x - lastX)*zoneW)^2 + ((y - lastY)*zoneH)^2)^0.5
+			else
+				firstX, firstY = x, y
+			end
+			lastX, lastY = x, y
+		end
+	end
+	if numClusters > 1 then
+		pathLength = pathLength + (((lastX - firstX)*zoneW)^2 + ((lastY - firstY)*zoneH)^2)^0.5
 	end
 
-	--ChatFrame1:AddMessage(taboo.." tabooed")
-	return nodes, metadata, pathLength
+	return newNodes, newMetadata, pathLength
 end
 
 function TSP:ClusterRouteBackground(nodes, zoneID, radius, finishFunc)

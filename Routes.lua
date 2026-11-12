@@ -71,7 +71,7 @@ local Feat_MinimapViewRadius = C_Minimap and C_Minimap.GetViewRadius
 
 -- database defaults
 local db
-local defaults = {
+local DEFAULTS = {
 	global = {
 		routes = {
 			['*'] = { -- zone name, stored as the MapFile string constant
@@ -980,7 +980,7 @@ end
 
 function Routes:OnInitialize()
 	-- Initialize database
-	self.db = LibStub("AceDB-3.0"):New("RoutesDB", defaults, true)
+	self.db = LibStub("AceDB-3.0"):New("RoutesDB", DEFAULTS, true)
 	db = self.db.global
 	self.options = options
 
@@ -1023,7 +1023,7 @@ function Routes:OnInitialize()
 	end
 
 	-- Generate ace options table for each taboo region
-	local opts = options.args.taboo_group.args
+	opts = options.args.taboo_group.args
 	for zone, zone_table in pairs(db.taboo) do
 		if next(zone_table) == nil then
 			-- cleanup the empty zone
@@ -1285,16 +1285,16 @@ do
 	local KeybindHelper = {}
 	Routes.KeybindHelper = KeybindHelper
 
-	local t = {}
+	local keyBindingCache = {}
 	function KeybindHelper:MakeKeyBindingTable(...)
-		wipe(t)
+		wipe(keyBindingCache)
 		for i = 1, select("#", ...) do
 			local key = select(i, ...)
 			if key ~= "" then
-				tinsert(t, key)
+				tinsert(keyBindingCache, key)
 			end
 		end
-		return t
+		return keyBindingCache
 	end
 
 	function KeybindHelper:GetKeybind(info)
@@ -1978,20 +1978,20 @@ do
 		wipe(data)
 		local zone = tonumber(info[2])
 		local route = Routes.routekeys[zone][ info[3] ]
-		local t = db.routes[zone][route]
-		if not t.metadata then
+		local route_data = db.routes[zone][route]
+		if not route_data.metadata then
 			return L["This route is not a clustered route."]
 		end
 
 		local numNodes = 0
 		local maxt = 0
 		local zoneW, zoneH = Routes.Dragons:GetZoneSize(zone)
-		for i = 1, #t.metadata do
-			local numData = #t.metadata[i]
+		for i = 1, #route_data.metadata do
+			local numData = #route_data.metadata[i]
 			numNodes = numNodes + numData
-			local x, y = floor(t.route[i] / 10000) / 10000, (t.route[i] % 10000) / 10000
+			local x, y = floor(route_data.route[i] / 10000) / 10000, (route_data.route[i] % 10000) / 10000
 			for j = 1, numData do
-				local x2, y2 = floor(t.metadata[i][j] / 10000) / 10000, (t.metadata[i][j] % 10000) / 10000 -- to round off the coordinate
+				local x2, y2 = floor(route_data.metadata[i][j] / 10000) / 10000, (route_data.metadata[i][j] % 10000) / 10000 -- to round off the coordinate
 				local t = (((x2 - x)*zoneW)^2 + ((y2 - y)*zoneH)^2)^0.5 - 0.0001
 				t = floor(t / 10)
 				data[t] = (data[t] or 0) + 1
@@ -2002,7 +2002,7 @@ do
 			str[i+4] = L["|cffffd200     %d|r node(s) are between |cffffd200%d|r-|cffffd200%d|r yards of a cluster point"]:format(data[i] or 0, i*10+1, i*10+10)
 		end
 		str[1] = L["This route is a clustered route, down from the original |cffffd200%d|r nodes."]:format(numNodes)
-		str[2] = L["The cluster radius of this route is |cffffd200%d|r yards."]:format(t.cluster_dist or 65) -- 65 was an old default
+		str[2] = L["The cluster radius of this route is |cffffd200%d|r yards."]:format(route_data.cluster_dist or 65) -- 65 was an old default
 		str[3] = L["|cffffd200     %d|r node(s) are at |cffffd2000|r yards of a cluster point"]:format(data[-1] or 0)
 		return table.concat(str, "\n")
 	end
@@ -3202,7 +3202,7 @@ do
 		taboo_edit_list[taboo_data] = copy_of_taboo_data
 
 		-- open the WorldMapFlame on the right zone
-		if WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then
+		if WOW_PROJECT_ID == WOW_PROJECT_MAINLINE or WOW_PROJECT_ID == WOW_PROJECT_CAMELOT then
 			OpenWorldMap(zone)
 		else
 			ShowUIPanel(WorldMapFrame)
@@ -3745,8 +3745,8 @@ function G:DrawLine(C, sx, sy, ex, ey, w, color, layer)
 	if l == 0 then
 		T:ClearAllPoints();
 		T:SetTexCoord(0,0,0,0,0,0,0,0);
-		T:SetPoint("BOTTOMLEFT", C, relPoint, cx, cy);
-		T:SetPoint("TOPRIGHT",   C, relPoint, cx, cy);
+		T:SetPoint("BOTTOMLEFT", C, relPoint);
+		T:SetPoint("TOPRIGHT",   C, relPoint);
 		return T;
 	end
 

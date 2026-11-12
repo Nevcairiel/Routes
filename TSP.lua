@@ -274,23 +274,27 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 
 	-- Create a copy of the nodes[] table and use this instead of the original because data could get changed
 	local numNodes = #nodes
-	local nodes2 = {}
-	for i = 1, numNodes do
-		nodes2[i] = nodes[i]
-	end
-	local nodes = nodes2
-	-- Create a copy of the metadata[] table too, if there is one
-	local metadata2
-	if metadata then
-		metadata2 = {}
+	do
+		local nodes2 = {}
 		for i = 1, numNodes do
-			metadata2[i] = {}
-			for j = 1, #metadata[i] do
-				metadata2[i][j] = metadata[i][j]
+			nodes2[i] = nodes[i]
+		end
+		nodes = nodes2
+	end
+	-- Create a copy of the metadata[] table too, if there is one
+	do
+		local metadata2
+		if metadata then
+			metadata2 = {}
+			for i = 1, numNodes do
+				metadata2[i] = {}
+				for j = 1, #metadata[i] do
+					metadata2[i][j] = metadata[i][j]
+				end
 			end
 		end
+		metadata = metadata2
 	end
-	local metadata = metadata2
 
 	if nonblocking then
 		-- Ensure that at least 1 yield() is called in a nonblocking call. This
@@ -713,8 +717,8 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 			-- most of the time one of the neighbours is still unvisited...
 			local nextNode
 			local base = (current - 1) * numNeighbours
-			for n = base + 1, base + numNeighbours do
-				local node = neighbour[n]
+			for n1 = base + 1, base + numNeighbours do
+				local node = neighbour[n1]
 				if not visited[node] then
 					nextNode = node
 					break
@@ -1123,9 +1127,9 @@ local function tryInsert(nodes, metadata, insertPoint, nodeID, radius, zoneW, zo
 	x2, y2 = floor(coord / 10000) / 10000, (coord % 10000) / 10000 -- to round off the coordinate
 	-- Check that the merged point is valid
 	for i = 1, num do
-		local coord = metadata[insertPoint][i]
-		local x, y = floor(coord / 10000) / 10000, (coord % 10000) / 10000
-		local t = (((x2 - x)*zoneW)^2 + ((y2 - y)*zoneH)^2)^0.5
+		local coord1 = metadata[insertPoint][i]
+		local x1, y1 = floor(coord1 / 10000) / 10000, (coord1 % 10000) / 10000
+		local t = (((x2 - x1)*zoneW)^2 + ((y2 - y1)*zoneH)^2)^0.5
 		if t > radius then
 			return false
 		end

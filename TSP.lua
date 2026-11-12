@@ -260,7 +260,7 @@ local EPSILON = 1e-7
 -- Number of kicks to try per node of the route
 local KICKS_PER_NODE = 10
 -- Maximum length of the 2 segments that a kick swaps
-local KICK_SEGMENT = 30
+local KICK_SEGMENT = 100
 
 function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonblocking)
 	assert(type(nodes) == "table", "SolveTSP() expected table in 1st argument, got "..type(nodes).." instead.")

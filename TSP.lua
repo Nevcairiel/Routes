@@ -1,6 +1,6 @@
 ﻿----------------------------------
 --[[
-Ant Colony Optimization (ACO) for Travelling Salesman Problem (TSP)
+Travelling Salesman Problem (TSP) solver
 for Routes (a World of Warcraft addon)
 
 Copyright (C) 2011 Xinhuan
@@ -21,52 +21,35 @@ Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 ---------------------------------
 --[[
-Ant Colony Optimization and the Travelling Salesman Problem
+The Travelling Salesman Problem
 
 The Travelling Salesman Problem (TSP) consists of finding the shortest tour
-between n cities visiting each once only and ending at the starting point. Let
-d(i,j) be the distance between cities i and j and t(i,j) the amount of pheromone
-on the edge that connects i and j. t(i,j) is initially set to a small value
-t(0), the same for all edges (i,j). The algorithm consists of a series of
-iterations.
+between n cities visiting each once only and ending at the starting point.
 
-One iteration of the simplest ACO algorithm applied to the TSP can be summarized
-as follows: (1) a set of m artificial ants are initially located at randomly
-selected cities; (2) each ant, denoted by k, constructs a complete tour,
-visiting each city exactly once, always maintaining a list J(k) of cities that
-remain to be visited; (3) an ant located at city i hops to a city j, selected
-among the cities that have not yet been visited, according to probability
-p(k,i,j) = (t(i,j)^a * d(i,j)^-b) / sum(t(i,l)^a * d(i,l)^-b, all l in J(k))
-where a and b are two positive parameters which govern the respective influences
-of pheromone and distance; (4) when every ant has completed a tour, pheromone
-trails are updated: t(i,j) = (1-p) * t(i,j) + D(t(i,j)), where p is the
-evaporation rate and D(t(i,j)) is the amount of reinforcement received by edge
-(i,j). D(t(i,j)) is proportional to the quality of the solutions in which (i,j)
-was used by one ant or more. More precisely, if L(k) is the length of the tour
-T(k) constructed by ant k, then D(t(i,j)) = sum(D(t(k,i,j)), 1 to m) with
-D(t(k,i,j)) = Q / L(k) if (i,j) is in T(k) and D(t(k,i,j)) = 0 otherwise, where
-Q is a positive parameter. This reinforcement procedure reflects the idea that
-pheromone density should be lower on a longer path because a longer trail is
-more difficult to maintain.
+Finding the shortest tour is not feasible for more than a handful of cities,
+so the solver in this file looks for a good tour instead, by local search: it
+starts with a tour and keeps making small changes to it that make it shorter,
+until it finds no such change anymore. The changes it tries are
 
-Steps (1) to (4) are repeated either a predefined number of times or until a
-satisfactory solution has been found. The algorithm works by reinforcing
-portions of solutions that belong to good solutions and by applying a
-dissipation mechanism, pheromone evaporation, which ensures that the system does
-not converge early toward a poor solution. When a = 0, the algorithm implements
-a probabilistic greedy search, whereby the next city is selected solely on the
-basis of its distance from the current city. When b = 0, only the pheromone is
-used to guide the search, which would react the way the ants do it. However, the
-explicit use of distance as a criterion for path selection appears to improve
-the algorithm's performance. In all other optimization applications also, an
-improvement in the algorithm's performance is observed when a local measure of
-greed, similar to the inverse of distance for the TSP, is included into the
-local selection of portions of solution by the agents. Typical parameter values
-are: m = n, a = 1, b = 5, p = 0.5, t(0) = 1e-6.
+  2-opt:  Remove 2 links from the tour and reconnect the 2 parts the other way
+          around, which reverses the direction of one part. For example, if
+          the tour contains the links (a, b) and (c, d) in that order, they
+          are replaced by (a, c) and (b, d). This is what removes crossings.
 
--- Inspiration for optimization from social insect behaviour
--- by E. Bonabeau, M. Dorigo & G. Theraulaz
--- NATURE, VOL 406, 6 JULY 2000, www.nature.com
+  Or-opt: Take a segment of 1 to 3 consecutive cities out of the tour and
+          insert it somewhere else, in either direction.
+
+Trying all combinations of links would take O(n^2) time for every pass over
+the tour. Instead, only changes that link a city to one of its few nearest
+neighbours are tried, as a good tour consists almost only of such links. For
+the same reason there is no matrix with the distances between all cities,
+distances are calculated when they are needed. Both the time and the memory
+needed are therefore roughly proportional to the number of cities.
+
+-- An Effective Implementation of the Lin-Kernighan Traveling Salesman Heuristic
+-- by K. Helsgaun, 2000 (on neighbour lists and local search in general)
+-- Experimental Analysis of Heuristics for the STSP
+-- by D. S. Johnson & L. A. McGeoch, 2002
 ]]
 
 -- Note:
@@ -77,14 +60,12 @@ are: m = n, a = 1, b = 5, p = 0.5, t(0) = 1e-6.
 -- Localize some globals
 local ipairs, pairs, type = ipairs, pairs, type
 local random = random
-local floor, ceil, abs = floor, ceil, abs
+local floor, abs = floor, abs
 local coroutine = coroutine
 local tinsert, tremove = tinsert, tremove
 local debugprofilestop = debugprofilestop
 local inf = math.huge
 
-local pathR = {}
-local lastpath
 local Routes = LibStub("AceAddon-3.0"):GetAddon("Routes")
 local TSP = {}
 Routes.TSP = TSP
@@ -110,27 +91,6 @@ local function yield()
 		yieldNow()
 	end
 end
-
-
------------------------------------------------------
--- Function to get the intersection point of 2 lines (x1,y1)-(x2,y2) and (sx,sy)-(ex,ey)
---[[ Unused function, its inlined in SolveTSP()
-function TSP:GetIntersection(x1, y1, x2, y2, sx, sy, ex, ey)
-	local dx = x2-x1
-	local dy = y2-y1
-	local numer = dx*(sy-y1) - dy*(sx-x1)
-	local demon = dx*(sy-ey) + dy*(ex-sx)
-	if demon == 0 or dx == 0 then
-		return false
-	else
-		local u = numer / demon
-		local t = (sx + (ex-sx)*u - x1)/dx
-		if u >= 0 and u <= 1 and t >= 0 and t <= 1 then
-			--return sx + (ex-sx)*u, sy + (ey-sy)*u -- coordinate of intersection
-			return true
-		end
-	end
-end]]
 
 
 -----------------------------------------------------
@@ -237,7 +197,7 @@ end
 
 
 -----------------------------------
--- TSP:SolveTSP(nodes, metadata, zoneID, parameters, path, nonblocking)
+-- TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonblocking)
 -- Arguments
 --   nodes       - The table containing a list of Routes node IDs to path
 --                 This list should only contain nodes on the same map. This
@@ -245,7 +205,7 @@ end
 --   metadata    - The table containing the cluster metadata, if available
 --   taboos      - A table containing a table of taboo regions to use.
 --   zoneID      - The map area ID of the map that the route is to be generated on.
---   parameters  - The table containing the ACO parameters to use.
+--   parameters  - The table containing the parameters to use.
 --   path        - An optional input table that is used to supply the result
 --                 table. If this is nil, the function returns a new table.
 --   nonblocking - A boolean to indicate whether the function should yield() regularly.
@@ -257,10 +217,17 @@ end
 --   iteration   - Number of interations taken.
 --   timeTaken   - Number of seconds used.
 -- Notes: A new nodes[] and metadata[] table is returned. The original tables
---        sent in are unmodified.
+--        sent in are unmodified. The path returned is never worse than the
+--        order of the nodes that were sent in.
+
+-- Number of nearest neighbours of each node that are considered as the new
+-- neighbour of that node in the route
+local NEIGHBOURS = 8
+-- Improvements smaller than this (in yards) are ignored, so that rounding
+-- errors can't make the search run in circles
+local EPSILON = 1e-7
+
 function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonblocking)
-	-- Notes: Some of these code might look convoluted, with seemingly unnecessary use of too many locals
-	-- and make the code look longer. But they are for speed optimization.
 	assert(type(nodes) == "table", "SolveTSP() expected table in 1st argument, got "..type(nodes).." instead.")
 	assert(type(taboos) == "table", "SolveTSP() expected table in 3rd argument, got "..type(taboos).." instead.")
 	assert(type(parameters) == "table", "SolveTSP() expected table in 5th argument, got "..type(parameters).." instead.")
@@ -270,33 +237,8 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 		path = {}
 	end
 
-	if nonblocking then
-		-- Ensure that at least 1 yield() is called in a nonblocking call
-		coroutine.yield()
-	end
-
-	-- Check for trivial problem of 3 or less nodes
-	local numNodes = #nodes
-	if numNodes < 4 then
-		-- Trivial solution for an input size of 3 or less nodes
-		for i = 1, numNodes do
-			path[i] = nodes[i]
-		end
-		-- Create a copy of the metadata[] table too, if there is one
-		local metadata2
-		if metadata then
-			metadata2 = {}
-			for i = 1, numNodes do
-				metadata2[i] = {}
-				for j = 1, #metadata[i] do
-					metadata2[i][j] = metadata[i][j]
-				end
-			end
-		end
-		return path, metadata2, TSP:PathLength(path, zoneID), 0, 0
-	end
-
 	-- Create a copy of the nodes[] table and use this instead of the original because data could get changed
+	local numNodes = #nodes
 	local nodes2 = {}
 	for i = 1, numNodes do
 		nodes2[i] = nodes[i]
@@ -314,292 +256,579 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 		end
 	end
 	local metadata = metadata2
-	
-	-- Setup ACO parameters
+
+	if nonblocking then
+		-- Ensure that at least 1 yield() is called in a nonblocking call. This
+		-- must be after copying the input, it may be modified while we run.
+		yieldNow()
+	end
+
+	-- Check for trivial problem of 3 or less nodes
+	if numNodes < 4 then
+		for i = 1, numNodes do
+			path[i] = nodes[i]
+		end
+		return path, metadata, TSP:PathLength(path, zoneID), 0, 0
+	end
+
 	local startTime
 	if nonblocking then
 		startTime = GetTime()
 	else
 		startTime = debugprofilestop()
 	end
-	local zoneW, zoneH	= Routes.Dragons:GetZoneSize(zoneID)
+	local zoneW, zoneH = Routes.Dragons:GetZoneSize(zoneID)
 
-	local INITIAL_PHEROMONE = parameters.initial_pheromone or 0.1   -- Parameter: Initial pheromone trail value
-	local ALPHA             = parameters.alpha or 1                 -- Parameter: Likelihood of ants to follow pheromone trails (larger value == more likely)
-	local BETA              = parameters.beta or 6                  -- Parameter: Likelihood of ants to choose closer nodes (larger value == more likely)
-	local LOCALDECAY        = parameters.local_decay or 0.2         -- Parameter: Governs local trail decay rate [0, 1]
-	local LOCALUPDATE       = parameters.local_update or 0.4        -- Parameter: Amount of pheromone to reinforce local trail update by
-	local GLOBALDECAY       = parameters.global_decay or 0.2        -- Parameter: Governs global trail decay rate [0, 1]
-	local TWOOPTPASSES      = parameters.twoopt_passes or 3         -- Parameter: Number of times to perform 2-opt passes
-	local TWOPOINTFIVEOPT   = parameters.two_point_five_opt or false-- Parameter: Run improved 2-opt pass?
-	local QUALITY           = 2 * zoneH                             -- Parameter: Tunable parameter that should be somewhat close to 1/4 to 1/2 (distance) of a good solution
-	local numAnts           = ceil(2 * numNodes ^ 0.5)              -- Parameter: Number of ants.
-	local LOCALDECAYUPDATE  = LOCALDECAY * LOCALUPDATE              -- Just a constant.
-	-- If ALPHA = 0, the closest cities are more likely to be selected.
-	-- If BETA = 0, only pheromone amplifications is at work.
-	-- The number of ants will directly determine the speed of the algorithm proportionally. More ants will get more optimal results, but don't use more ants than the number of nodes.
-	-- You need more ants when there are more nodes to have more chances to find a good path quickly. The usual default is numAnts = numNodes, but this takes too long in WoW.
-	local PRUNEDIST         = zoneW * 0.30                          -- Another constant for our own pruning
-
-	local shortestPathLength = math.huge
-	local shortestPath = {}
-
-	-- Step 1	- Initialize and generate the weight matrix, the pheromone matrix and the ants
-	local weight = {}
-	local phero = {}
-	local ants = {}
-	local prune = {}
-	local antprob = {}
-	for i = 1, numNodes do
-		prune[i] = {}
+	-- Status for the status function: the pass we are in, how far it is, and
+	-- the cost of the route so far (nil while it is unknown)
+	local pass, progress, cost = 1, 0, nil
+	-- In a nonblocking call this is called regularly to give control back
+	-- once we have used up our time for this frame
+	local function tick()
+		local t = debugprofilestop()
+		if t - sliceStart >= YIELD_BUDGET or t < sliceStart then
+			if TSPUpdateFrame.statusFunc then
+				TSPUpdateFrame.statusFunc(pass, progress, cost)
+			end
+			yieldNow()
+		end
 	end
 
+	-- Step 1	- Positions of the nodes in yards
+	local X, Y = {}, {}
 	for i = 1, numNodes do
-		local x1, y1 = floor(nodes[i] / 10000) / 10000, (nodes[i] % 10000) / 10000
-		local u = i*numNodes-i
-		weight[u] = 0
-		phero[u] = INITIAL_PHEROMONE
-		for j = i+1, numNodes do
-			local x2, y2 = floor(nodes[j] / 10000) / 10000, (nodes[j] % 10000) / 10000
-			local u, v = i*numNodes-j, j*numNodes-i
-			weight[u] = (((x2 - x1)*zoneW)^2 + ((y2 - y1)*zoneH)^2)^0.5 -- Calc distance between each node pair
-			weight[v] = weight[u]
-			phero[u] = INITIAL_PHEROMONE -- All pheromone trails start
-			phero[v] = INITIAL_PHEROMONE -- with a initial small value
-			-- Table containing data for 2-opt pruning operations. This is just a list of nodes that are near each node.
-			if weight[u] < PRUNEDIST then
-				tinsert(prune[i], j)
-				tinsert(prune[j], i)
+		local c = nodes[i]
+		X[i], Y[i] = floor(c / 10000) / 10000 * zoneW, (c % 10000) / 10000 * zoneH
+	end
+
+	-- Step 2	- The cost function D(a, b) of travelling between nodes a and b
+	-- This is the distance in yards, unless the line between the nodes crosses
+	-- the outline of a taboo region. There is no NxN matrix of these, they are
+	-- calculated when needed.
+	local D
+	-- The outlines of all taboo regions as one list of lines (x1,y1)-(x2,y2)
+	local lineX1, lineY1, lineX2, lineY2 = {}, {}, {}, {}
+	-- The lines and the bounding box of each taboo region
+	local tabooFirst, tabooLast, tabooMinX, tabooMaxX, tabooMinY, tabooMaxY = {}, {}, {}, {}, {}, {}
+	local numTaboos, numLines = 0, 0
+	for m = 1, #taboos do
+		local outline = taboos[m].route
+		local numPoints = #outline
+		if numPoints >= 2 then
+			numTaboos = numTaboos + 1
+			tabooFirst[numTaboos] = numLines + 1
+			local last = outline[numPoints]
+			local sx, sy = floor(last / 10000) / 10000 * zoneW, (last % 10000) / 10000 * zoneH
+			local minX, maxX, minY, maxY = sx, sx, sy, sy
+			for n = 1, numPoints do
+				local point = outline[n]
+				local ex, ey = floor(point / 10000) / 10000 * zoneW, (point % 10000) / 10000 * zoneH
+				numLines = numLines + 1
+				lineX1[numLines], lineY1[numLines], lineX2[numLines], lineY2[numLines] = sx, sy, ex, ey
+				if ex < minX then minX = ex elseif ex > maxX then maxX = ex end
+				if ey < minY then minY = ey elseif ey > maxY then maxY = ey end
+				sx, sy = ex, ey
 			end
-			-- For taboo regions
-			local flag = false
-			for m = 1, #taboos do -- loop over every taboo
-				local taboo_data = taboos[m].route
-				local last_point = taboo_data[ #taboo_data ]
-				local sx, sy = floor(last_point / 10000) / 10000, (last_point % 10000) / 10000
-				for n = 1, #taboo_data do
-					local point = taboo_data[n]
-					local ex, ey = floor(point / 10000) / 10000, (point % 10000) / 10000
-					-- inlined the intersection check so that it is faster
-					local dx = x2-x1
-					local dy = y2-y1
-					local numer = dx*(sy-y1) - dy*(sx-x1)
-					local demon = dx*(sy-ey) + dy*(ex-sx)
-					if demon ~= 0 and dx ~= 0 then
-						local u = numer / demon
-						local t = (sx + (ex-sx)*u - x1)/dx
-						if u >= 0 and u <= 1 and t >= 0 and t <= 1 then
-							flag = true
-							break
+			tabooLast[numTaboos] = numLines
+			tabooMinX[numTaboos], tabooMaxX[numTaboos], tabooMinY[numTaboos], tabooMaxY[numTaboos] = minX, maxX, minY, maxY
+		end
+	end
+	if numTaboos == 0 then
+		D = function(a, b)
+			local dx, dy = X[a] - X[b], Y[a] - Y[b]
+			return (dx*dx + dy*dy)^0.5
+		end
+	else
+		-- Does the line between nodes a and b cross (or touch) the outline of a taboo region?
+		local function crossesTaboo(a, b)
+			local ax, ay, bx, by = X[a], Y[a], X[b], Y[b]
+			if ax == bx and ay == by then
+				return false
+			end
+			local minX, maxX, minY, maxY = ax, bx, ay, by
+			if minX > maxX then minX, maxX = maxX, minX end
+			if minY > maxY then minY, maxY = maxY, minY end
+			for m = 1, numTaboos do
+				if maxX >= tabooMinX[m] and minX <= tabooMaxX[m] and maxY >= tabooMinY[m] and minY <= tabooMaxY[m] then
+					for n = tabooFirst[m], tabooLast[m] do
+						local sx, sy, ex, ey = lineX1[n], lineY1[n], lineX2[n], lineY2[n]
+						-- on which side of the line s-e are a and b...
+						local d1 = (ex - sx)*(ay - sy) - (ey - sy)*(ax - sx)
+						local d2 = (ex - sx)*(by - sy) - (ey - sy)*(bx - sx)
+						if not ((d1 > 0 and d2 > 0) or (d1 < 0 and d2 < 0)) then
+							-- ...and on which side of the line a-b are s and e
+							local d3 = (bx - ax)*(sy - ay) - (by - ay)*(sx - ax)
+							local d4 = (bx - ax)*(ey - ay) - (by - ay)*(ex - ax)
+							if not ((d3 > 0 and d4 > 0) or (d3 < 0 and d4 < 0)) then
+								if d1 ~= 0 or d2 ~= 0 or d3 ~= 0 or d4 ~= 0 then
+									return true
+								end
+								-- All 4 points are on one line, they cross if they overlap
+								local sMinX, sMaxX, sMinY, sMaxY = sx, ex, sy, ey
+								if sMinX > sMaxX then sMinX, sMaxX = sMaxX, sMinX end
+								if sMinY > sMaxY then sMinY, sMaxY = sMaxY, sMinY end
+								if maxX >= sMinX and minX <= sMaxX and maxY >= sMinY and minY <= sMaxY then
+									return true
+								end
+							end
 						end
 					end
-					sx, sy = ex, ey
-					last_point = point
 				end
-				if flag then break end
 			end
-			if flag then -- we increase/bias the weight by a constant factor and by the zone width, since it passes thru a taboo region
-				weight[u] = weight[u] * 2 + zoneW
-				weight[v] = weight[u]
-			end
-
-			-- Initialize the probability table of travelling from city i to j
-			antprob[u] = phero[u] ^ ALPHA / weight[u] ^ BETA
-			antprob[v] = antprob[u]
+			return false
 		end
-	end
-	for k = 1, numAnts do
-		ants[k] = {}
-		local antpath = ants[k] -- This table will stores both the partially constructed path (from 1 to j) and the remainder unvisited nodes (from j+1 to N)
-		for j = 1, numNodes do
-			antpath[j] = j
-		end
-	end
-
-	-- Step 2	- Loop until path has small to no changes over the last MAXUNCHANGEDINTERATION iterations
-	local nochanges = 0
-	local count = 0
-	local MAXUNCHANGEDINTERATION = 3
-	if numAnts >= 25 then
-		MAXUNCHANGEDINTERATION = 2
-	end
-	while nochanges < MAXUNCHANGEDINTERATION do
-		nochanges = nochanges + 1
-		count = count + 1
-		
-		-- Step 3	- Each ant k starts at a randomly selected node
-		for k = 1, numAnts do
-			local antpath = ants[k]
-			local p = random(numNodes)
-			antpath[1], antpath[p] = antpath[p], antpath[1]
-		end
-
-		-- Step 4	- Construct/path the next N-1 nodes...
-		for j = 1, numNodes-1 do
-			-- Step 5	- ...for each ant k
-			for k = 1, numAnts do
-				-- Step 6	- Calculate the probability of visiting each remainder node, and the total probability
-				local antpath = ants[k]
-				local curnode = antpath[j] -- j is the "current node" index in the path
-				local totalprob = 0
-				for i = j+1, numNodes do
-					local u = curnode*numNodes-antpath[i]
-					totalprob = totalprob + antprob[u]
+		-- Remember the answers, the same pairs of nodes get asked for all the time
+		local crossing, numCrossing = {}, 0
+		local pairBase = numNodes + 1
+		D = function(a, b)
+			local dx, dy = X[a] - X[b], Y[a] - Y[b]
+			local d = (dx*dx + dy*dy)^0.5
+			local pair = a < b and a * pairBase + b or b * pairBase + a
+			local c = crossing[pair]
+			if c == nil then
+				c = crossesTaboo(a, b)
+				if numCrossing >= 400000 then
+					-- don't let the cache grow forever
+					crossing, numCrossing = {}, 0
 				end
-				-- Step 7	- Now randomly choose one of these nodes to go to based on the calculated probabilities
-				local p = totalprob * random()
-				totalprob = 0
-				for i = j+1, numNodes do
-					local u = curnode*numNodes-antpath[i]
-					totalprob = totalprob + antprob[u]
-					if p <= totalprob then
-						antpath[j+1], antpath[i] = antpath[i], antpath[j+1]
-						phero[u] = (1 - LOCALDECAY) * phero[u] + LOCALDECAYUPDATE -- Perform local pheromone update
-						antprob[u] = phero[u] ^ ALPHA / weight[u] ^ BETA -- Update the probability
+				crossing[pair] = c
+				numCrossing = numCrossing + 1
+			end
+			if c then
+				-- we increase/bias the cost by a constant factor and by the zone width, since it passes thru a taboo region
+				return d * 2 + zoneW
+			end
+			return d
+		end
+	end
+
+	-- Step 3	- Sort the nodes into a grid with about 2 nodes per cell
+	local minX, maxX, minY, maxY = X[1], X[1], Y[1], Y[1]
+	for i = 2, numNodes do
+		local x, y = X[i], Y[i]
+		if x < minX then minX = x elseif x > maxX then maxX = x end
+		if y < minY then minY = y elseif y > maxY then maxY = y end
+	end
+	local width, height = maxX - minX, maxY - minY
+	local cellSize = (2 * width * height / numNodes)^0.5
+	local extent = width > height and width or height
+	-- no more than numNodes/2 cells per axis, even if all nodes are on a line
+	if not (cellSize > 2 * extent / numNodes) then cellSize = 2 * extent / numNodes end
+	if not (cellSize > 0) then cellSize = 1 end
+	local numColumns, numRows = floor(width / cellSize) + 1, floor(height / cellSize) + 1
+	local cells = {}             -- column * numRows + row -> list of nodes in the cell
+	local cellColumn, cellRow = {}, {}
+	local cellPos = {}           -- node -> index in the list of its cell
+	for i = 1, numNodes do
+		local column, row = floor((X[i] - minX) / cellSize), floor((Y[i] - minY) / cellSize)
+		local key = column * numRows + row
+		local cell = cells[key]
+		if not cell then
+			cell = {}
+			cells[key] = cell
+		end
+		local n = #cell + 1
+		cell[n] = i
+		cellColumn[i], cellRow[i], cellPos[i] = column, row, n
+	end
+
+	-- Calls func(node) for every node in the cells that are exactly "ring"
+	-- cells away from the given cell
+	local function scanRing(column, row, ring, func)
+		local c1, c2, r1, r2 = column - ring, column + ring, row - ring, row + ring
+		for c = c1 < 0 and 0 or c1, c2 >= numColumns and numColumns - 1 or c2 do
+			if c == c1 or c == c2 then
+				for r = r1 < 0 and 0 or r1, r2 >= numRows and numRows - 1 or r2 do
+					local cell = cells[c * numRows + r]
+					if cell then
+						for n = 1, #cell do func(cell[n]) end
+					end
+				end
+			else
+				if r1 >= 0 then
+					local cell = cells[c * numRows + r1]
+					if cell then
+						for n = 1, #cell do func(cell[n]) end
+					end
+				end
+				if r2 < numRows and r2 ~= r1 then
+					local cell = cells[c * numRows + r2]
+					if cell then
+						for n = 1, #cell do func(cell[n]) end
+					end
+				end
+			end
+		end
+	end
+
+	-- Step 4	- Find the nearest neighbours of every node
+	-- neighbour[(a-1)*numNeighbours + 1 .. a*numNeighbours] is the list of the
+	-- neighbours of node a, the cheapest to travel to first
+	local numNeighbours = NEIGHBOURS < numNodes - 1 and NEIGHBOURS or numNodes - 1
+	local neighbour = {}
+	do
+		local nearNode, nearDist = {}, {}
+		local numNear, worst, self, selfX, selfY
+		local function consider(node)
+			if node ~= self then
+				local dx, dy = X[node] - selfX, Y[node] - selfY
+				local d = (dx*dx + dy*dy)^0.5
+				if numNear < numNeighbours or d < worst then
+					-- insert it into the sorted list, the worst one drops out if the list is full
+					local n = numNear
+					if n < numNeighbours then
+						n = n + 1
+						numNear = n
+					end
+					while n > 1 and nearDist[n - 1] > d do
+						nearDist[n], nearNode[n] = nearDist[n - 1], nearNode[n - 1]
+						n = n - 1
+					end
+					nearDist[n], nearNode[n] = d, node
+					if numNear == numNeighbours then
+						worst = nearDist[numNear]
+					end
+				end
+			end
+		end
+		local maxRing = numColumns > numRows and numColumns or numRows
+		for i = 1, numNodes do
+			self, selfX, selfY = i, X[i], Y[i]
+			numNear, worst = 0, inf
+			local column, row = cellColumn[i], cellRow[i]
+			for ring = 0, maxRing do
+				scanRing(column, row, ring, consider)
+				-- everything in the cells further out is at least ring * cellSize away
+				if numNear == numNeighbours and worst <= ring * cellSize then
+					break
+				end
+			end
+			if numTaboos > 0 then
+				-- sort them by cost instead of by distance
+				for n = 1, numNear do
+					nearDist[n] = D(i, nearNode[n])
+				end
+				for n = 2, numNear do
+					local d, node = nearDist[n], nearNode[n]
+					local m = n
+					while m > 1 and nearDist[m - 1] > d do
+						nearDist[m], nearNode[m] = nearDist[m - 1], nearNode[m - 1]
+						m = m - 1
+					end
+					nearDist[m], nearNode[m] = d, node
+				end
+			end
+			local base = (i - 1) * numNeighbours
+			for n = 1, numNeighbours do
+				neighbour[base + n] = nearNode[n]
+			end
+			if nonblocking and i % 16 == 0 then
+				tick()
+			end
+		end
+	end
+
+	-- Step 5	- Construct a route by always travelling to the nearest unvisited node
+	local greedy = {}
+	do
+		local visited = {}
+		local best, bestDist, selfX, selfY
+		local function consider(node)
+			local dx, dy = X[node] - selfX, Y[node] - selfY
+			local d = dx*dx + dy*dy
+			if d < bestDist then
+				best, bestDist = node, d
+			end
+		end
+		local maxRing = numColumns > numRows and numColumns or numRows
+		local current = 1
+		for i = 1, numNodes do
+			greedy[i] = current
+			visited[current] = true
+			-- remove it from the grid, the last node in its cell takes its place there
+			local cell, n = cells[cellColumn[current] * numRows + cellRow[current]], cellPos[current]
+			local last = #cell
+			local moved = cell[last]
+			cell[n], cellPos[moved] = moved, n
+			cell[last] = nil
+			if i == numNodes then
+				break
+			end
+			-- most of the time one of the neighbours is still unvisited...
+			local nextNode
+			local base = (current - 1) * numNeighbours
+			for n = base + 1, base + numNeighbours do
+				local node = neighbour[n]
+				if not visited[node] then
+					nextNode = node
+					break
+				end
+			end
+			if not nextNode then
+				-- ...else look for the nearest unvisited node in the grid
+				selfX, selfY = X[current], Y[current]
+				best, bestDist = nil, inf
+				local column, row = cellColumn[current], cellRow[current]
+				for ring = 0, maxRing do
+					scanRing(column, row, ring, consider)
+					if best and bestDist <= (ring * cellSize)^2 then
 						break
 					end
 				end
+				nextNode = best
 			end
-			if nonblocking then
-				yield()
+			current = nextNode
+			if nonblocking and i % 16 == 0 then
+				tick()
 			end
 		end
+	end
+	cells, cellColumn, cellRow, cellPos = nil, nil, nil, nil
 
-		for k = 1, numAnts do
-			-- Send out status update if requested  (this loop is the one that actually takes lots of time)
-			if nonblocking and TSPUpdateFrame.statusFunc then
-				TSPUpdateFrame.statusFunc(count, (k-1)/numAnts)
+	-- Step 6	- Start with that route, or with the route that was sent in if that is better
+	-- tour[] is the route as a list of nodes, tourPos[] is where each node is in it
+	local tour, tourPos = {}, {}
+	do
+		local inputCost, greedyCost = D(numNodes, 1), D(greedy[numNodes], greedy[1])
+		for i = 1, numNodes - 1 do
+			inputCost = inputCost + D(i, i + 1)
+			greedyCost = greedyCost + D(greedy[i], greedy[i + 1])
+		end
+		if greedyCost < inputCost then
+			cost = greedyCost
+			for i = 1, numNodes do
+				tour[i], tourPos[greedy[i]] = greedy[i], i
 			end
-			-- Step 8	-- Perform local pheromone update on the path from the last node to the first node for each ant k
-			local antpath = ants[k]
-			local curnode = antpath[numNodes]
-			local nextnode = antpath[1]
-			local u = curnode*numNodes-nextnode
-			phero[u] = (1 - LOCALDECAY) * phero[u] + LOCALDECAYUPDATE
-			antprob[u] = phero[u] ^ ALPHA / weight[u] ^ BETA
+		else
+			cost = inputCost
+			for i = 1, numNodes do
+				tour[i], tourPos[i] = i, i
+			end
+		end
+		greedy = nil
+	end
 
-			-- Step 9	-- Perform 2-opt on the path to improve it
-			--[[for i = 1, TWOOPTPASSES do
-				if nonblocking then
-					yield()
-				end
-				if TSP:TwoOpt(antpath, weight, prune) == 0 then
+	-- All changes to the route are done by reversing a part of it.
+	-- Reverses the nodes at positions i to j (going forward, may wrap around).
+	-- If that is more than half of the route, the other part is reversed
+	-- instead, which results in the same route going the other direction.
+	local function reverse(i, j)
+		local len = j - i + 1
+		if len <= 0 then
+			len = len + numNodes
+		end
+		if len * 2 > numNodes then
+			i, j = j + 1, i - 1
+			if i > numNodes then i = 1 end
+			if j < 1 then j = numNodes end
+			len = numNodes - len
+		end
+		for n = 1, floor(len / 2) do
+			local a, b = tour[i], tour[j]
+			tour[i], tour[j] = b, a
+			tourPos[b], tourPos[a] = i, j
+			i = i + 1
+			if i > numNodes then i = 1 end
+			j = j - 1
+			if j < 1 then j = numNodes end
+		end
+	end
+
+	-- A 2-opt move: for nodes a and b that are next to each other, and nodes
+	-- c and d that are next to each other in the same direction (the route is
+	-- a b ... c d or d c ... b a), removes the links a-b and c-d and adds the
+	-- links a-c and b-d
+	local function exchange(a, b, c, d)
+		local pa, pb = tourPos[a], tourPos[b]
+		local nextPos = pa + 1
+		if nextPos > numNodes then nextPos = 1 end
+		if nextPos == pb then
+			reverse(pb, tourPos[c])
+		else
+			reverse(tourPos[c], pb)
+		end
+	end
+
+	-- The nodes whose surroundings in the route have changed and that need
+	-- to be looked at (again)
+	local queue, queued = {}, {}
+	local queueHead, queueTail = 1, 0
+	local function push(node)
+		if not queued[node] then
+			queueTail = queueTail + 1
+			queue[queueTail] = node
+			queued[node] = true
+		end
+	end
+
+	-- Tries to find a change to the route around node a that makes the route
+	-- shorter. Returns true if it found and made one.
+	local function improve(a)
+		local pa = tourPos[a]
+		local base = (a - 1) * numNeighbours
+
+		-- 2-opt: with b being the node after (or before) a, look for a
+		-- neighbour c of a with d being the node after (or before) c, where
+		-- the links a-c and b-d are shorter than a-b and c-d
+		for dir = 1, -1, -2 do
+			local pb = pa + dir
+			if pb > numNodes then pb = 1 elseif pb < 1 then pb = numNodes end
+			local b = tour[pb]
+			local dab = D(a, b)
+			for n = base + 1, base + numNeighbours do
+				local c = neighbour[n]
+				local gain = dab - D(a, c)
+				if gain <= EPSILON then
 					break
 				end
-			end]]
-			while TSP:TwoOpt(antpath, weight, prune, TWOPOINTFIVEOPT, nonblocking) > 0 do
-				-- Cycle the last 3 nodes so that the 2-opt algorithm will work on the last
-				-- 3 nodes in the path that got missed (the loop goes from 1 to N-3)
-				tinsert(antpath, tremove(antpath, 1))
-				tinsert(antpath, tremove(antpath, 1))
-				tinsert(antpath, tremove(antpath, 1))
-				if nonblocking then
-					yield()
+				local pd = tourPos[c] + dir
+				if pd > numNodes then pd = 1 elseif pd < 1 then pd = numNodes end
+				local d = tour[pd]
+				if c ~= b and d ~= a then
+					gain = gain + D(c, d) - D(b, d)
+					if gain > EPSILON then
+						if dir == 1 then
+							reverse(pb, tourPos[c])
+						else
+							reverse(tourPos[c], pb)
+						end
+						cost = cost - gain
+						push(a) push(b) push(c) push(d)
+						return true
+					end
 				end
 			end
+		end
 
-			-- Step 10	-- At the same time, we also calculate the length of each ant's tour
-			local pathLength = 0
-			curnode = antpath[numNodes]
-			for i = 1, numNodes do
-				nextnode = antpath[i]
-				pathLength = pathLength + weight[curnode*numNodes-nextnode]
-				curnode = nextnode
-			end
-
-			-- Step 11	-- If this ant's path is shorter than the global shortest known solution, copy it
-			if pathLength < shortestPathLength then
-				shortestPathLength = pathLength
-				for i = 1, numNodes do
-					shortestPath[i] = antpath[i]
+		-- Or-opt: take a segment of 1 to 3 nodes that starts (or ends) at a
+		-- out of the route, and insert it next to a neighbour c of one of its
+		-- 2 ends, between c and the node d after (or before) c
+		for dir = 1, -1, -2 do
+			-- the segment is s1..s2 going forward, at positions ps1..ps2
+			local s1, s2, ps1, ps2 = a, a, pa, pa
+			for len = 1, 3 do
+				if len > numNodes - 2 then
+					break
 				end
-				nochanges = 0 -- There were changes, so reset nochanges counter to 0
+				if len > 1 then
+					if dir == 1 then
+						ps2 = ps2 + 1
+						if ps2 > numNodes then ps2 = 1 end
+						s2 = tour[ps2]
+					else
+						ps1 = ps1 - 1
+						if ps1 < 1 then ps1 = numNodes end
+						s1 = tour[ps1]
+					end
+				end
+				-- p and q are the nodes before and after the segment
+				local pp, pq = ps1 - 1, ps2 + 1
+				if pp < 1 then pp = numNodes end
+				if pq > numNodes then pq = 1 end
+				local p, q = tour[pp], tour[pq]
+				local remove = D(p, s1) + D(s2, q) - D(p, q)
+				if remove > EPSILON then
+					for segEnd = 1, len > 1 and 2 or 1 do
+						-- s is the end of the segment that gets linked to c, o is the other end
+						local s, o = s1, s2
+						if segEnd == 2 then
+							s, o = s2, s1
+						end
+						local sbase = (s - 1) * numNeighbours
+						for n = sbase + 1, sbase + numNeighbours do
+							local c = neighbour[n]
+							local dsc = D(s, c)
+							if remove - dsc <= EPSILON then
+								break
+							end
+							local pc = tourPos[c]
+							local offset = pc - ps1
+							if offset < 0 then offset = offset + numNodes end
+							if offset >= len then -- c is not in the segment
+								for side = 1, -1, -2 do
+									local pd = pc + side
+									if pd > numNodes then pd = 1 elseif pd < 1 then pd = numNodes end
+									offset = pd - ps1
+									if offset < 0 then offset = offset + numNodes end
+									if offset >= len then -- and neither is d
+										local d = tour[pd]
+										local gain = remove - dsc - D(o, d) + D(c, d)
+										if gain > EPSILON then
+											-- Move the segment with 2 exchanges, then turn it around with
+											-- a third one if it ended up the wrong way around
+											if side == 1 then
+												-- p s1..s2 q ... c d
+												exchange(p, s1, c, d) -- p c ... q s2..s1 d
+												exchange(p, c, q, s2) -- p q ... c s2..s1 d
+												if s ~= s2 then
+													exchange(c, s2, s1, d)
+												end
+											else
+												-- d c ... p s1..s2 q
+												exchange(q, s2, c, d) -- d s2..s1 p ... c q
+												exchange(q, c, p, s1) -- d s2..s1 c ... p q
+												if s ~= s1 then
+													exchange(c, s1, s2, d)
+												end
+											end
+											cost = cost - gain
+											push(p) push(q) push(c) push(d) push(s1) push(s2)
+											return true
+										end
+									end
+								end
+							end
+						end
+					end
+				end
 			end
-		
 		end
-			
-		-- Step 12	- Perform global pheromone trail update on the best known solution
-		local curnode = shortestPath[numNodes]
-		local tempConstant = GLOBALDECAY * QUALITY / shortestPathLength
-		for i = 1, numNodes do
-			local nextnode = shortestPath[i]
-			local u = curnode*numNodes-nextnode
-			phero[u] = (1 - GLOBALDECAY) * phero[u] + tempConstant
-			antprob[u] = phero[u] ^ ALPHA / weight[u] ^ BETA -- Update the probability
-			curnode = nextnode
-		end
-		
-		-- report how long path this round found (with progress==1)
-		if nonblocking and TSPUpdateFrame.statusFunc then
-			TSPUpdateFrame.statusFunc(count, 1, shortestPathLength)
-			yield()
-		end
+
+		return false
 	end
 
-	do
-		-- Perform a non-pruned 2-opt on the final path so that there is absolutely no criss-cross
-		local noprune = {}
-		for i = 1, numNodes do
-			noprune[i] = {}
-		end
-		for i = 1, numNodes do
-			for j = i+1, numNodes do
-				tinsert(noprune[i], j)
-				tinsert(noprune[j], i)
+	-- Improves the route until there is no node left to look at
+	local numLooked = 0
+	local function localSearch()
+		while queueHead <= queueTail do
+			local a = queue[queueHead]
+			queue[queueHead] = nil
+			queueHead = queueHead + 1
+			queued[a] = nil
+			while improve(a) do end
+			numLooked = numLooked + 1
+			if nonblocking and numLooked % 8 == 0 then
+				if pass == 1 then
+					progress = numLooked < numNodes and numLooked / numNodes or 1
+				end
+				tick()
 			end
 		end
-		while TSP:TwoOpt(shortestPath, weight, noprune, TWOPOINTFIVEOPT, nonblocking) > 0 do
-			tinsert(shortestPath, tremove(shortestPath, 1))
-			tinsert(shortestPath, tremove(shortestPath, 1))
-			tinsert(shortestPath, tremove(shortestPath, 1))
-			if nonblocking then
-				yield()
-			end
-		end
-		
-		-- Recompute the path length
-		shortestPathLength = 0
-		local curnode = shortestPath[numNodes]
-		for i = 1, numNodes do
-			local nextnode = shortestPath[i]
-			shortestPathLength = shortestPathLength + weight[curnode*numNodes-nextnode]
-			curnode = nextnode
-		end
+		queueHead, queueTail = 1, 0
 	end
 
-	-- Step 13	-- Check the length of the original tour that was sent in in nodes[]
-	local pathLength = 0
-	for i = 2, numNodes do
-		pathLength = pathLength + weight[(i-1)*numNodes-i]
+	-- Step 7	- Improve the route until no single change makes it any shorter
+	for i = 1, numNodes do
+		push(tour[i])
 	end
-	pathLength = pathLength + weight[numNodes*numNodes-1]
+	localSearch()
+	local count = 1
 
-	-- Step 14	-- Check solution with original that was sent in
-	if pathLength < shortestPathLength then
-		-- TSP didn't find a shorter solution, so copy the input to the output
-		for i = 1, numNodes do
-			path[i] = nodes[i]
-		end
-		shortestPathLength = pathLength
-	else
-		-- TSP found a shorter path than the original, convert our shortest path to the output format wanted
-		local meta
+	-- Step 8	- Convert the route to the output format wanted
+	local meta
+	if metadata then
+		meta = {}
+	end
+	for i = 1, numNodes do
+		path[i] = nodes[tour[i]]
 		if metadata then
-			meta = {}
+			meta[i] = metadata[tour[i]]
 		end
-		for i = 1, numNodes do
-			path[i] = nodes[shortestPath[i]]
-			if metadata then
-				meta[i] = metadata[shortestPath[i]]
-			end
-		end
-		metadata = meta -- prev metadata[] not recycled here, will go out of scope at function end and get GCed
 	end
+	metadata = meta
 
-	lastpath = nil
-
-	-- This step is necessary because our pathlength above is calculated from biased data from taboos
-	shortestPathLength = TSP:PathLength(path, zoneID)
+	-- This step is necessary because our cost is calculated from biased data from taboos
+	local pathLength = TSP:PathLength(path, zoneID)
 
 	if nonblocking then
 		startTime = GetTime() - startTime
@@ -607,109 +836,7 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 		startTime = debugprofilestop() - startTime
 		startTime = startTime / 1000
 	end
-	return path, metadata, shortestPathLength, count, startTime
-end
-
--- TSP:TwoOpt(path, weight)
--- Arguments
---   path   - The table containing a TSP path to improve. Input must have node IDs 1-N, numerically indexed.
---   weight - The table containing the NxN weight matrix.
---   prune  - The table containing the list of neighbouring nodes for each node.
---   twoPointFiveOpt - A boolean indicating whether to perform 2.5-opt.
---   nonblocking - A boolean indicating whether the function should yield() regularly.
--- Returns
---   count  - The number of 2-opt replacements made to path[]
---[[
-Typically TSP tour refinement takes place by "flipping" edges. For example, if
-the tour contains the edges (v1, w1) and (w2, v2) in that order, then these two
-edges can always be flipped to create (v1, w2) and (w1, v2). This sort of step
-forms the basis of the 2-opt algorithm which is a steepest descent approach,
-repeatedly flipping pairs of edges if they improve the tour quality until it
-reaches a local minimum of the objective function and no more such flips exist.
-
-In a similar vein, the 3-opt algorithm exchanges 3 edges at a time. These are
-more specific versions of the Lin-Kernighan (LK) algorithm or better known as
-the N-opt or variable-opt algorithm.
-
--- A Multilevel Lin-Kernighan-Helsgaun Algorithm for the Travelling Salesman Problem
--- Chris Walshaw, September 27, 2001.
-]]
-function TSP:TwoOpt(path, weight, prune, twoPointFiveOpt, nonblocking)
-	local count = 0
-	local numNodes = #path
-	local pathR = pathR
-
-	-- Generate reverse lookup table
-	if lastpath ~= path then
-		for i = 1, numNodes do
-			pathR[path[i]] = i
-		end
-	end
-
-	-- Perform normal 2-opt
-	for i = 1, numNodes-3 do
-		local a, b = path[i], path[i+1]
-		local z = weight[a*numNodes-b]
-		--for j = i+2, numNodes-1 do
-		for m = 1, #prune[a] do
-			local j = pathR[prune[a][m]]
-			if j > i+1 and j ~= numNodes then
-				local c, d = path[j], path[j+1]
-				local currW = z + weight[c*numNodes-d]
-				local newW = weight[a*numNodes-c] + weight[b*numNodes-d]
-				if newW < currW then
-					-- Swap these 2 edges to get a shorter path
-					-- This is done by reversing the node order between i+1 to j
-					local left = i+1
-					local right = j
-					while left < right do
-						local L, R = path[right], path[left]
-						path[left], path[right] = L, R
-						pathR[L], pathR[R] = left, right
-						left = left + 1
-						right = right - 1
-					end
-					b = path[i+1]
-					z = weight[a*numNodes-b]
-					count = count + 1
-				end
-			end
-		end
-	end
-
-	-- Then perform 2.5-opt
-	if twoPointFiveOpt then
-		if nonblocking then
-			yield()
-		end
-		for i = 1, numNodes-4 do
-			local a, b, c = path[i], path[i+1], path[i+2]
-			local z = weight[a*numNodes-b] + weight[b*numNodes-c]
-			for m = 1, #prune[a] do
-				local j = pathR[prune[a][m]]
-				if j > i+2 and j ~= numNodes then
-					local d, e = path[j], path[j+1]
-					local currW = z + weight[d*numNodes-e]
-					local newW = weight[a*numNodes-c] + weight[d*numNodes-b] + weight[b*numNodes-e]
-					if newW < currW then
-						-- Remove node b from the path, then reinsert it between d and e
-						for q = i+1, j-1 do
-							path[q] = path[q+1]
-							pathR[path[q]] = q
-						end
-						path[j] = b
-						pathR[b] = j
-						b, c = path[i+1], path[i+2]
-						z = weight[a*numNodes-b] + weight[b*numNodes-c]
-						count = count + 1
-					end
-				end
-			end
-		end
-	end
-
-	lastpath = path
-	return count
+	return path, metadata, pathLength, count, startTime
 end
 
 -- Helper function for TSP:InsertNode()

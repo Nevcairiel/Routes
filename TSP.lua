@@ -945,11 +945,6 @@ function TSP:ClusterRoute(nodes, zoneID, radius, nonblocking)
 	local zoneW, zoneH = Routes.Dragons:GetZoneSize(zoneID)
 	local diameter = radius * 2
 
-	-- ensure one yield is always called
-	if nonblocking then
-		yieldNow()
-	end
-
 	-- Clusters are identified by the route index of their first node for the
 	-- whole run, a cluster that is merged into another is just flagged as dead.
 	local coord = {}    -- node ID of the cluster point
@@ -964,6 +959,12 @@ function TSP:ClusterRoute(nodes, zoneID, radius, nonblocking)
 		cx[i], cy[i] = floor(c / 10000) / 10000, (c % 10000) / 10000
 		metadata[i] = {c}
 		changed[i] = 0
+	end
+
+	-- ensure one yield is always called. This must be after reading nodes[],
+	-- the caller is free to modify it while we run in the background.
+	if nonblocking then
+		yieldNow()
 	end
 
 	-- Step 2: Sort the clusters into the grid

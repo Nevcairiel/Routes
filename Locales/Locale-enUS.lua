@@ -185,6 +185,7 @@ L["Now running route clustering in the background..."] = true
 L["There is already a route being clustered in the background. Wait for it to complete first."] = true
 L["This route is already being clustered in the background."] = true
 L["You may not cluster or uncluster a route that is being optimized in the background."] = true
+L["You may not optimize a route that is being clustered in the background."] = true
 L["The route was changed while it was being clustered in the background, the result was discarded."] = true
 L["The following error occured in the background clustering coroutine, please report to the addon authors:"] = true
 L["Uncluster"] = true

@@ -2083,6 +2083,11 @@ function ConfigHandler:DoBackground(info)
 	local zone = tonumber(info[2])
 	local route = Routes.routekeys[zone][ info[3] ]
 	local t = db.routes[zone][route]
+	local is_clustering, route_table = Routes.TSP:IsClusterRunning()
+	if is_clustering and route_table == t.route then
+		Routes:Print(L["You may not optimize a route that is being clustered in the background."])
+		return
+	end
 	if #t.route > 724 then
 		Routes:Print(L["TOO_MANY_NODES_ERROR"])
 		return

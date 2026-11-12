@@ -2036,7 +2036,7 @@ end
 -- without an improvement per node it gives up early.
 local function GetTSPParameters(background)
 	if background then
-		return { kicks_per_node = 100, patience_per_node = 5 }
+		return { kicks_per_node = 300, patience_per_node = 30 }
 	end
 	return { kicks_per_node = 10 }
 end

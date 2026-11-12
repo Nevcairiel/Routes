@@ -222,10 +222,20 @@ end
 
 -- Number of nearest neighbours of each node that are considered as the new
 -- neighbour of that node in the route
-local NEIGHBOURS = 8
+local NEIGHBOURS = 10
+-- Of those, the number of nodes that are the nearest ones in each of the 4
+-- directions, rather than the nearest ones overall. Without these, the nodes
+-- of a dense group of nodes would only have each other as neighbours.
+local QUADRANT_NEIGHBOURS = 2
+-- Number of nodes to look at before giving up on finding those
+local QUADRANT_SCAN_LIMIT = 150
 -- Improvements smaller than this (in yards) are ignored, so that rounding
 -- errors can't make the search run in circles
 local EPSILON = 1e-7
+-- Number of kicks to try per node of the route
+local KICKS_PER_NODE = 10
+-- Maximum length of the 2 segments that a kick swaps
+local KICK_SEGMENT = 30
 
 function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonblocking)
 	assert(type(nodes) == "table", "SolveTSP() expected table in 1st argument, got "..type(nodes).." instead.")
@@ -468,9 +478,13 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 	local neighbour = {}
 	do
 		local nearNode, nearDist = {}, {}
-		local numNear, worst, self, selfX, selfY
+		local numNear, worst, self, selfX, selfY, numScanned
+		-- the nearest nodes in each of the 4 directions (quadrants) are kept in
+		-- quadNode[quadrant * QUADRANT_NEIGHBOURS + 1 .. + quadCount[quadrant]]
+		local quadNode, quadDist, quadCount = {}, {}, {}
 		local function consider(node)
 			if node ~= self then
+				numScanned = numScanned + 1
 				local dx, dy = X[node] - selfX, Y[node] - selfY
 				local d = (dx*dx + dy*dy)^0.5
 				if numNear < numNeighbours or d < worst then
@@ -489,38 +503,98 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 						worst = nearDist[numNear]
 					end
 				end
+				if QUADRANT_NEIGHBOURS > 0 then
+					-- the same for the list of its quadrant
+					local quadrant = (dx >= 0 and 1 or 0) + (dy >= 0 and 2 or 0)
+					local base = quadrant * QUADRANT_NEIGHBOURS
+					local n = quadCount[quadrant]
+					if n < QUADRANT_NEIGHBOURS or d < quadDist[base + n] then
+						if n < QUADRANT_NEIGHBOURS then
+							n = n + 1
+							quadCount[quadrant] = n
+						end
+						while n > 1 and quadDist[base + n - 1] > d do
+							quadDist[base + n], quadNode[base + n] = quadDist[base + n - 1], quadNode[base + n - 1]
+							n = n - 1
+						end
+						quadDist[base + n], quadNode[base + n] = d, node
+					end
+				end
 			end
 		end
 		local maxRing = numColumns > numRows and numColumns or numRows
+		local chosen, chosenCost = {}, {}
 		for i = 1, numNodes do
 			self, selfX, selfY = i, X[i], Y[i]
-			numNear, worst = 0, inf
+			numNear, worst, numScanned = 0, inf, 0
+			for quadrant = 0, 3 do
+				quadCount[quadrant] = 0
+			end
 			local column, row = cellColumn[i], cellRow[i]
 			for ring = 0, maxRing do
 				scanRing(column, row, ring, consider)
 				-- everything in the cells further out is at least ring * cellSize away
-				if numNear == numNeighbours and worst <= ring * cellSize then
-					break
+				local reach = ring * cellSize
+				if numNear == numNeighbours and worst <= reach then
+					-- that's the nearest ones, but keep going for the quadrants for a while
+					local done = numScanned >= QUADRANT_SCAN_LIMIT
+					if not done then
+						done = true
+						for quadrant = 0, 3 do
+							local n = quadCount[quadrant]
+							if n < QUADRANT_NEIGHBOURS or (n > 0 and quadDist[quadrant * QUADRANT_NEIGHBOURS + n] > reach) then
+								done = false
+								break
+							end
+						end
+					end
+					if done then
+						break
+					end
 				end
 			end
-			if numTaboos > 0 then
-				-- sort them by cost instead of by distance
-				for n = 1, numNear do
-					nearDist[n] = D(i, nearNode[n])
-				end
-				for n = 2, numNear do
-					local d, node = nearDist[n], nearNode[n]
-					local m = n
-					while m > 1 and nearDist[m - 1] > d do
-						nearDist[m], nearNode[m] = nearDist[m - 1], nearNode[m - 1]
-						m = m - 1
+			-- Take the nodes of the quadrants, and fill the rest with the nearest nodes
+			local numChosen = 0
+			for quadrant = 0, 3 do
+				local base = quadrant * QUADRANT_NEIGHBOURS
+				for n = 1, quadCount[quadrant] do
+					if numChosen < numNeighbours then
+						numChosen = numChosen + 1
+						chosen[numChosen] = quadNode[base + n]
 					end
-					nearDist[m], nearNode[m] = d, node
 				end
+			end
+			local numQuadrant = numChosen
+			for n = 1, numNear do
+				if numChosen == numNeighbours then
+					break
+				end
+				local node, found = nearNode[n], false
+				for m = 1, numQuadrant do
+					if chosen[m] == node then
+						found = true
+						break
+					end
+				end
+				if not found then
+					numChosen = numChosen + 1
+					chosen[numChosen] = node
+				end
+			end
+			-- and sort them by cost
+			for n = 1, numChosen do
+				local node = chosen[n]
+				local d = D(i, node)
+				local m = n
+				while m > 1 and chosenCost[m - 1] > d do
+					chosenCost[m], chosen[m] = chosenCost[m - 1], chosen[m - 1]
+					m = m - 1
+				end
+				chosenCost[m], chosen[m] = d, node
 			end
 			local base = (i - 1) * numNeighbours
 			for n = 1, numNeighbours do
-				neighbour[base + n] = nearNode[n]
+				neighbour[base + n] = chosen[n]
 			end
 			if nonblocking and i % 16 == 0 then
 				tick()
@@ -612,6 +686,21 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 	-- Reverses the nodes at positions i to j (going forward, may wrap around).
 	-- If that is more than half of the route, the other part is reversed
 	-- instead, which results in the same route going the other direction.
+	-- While journalSize is not nil, every reversal is written down in the
+	-- journal so that the changes can be undone by doing them again backwards.
+	local journalI, journalJ, journalLen = {}, {}, {}
+	local journalSize
+	local function flip(i, j, len)
+		for n = 1, floor(len / 2) do
+			local a, b = tour[i], tour[j]
+			tour[i], tour[j] = b, a
+			tourPos[b], tourPos[a] = i, j
+			i = i + 1
+			if i > numNodes then i = 1 end
+			j = j - 1
+			if j < 1 then j = numNodes end
+		end
+	end
 	local function reverse(i, j)
 		local len = j - i + 1
 		if len <= 0 then
@@ -623,14 +712,12 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 			if j < 1 then j = numNodes end
 			len = numNodes - len
 		end
-		for n = 1, floor(len / 2) do
-			local a, b = tour[i], tour[j]
-			tour[i], tour[j] = b, a
-			tourPos[b], tourPos[a] = i, j
-			i = i + 1
-			if i > numNodes then i = 1 end
-			j = j - 1
-			if j < 1 then j = numNodes end
+		if len > 1 then
+			if journalSize then
+				journalSize = journalSize + 1
+				journalI[journalSize], journalJ[journalSize], journalLen[journalSize] = i, j, len
+			end
+			flip(i, j, len)
 		end
 	end
 
@@ -814,7 +901,60 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 	localSearch()
 	local count = 1
 
-	-- Step 8	- Convert the route to the output format wanted
+	-- Step 8	- Kick the route out of the dead end it is in now
+	-- A kick swaps 2 short segments of the route that are next to each other,
+	-- which is a change that the local search can't make or undo with a single
+	-- move. If the route is shorter after improving it again we keep it,
+	-- otherwise the kick and everything after it is undone.
+	local maxSegment = floor((numNodes - 2) / 2)
+	if maxSegment > KICK_SEGMENT then maxSegment = KICK_SEGMENT end
+	local numKicks = floor((parameters.kicks_per_node or KICKS_PER_NODE) * numNodes)
+	pass, progress = 2, 0
+	for kick = 1, numKicks do
+		local costBefore = cost
+		journalSize = 0
+		-- the route is a a1..a2 b1..b2 c, change it to a b1..b2 a1..a2 c
+		local pos = random(numNodes)
+		local len1, len2 = random(maxSegment), random(maxSegment)
+		local a = tour[pos]
+		pos = pos + 1
+		if pos > numNodes then pos = pos - numNodes end
+		local a1 = tour[pos]
+		pos = pos + len1 - 1
+		if pos > numNodes then pos = pos - numNodes end
+		local a2 = tour[pos]
+		pos = pos + 1
+		if pos > numNodes then pos = pos - numNodes end
+		local b1 = tour[pos]
+		pos = pos + len2 - 1
+		if pos > numNodes then pos = pos - numNodes end
+		local b2 = tour[pos]
+		pos = pos + 1
+		if pos > numNodes then pos = pos - numNodes end
+		local c = tour[pos]
+		cost = cost + D(a, b1) + D(b2, a1) + D(a2, c) - D(a, a1) - D(a2, b1) - D(b2, c)
+		exchange(a, a1, b2, c)  -- a b2..b1 a2..a1 c
+		exchange(a, b2, b1, a2) -- a b1..b2 a2..a1 c
+		exchange(b2, a2, a1, c) -- a b1..b2 a1..a2 c
+		push(a) push(a1) push(a2) push(b1) push(b2) push(c)
+		localSearch()
+		if cost < costBefore - EPSILON then
+			count = count + 1
+		else
+			-- no good, undo it
+			for n = journalSize, 1, -1 do
+				flip(journalI[n], journalJ[n], journalLen[n])
+			end
+			cost = costBefore
+		end
+		journalSize = nil
+		if nonblocking and kick % 4 == 0 then
+			progress = kick / numKicks
+			tick()
+		end
+	end
+
+	-- Step 9	- Convert the route to the output format wanted
 	local meta
 	if metadata then
 		meta = {}

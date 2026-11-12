@@ -537,9 +537,10 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 
 	-- Step 4	- Find the nearest neighbours of every node
 	-- neighbour[(a-1)*numNeighbours + 1 .. a*numNeighbours] is the list of the
-	-- neighbours of node a, the cheapest to travel to first
+	-- neighbours of node a, the cheapest to travel to first, and neighbourCost[]
+	-- is the cost of travelling from a to each of them
 	local numNeighbours = NEIGHBOURS < numNodes - 1 and NEIGHBOURS or numNodes - 1
-	local neighbour = {}
+	local neighbour, neighbourCost = {}, {}
 	do
 		local nearNode, nearDist = {}, {}
 		local numNear, worst, self, selfX, selfY, numScanned, scanLimit
@@ -674,7 +675,7 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 			end
 			local base = (i - 1) * numNeighbours
 			for n = 1, numNeighbours do
-				neighbour[base + n] = chosen[n]
+				neighbour[base + n], neighbourCost[base + n] = chosen[n], chosenCost[n]
 			end
 			if nonblocking and (i % 16 == 0 or numScanned > 200) then
 				progress = 0.3 * i / numNodes
@@ -849,18 +850,24 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 	local function improve(a)
 		local pa = tourPos[a]
 		local base = (a - 1) * numNeighbours
+		-- the nodes after and before a, and the cost of the links to them
+		local pNext, pPrev = pa + 1, pa - 1
+		if pNext > numNodes then pNext = 1 end
+		if pPrev < 1 then pPrev = numNodes end
+		local costNext, costPrev = D(a, tour[pNext]), D(a, tour[pPrev])
 
 		-- 2-opt: with b being the node after (or before) a, look for a
 		-- neighbour c of a with d being the node after (or before) c, where
 		-- the links a-c and b-d are shorter than a-b and c-d
 		for dir = 1, -1, -2 do
-			local pb = pa + dir
-			if pb > numNodes then pb = 1 elseif pb < 1 then pb = numNodes end
+			local pb, dab = pNext, costNext
+			if dir == -1 then
+				pb, dab = pPrev, costPrev
+			end
 			local b = tour[pb]
-			local dab = D(a, b)
 			for n = base + 1, base + numNeighbours do
 				local c = neighbour[n]
-				local gain = dab - D(a, c)
+				local gain = dab - neighbourCost[n]
 				if gain <= EPSILON then
 					break
 				end
@@ -889,7 +896,8 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 		for dir = 1, -1, -2 do
 			-- the segment is s1..s2 going forward, at positions ps1..ps2
 			local s1, s2, ps1, ps2 = a, a, pa, pa
-			for len = 1, 3 do
+			-- the segment of just a is the same in both directions, look at it only once
+			for len = dir == 1 and 1 or 2, 3 do
 				if len > numNodes - 2 then
 					break
 				end
@@ -909,7 +917,13 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 				if pp < 1 then pp = numNodes end
 				if pq > numNodes then pq = 1 end
 				local p, q = tour[pp], tour[pq]
-				local remove = D(p, s1) + D(s2, q) - D(p, q)
+				-- the link at the end of the segment that is a is one of the links of a
+				local remove
+				if dir == 1 then
+					remove = costPrev + (len == 1 and costNext or D(s2, q)) - D(p, q)
+				else
+					remove = D(p, s1) + costNext - D(p, q)
+				end
 				if remove > EPSILON then
 					for segEnd = 1, len > 1 and 2 or 1 do
 						-- s is the end of the segment that gets linked to c, o is the other end
@@ -920,7 +934,7 @@ function TSP:SolveTSP(nodes, metadata, taboos, zoneID, parameters, path, nonbloc
 						local sbase = (s - 1) * numNeighbours
 						for n = sbase + 1, sbase + numNeighbours do
 							local c = neighbour[n]
-							local dsc = D(s, c)
+							local dsc = neighbourCost[n]
 							if remove - dsc <= EPSILON then
 								break
 							end

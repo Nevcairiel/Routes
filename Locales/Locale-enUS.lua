@@ -159,16 +159,17 @@ L["Reset the line settings to defaults"] = true
 L["Optimize Route"] = true
 L["Route Optimizing"] = true
 L["Extra optimization"] = true
-L["ExtraOptDesc"] = "Turning on this option will make optimizing the route take approximately 40% longer, but will generate -slightly- better routes. Recommended setting is OFF."
+L["ExtraOptDesc2"] = "Turning on this option will make Routes try 5 times as long to improve a route, but this usually only generates -very slightly- better routes. Recommended setting is OFF."
 L["Foreground"] = true
-L["Foreground Disclaimer"] = "Generate close to optimal path for the set of nodes in this route. Please keep in mind that doing this will 'hang' your client for some time. Depending on the amount of nodes (more cause near exponential increase in time) and CPU speed you might even get a disconnect if it takes too long."
+L["Foreground Disclaimer"] = "Generate close to optimal path for the set of nodes in this route. Please keep in mind that doing this will 'hang' your client for some time, a few seconds for every thousand nodes in the route. Depending on the amount of nodes and CPU speed you might even get a disconnect if it takes too long."
 L["Background"] = true
-L["Background Disclaimer"] = "This will perform the TSP route generation in the background much more slowly without locking up WoW. Please note that your WoW will still take a noticable performance hit."
+L["Background Disclaimer"] = "This will perform the TSP route generation in the background without locking up WoW, and keeps trying to improve the route for longer than the foreground option does. You can stop it at any time and keep the best route found so far. Please note that your WoW will still take a noticable performance hit."
+L["Stop"] = true
+L["Stop optimizing this route in the background and keep the best route found so far"] = true
 L["Path with %d nodes found with length %.2f yards after %d iterations in %.2f seconds."] = true
 L["Now running TSP in the background..."] = true
 L["There is already a TSP running in background. Wait for it to complete first."] = true
 L["The following error occured in the background path generation coroutine, please report to the addon authors:"] = true
-L["TOO_MANY_NODES_ERROR"] = "This route has more than 724 nodes. Please reduce it by removing some nodes or by clustering otherwise memory allocation errors will occur."
 L["Pass %d: %d%% - %d yards"] = true
 L["Pass %d: %d%%"] = true
 
@@ -284,14 +285,14 @@ This is somewhat like the |cffffff78Windows XP Disk Defragmentation|r utility, a
 |cffffd200
 How does Routes perform its route optimization?
 |r
-Routes uses an algorithm called |cffffff78Ant Colony Optimization|r (ACO) which is a heuristic/probabilistic method of calculating optimal graphs based on observed real life ant behavior.
+Routes uses a |cffffff78local search|r, which is a heuristic method to produce near-optimal solutions to the |cffffff78Traveling Salesman Problem|r (TSP). It starts with a route that always travels to the nearest unvisited node, and then keeps making small changes to it that make it shorter.
 
-ACO algorithms have been used to produce near-optimal solutions to the |cffffff78Traveling Salesman Problem|r (TSP). For more information, consult Google or Wikipedia.
+The changes it tries are |cffffff782-opt|r, the process where pairs of edges are exchanged (A-B and C-D becomes A-C and B-D), and |cffffff78Or-opt|r, where up to 3 nodes in a row are moved to another place in the route. When no such change makes the route any shorter, it swaps 2 random neighboring parts of the route and tries again, and keeps the result if the route is shorter after that. For more information, consult Google or Wikipedia.
 
 |cffffd200
 What does the "Extra Optimization" option do?
 |r
-By default, we only used ACO along with the standard |cffffff782-opt algorithm|r to optimize routes. Turning on "extra optimization" tells Routes to also use 2.5-opt, which is a specific subset of 3-opt. 2-opt is the process where pairs of edges are exchanged (A-B and C-D becomes A-C and B-D) in order to produce shorter routes.
+Turning on "extra optimization" tells Routes to make 5 times as many attempts to improve a route once it doesn't find a simple change that makes it shorter anymore. Most of the improvement is found early on, so this takes a lot longer for usually very little gain.
 
 |cffffd200
 What algorithm does node clustering use?
@@ -356,17 +357,15 @@ Route optimization has 2 parts. The first is Route Clustering, the second is Rou
 
 * Route clustering is optional. What it does is it takes nodes that are near each other within a specified distance and combines them into a single travel point. Clustering a route is a reversible process, no node data is lost.
 
-* Route optimization can be done either using foreground or the background options. Both methods are identical. The foreground method will use up all your available CPU time "hanging WoW" until it completes, while the background method does it much more slowly in the background without locking WoW.
+* Route optimization can be done either using foreground or the background options. Both use the same method. The foreground method will use up all your available CPU time "hanging WoW" until it completes, while the background method does it in the background without locking WoW. The background method keeps trying to improve the route for longer, and can be stopped at any time with the |cffffff78Stop|r button, keeping the best route found so far.
 
-* Generally speaking, use foreground if the number of nodes is small (less than 100), background if the number of nodes is big, otherwise you risk disconnecting from the WoW servers if optimization takes too long.
+* Generally speaking, use foreground if the number of nodes is small (less than 1000), background if the number of nodes is big, otherwise you risk disconnecting from the WoW servers if optimization takes too long.
 
-* Route generation uses an algorithm known as |cffffff78Ant Colony Optimization|r. This algorithm is based on observed real life ant behavior, and uses thousands of random numbers to simulate the ants and generate the routes.
-
-* This means that route generation is random and optimizing the same initial route will give different results each time. You may repeatedly optimize a route in an attempt to find a better solution, Routes will not discard a shorter known solution.
+* Route generation uses random numbers to decide where to try to improve the route, so optimizing the same initial route will give different results each time. You may repeatedly optimize a route in an attempt to find a better solution: optimization continues with the route you already have, and Routes will not discard a shorter known solution.
 
 * The other reason why we want the generated route to be random is because you don't want 1000 other people to have the exact same route as you right? Standard WowHead node data is downloadable fairly easily for the 3 gathering addons.
 
-* In its current implementation in Routes, the ACO algorithm is pruned fairly heavily in order to reduce execution time. Trying to solve an NP-Complete problem in a WoW sandbox using the Lua scripting language isn't the most ideal of things to do.
+* Finding the shortest possible route is not feasible for more than a handful of nodes, so Routes looks for a good one instead. Trying to solve an NP-Complete problem in a WoW sandbox using the Lua scripting language isn't the most ideal of things to do.
 
 * We make efforts to prevent the route from criss-crossing itself, but sometimes it happens and the algorithm doesn't catch it. If this happens, just optimize the route again.
 ]]

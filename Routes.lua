@@ -25,8 +25,8 @@ Features:
 	   * GatherMate2
 	   * Gatherer
 	   * HandyNotes
-	- Optimize your route using the traveling salesmen problem (TSP) ant
-	  colony optimization (ACO) algorithm
+	- Optimize your route using a traveling salesmen problem (TSP) local
+	  search algorithm
 	- Background (nonblocking) and foreground (blocking) optimization
 	- Select color/thickness/transparency/visibility for each route
 	- For any route created, finding a new node will try to add that as
@@ -120,14 +120,7 @@ local defaults = {
 			draw_battlemap  = true,
 			draw_indoors    = false,
 			tsp = {
-				initial_pheromone  = 0.1,   -- Initial pheromone trail value
-				alpha              = 1,     -- Likelihood of ants to follow pheromone trails (larger value == more likely)
-				beta               = 6,     -- Likelihood of ants to choose closer nodes (larger value == more likely)
-				local_decay        = 0.2,   -- Governs local trail decay rate [0, 1]
-				local_update       = 0.4,   -- Amount of pheromone to reinforce local trail update by
-				global_decay       = 0.2,   -- Governs global trail decay rate [0, 1]
-				twoopt_passes      = 3,     -- Number of times to perform 2-opt passes
-				two_point_five_opt = false, -- Perform optimized 2-opt pass
+				two_point_five_opt = false, -- Extra optimization: try 5 times as long to improve a route
 			},
 			prof_options = {
 				['*'] = "Always",
@@ -2048,23 +2041,28 @@ function ConfigHandler:SetTwoPointFiveOpt(info, v)
 	db.defaults.tsp.two_point_five_opt = v
 end
 
+-- Returns the parameters for TSP:SolveTSP(): how many attempts to improve the
+-- route are made per node, and (in the background) after how many attempts
+-- without an improvement per node it gives up early.
+local function GetTSPParameters(background)
+	local effort = db.defaults.tsp.two_point_five_opt and 5 or 1
+	if background then
+		return { kicks_per_node = 100 * effort, patience_per_node = 5 * effort }
+	end
+	return { kicks_per_node = 10 * effort }
+end
+
 function ConfigHandler:DoForeground(info)
 	local zone = tonumber(info[2])
 	local route = Routes.routekeys[zone][ info[3] ]
 	local t = db.routes[zone][route]
-	if #t.route > 724 then
-		-- Lua has 4mb limit on table size. 725x725 will result in a table of size 525625
-		-- 524288 (or 2^19) is the max as 8 bytes per entry will give exactly 4 Mb
-		Routes:Print(L["TOO_MANY_NODES_ERROR"])
-		return
-	end
 	local taboos = {}
 	for tabooname, used in pairs(t.taboos) do
 		if used then
 			tinsert(taboos, db.taboo[zone][tabooname])
 		end
 	end
-	local output, meta, length, iter, timetaken = Routes.TSP:SolveTSP(t.route, t.metadata, taboos, zone, db.defaults.tsp)
+	local output, meta, length, iter, timetaken = Routes.TSP:SolveTSP(t.route, t.metadata, taboos, zone, GetTSPParameters(false))
 	t.route = output
 	t.length = length
 	t.metadata = meta
@@ -2088,17 +2086,13 @@ function ConfigHandler:DoBackground(info)
 		Routes:Print(L["You may not optimize a route that is being clustered in the background."])
 		return
 	end
-	if #t.route > 724 then
-		Routes:Print(L["TOO_MANY_NODES_ERROR"])
-		return
-	end
 	local taboos = {}
 	for tabooname, used in pairs(t.taboos) do
 		if used then
 			tinsert(taboos, db.taboo[zone][tabooname])
 		end
 	end
-	local running, errormsg = Routes.TSP:SolveTSPBackground(t.route, t.metadata, taboos, zone, db.defaults.tsp)
+	local running, errormsg = Routes.TSP:SolveTSPBackground(t.route, t.metadata, taboos, zone, GetTSPParameters(true))
 	if (running == 1) then
 		Routes:Print(L["Now running TSP in the background..."])
 		local dispLength;
@@ -2132,6 +2126,8 @@ function ConfigHandler:DoBackground(info)
 			end
 			Routes:DrawWorldmapLines()
 			Routes:DrawMinimapLines(true)
+			-- update the state of the stop button
+			LibStub("AceConfigRegistry-3.0"):NotifyChange("Routes")
 		end)
 	elseif (running == 2) then
 		Routes:Print(L["There is already a TSP running in background. Wait for it to complete first."])
@@ -2140,6 +2136,17 @@ function ConfigHandler:DoBackground(info)
 		Routes:Print(L["The following error occured in the background path generation coroutine, please report to the addon authors:"]);
 		Routes:Print(errormsg);
 	end
+end
+
+function ConfigHandler:StopBackground(info)
+	Routes.TSP:StopTSP()
+end
+
+function ConfigHandler:IsNotBeingOptimized(info)
+	local zone = tonumber(info[2])
+	local route = Routes.routekeys[zone][ info[3] ]
+	local is_running, route_table = Routes.TSP:IsTSPRunning()
+	return not (is_running and route_table == db.routes[zone][route].route)
 end
 
 do
@@ -2389,12 +2396,12 @@ do
 						inline = true,
 						args = {
 							two_point_five_opt_disc = {
-								name = L["ExtraOptDesc"], type = "description",
+								name = L["ExtraOptDesc2"], type = "description",
 								order = 0,
 							},
 							two_point_five_opt = {
 								name = L["Extra optimization"], type = "toggle",
-								desc = L["ExtraOptDesc"],
+								desc = L["ExtraOptDesc2"],
 								get = "GetTwoPointFiveOpt", set = "SetTwoPointFiveOpt",
 								disabled = false, -- to avoid inheriting from parent, so we don't have to use an arg= field
 								order = 100,
@@ -2436,6 +2443,13 @@ do
 								desc = L["Background Disclaimer"],
 								func = "DoBackground",
 								order = 100,
+							},
+							stop = {
+								name = L["Stop"], type = "execute",
+								desc = L["Stop optimizing this route in the background and keep the best route found so far"],
+								func = "StopBackground",
+								disabled = "IsNotBeingOptimized",
+								order = 110,
 							},
 						},
 					},

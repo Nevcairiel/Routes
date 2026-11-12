@@ -158,8 +158,6 @@ L["Reset the line settings to defaults"] = true
 
 L["Optimize Route"] = true
 L["Route Optimizing"] = true
-L["Extra optimization"] = true
-L["ExtraOptDesc2"] = "Turning on this option will make Routes try 5 times as long to improve a route, but this usually only generates -very slightly- better routes. Recommended setting is OFF."
 L["Foreground"] = true
 L["Foreground Disclaimer"] = "Generate close to optimal path for the set of nodes in this route. Please keep in mind that doing this will 'hang' your client for some time, a few seconds for every thousand nodes in the route. Depending on the amount of nodes and CPU speed you might even get a disconnect if it takes too long."
 L["Background"] = true
@@ -288,11 +286,6 @@ How does Routes perform its route optimization?
 Routes uses a |cffffff78local search|r, which is a heuristic method to produce near-optimal solutions to the |cffffff78Traveling Salesman Problem|r (TSP). It starts with a route that always travels to the nearest unvisited node, and then keeps making small changes to it that make it shorter.
 
 The changes it tries are |cffffff782-opt|r, the process where pairs of edges are exchanged (A-B and C-D becomes A-C and B-D), and |cffffff78Or-opt|r, where up to 3 nodes in a row are moved to another place in the route. When no such change makes the route any shorter, it swaps 2 random neighboring parts of the route and tries again, and keeps the result if the route is shorter after that. For more information, consult Google or Wikipedia.
-
-|cffffd200
-What does the "Extra Optimization" option do?
-|r
-Turning on "extra optimization" tells Routes to make 5 times as many attempts to improve a route once it doesn't find a simple change that makes it shorter anymore. Most of the improvement is found early on, so this takes a lot longer for usually very little gain.
 
 |cffffd200
 What algorithm does node clustering use?

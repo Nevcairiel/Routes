@@ -119,9 +119,6 @@ local defaults = {
 			draw_worldmap   = true,
 			draw_battlemap  = true,
 			draw_indoors    = false,
-			tsp = {
-				two_point_five_opt = false, -- Extra optimization: try 5 times as long to improve a route
-			},
 			prof_options = {
 				['*'] = "Always",
 			},
@@ -2034,22 +2031,14 @@ do
 	end
 end
 
-function ConfigHandler:GetTwoPointFiveOpt()
-	return db.defaults.tsp.two_point_five_opt
-end
-function ConfigHandler:SetTwoPointFiveOpt(info, v)
-	db.defaults.tsp.two_point_five_opt = v
-end
-
 -- Returns the parameters for TSP:SolveTSP(): how many attempts to improve the
 -- route are made per node, and (in the background) after how many attempts
 -- without an improvement per node it gives up early.
 local function GetTSPParameters(background)
-	local effort = db.defaults.tsp.two_point_five_opt and 5 or 1
 	if background then
-		return { kicks_per_node = 100 * effort, patience_per_node = 5 * effort }
+		return { kicks_per_node = 100, patience_per_node = 5 }
 	end
-	return { kicks_per_node = 10 * effort }
+	return { kicks_per_node = 10 }
 end
 
 function ConfigHandler:DoForeground(info)
@@ -2388,25 +2377,6 @@ do
 						type = "header",
 						name = L["Route Optimizing"],
 						order = 100,
-					},
-					two_point_five_group = {
-						type = "group",
-						order = 150,
-						name = L["Extra optimization"],
-						inline = true,
-						args = {
-							two_point_five_opt_disc = {
-								name = L["ExtraOptDesc2"], type = "description",
-								order = 0,
-							},
-							two_point_five_opt = {
-								name = L["Extra optimization"], type = "toggle",
-								desc = L["ExtraOptDesc2"],
-								get = "GetTwoPointFiveOpt", set = "SetTwoPointFiveOpt",
-								disabled = false, -- to avoid inheriting from parent, so we don't have to use an arg= field
-								order = 100,
-							},
-						},
 					},
 					foreground_group = {
 						type = "group",

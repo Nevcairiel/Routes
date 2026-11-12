@@ -67,7 +67,7 @@ local G = {} -- was Graph-1.0, but we removed the dependency
 Routes.G = G
 Routes.Dragons = LibStub("HereBeDragons-2.0")
 
-local WoW90 = select(4, GetBuildInfo()) >= 90000
+local Feat_MinimapViewRadius = C_Minimap and C_Minimap.GetViewRadius
 
 -- database defaults
 local db
@@ -450,7 +450,7 @@ function Routes:DrawMinimapLines(forceUpdate)
 		cos = math_cos(facing)
 	end
 
-	if WoW90 then
+	if Feat_MinimapViewRadius then
 		minimap_radius = C_Minimap.GetViewRadius()
 	else
 		minimap_radius = MinimapSize[indoors][Minimap:GetZoom()]
@@ -1081,7 +1081,7 @@ end
 
 
 function Routes:MINIMAP_UPDATE_ZOOM()
-	if not WoW90 then
+	if not Feat_MinimapViewRadius then
 		local zoom = Minimap:GetZoom()
 		if GetCVar("minimapZoom") == GetCVar("minimapInsideZoom") then
 			Minimap:SetZoom(zoom < 2 and zoom + 1 or zoom - 1)
@@ -1237,7 +1237,7 @@ function Routes:OnEnable()
 	end
 
 	-- Minimap line drawing
-	if not WoW90 then
+	if not Feat_MinimapViewRadius then
 		self:SecureHook(Minimap, "SetZoom", SetZoomHook)
 	end
 	if db.defaults.draw_minimap then

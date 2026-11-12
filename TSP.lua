@@ -93,16 +93,18 @@ Routes.TSP = TSP
 --------------------------------
 -- Background execution
 
-local nextYield = 0
+-- Milliseconds of work a background task may do per frame before it yields
+local YIELD_BUDGET = 10
+local sliceStart = 0
 local function yield()
 	local t = debugprofilestop()
-	if t > nextYield then
-		nextYield = t + 30
+	-- t < sliceStart means someone called debugprofilestart() and reset the
+	-- timer, yield anyway in that case
+	if t - sliceStart >= YIELD_BUDGET or t < sliceStart then
 		coroutine.yield()
-	elseif t < nextYield then
-		-- Someone called debugprofilestart(), we need to reset our timer, yield anyway
-		nextYield = t + 30
-		coroutine.yield()
+		-- measure the budget from when we are resumed, not from when we
+		-- yielded, so the time spent rendering the frame doesn't count
+		sliceStart = debugprofilestop()
 	end
 end
 

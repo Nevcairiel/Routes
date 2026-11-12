@@ -397,5 +397,5 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 
-# local tests
-tests/
+# written by tests/tsp_test.lua --record
+tests/data/tsp/best.lua

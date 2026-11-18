@@ -91,6 +91,17 @@ local function AppendNodes(node_list, zone, db_type, node_type)
 				return k, v, translate_db_type[db_type]
 			end
 		end
+		-- On WoW Forever, GatherMate2 names nodes from its
+		-- "GatherMate2NodesVanilla" locale, whose names can differ from the
+		-- "GatherMate2Nodes" ones (frFR uses a different apostrophe)
+		local LNV = LibStub("AceLocale-3.0"):GetLocale("GatherMate2NodesVanilla", true)
+		if LNV then
+			for k, v in pairs(LNV) do
+				if v == translatednode then -- get the english name
+					return k, v, translate_db_type[db_type]
+				end
+			end
+		end
 	end
 end
 source.AppendNodes = AppendNodes
